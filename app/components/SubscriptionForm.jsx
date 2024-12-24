@@ -25,7 +25,7 @@ const SubscriptionForm = () => {
                 }
                 const data = await response.json();
                 setStatus(data.status);
-                if( data.status === 'subscribed') {
+                if (data.status === 'subscribed') {
                     clearInterval(interval);
                     window.location.href = '/landing';
                 }

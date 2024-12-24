@@ -14,13 +14,16 @@
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@mui/icons-material": "^6.3.0",
     "@mui/material": "^6.3.0",
+    "@stripe/stripe-js": "^5.4.0",
+    "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "bottleneck": "^2.19.5",
     "ioredis": "^5.4.2",
     "next": "15.1.2",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.7",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "stripe": "^17.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

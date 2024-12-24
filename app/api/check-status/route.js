@@ -4,7 +4,6 @@ import redis from '@/app/utils/redis';
 
 
 
-
 export async function GET(req) {
     const email = req.nextUrl.searchParams.get('email');
     if (!email){
