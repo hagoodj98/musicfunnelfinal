@@ -9,13 +9,7 @@ export async function POST(req) {
             payment_method_types: ['card'],    
             line_items: [
                 {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: 'Fan Pack',
-                        },
-                        unit_amount: 900
-                    },
+                    price: 'price_1Qa8KSLbkXiHlM808dxEGruU',
                     quantity: 1,
                 }
             ],
