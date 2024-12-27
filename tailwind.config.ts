@@ -9,9 +9,13 @@ export default {
    prefix: "tw-",
   theme: {
     extend: {
+      
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'primary': '#167888',
+        'secondary': '#EF4C12',
+        'lighterblue': 'rgb(1, 10, 38, 0.8)'
       },
     },
   },

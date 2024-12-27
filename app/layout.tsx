@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Footer from './components/Footer';
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -26,9 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased tw-bg-[url('../public/oc-gonzalez-A-11N8ItHZo-unsplash.jpg')] tw-bg-cover tw-bg-no-repeat tw-bg-center`}
       >
         {children}
+        <Footer />
       </body>
     </html>
   );
