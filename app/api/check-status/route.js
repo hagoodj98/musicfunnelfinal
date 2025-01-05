@@ -1,8 +1,5 @@
 import crypto from 'crypto';
-import redis from '@/app/utils/redis';
-
-
-
+import redis from '../../utils/redis';
 
 export async function GET(req) {
     const email = req.nextUrl.searchParams.get('email');
@@ -12,21 +9,12 @@ export async function GET(req) {
 
     const emailHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
     // Check Redis for status
-    const status = await redis.get(emailHash);
+    const status = await redis.get(`status:${emailHash}`);
     if (!status) {
         return new Response(JSON.stringify({ status: 'unknown' }), { status: 200 });
     }
     return new Response(JSON.stringify({ status }), {status: 200 });
 }
-
-
-
-
-
-
-
-
-
 
 const listId = process.env.MAILCHIMP_LIST_ID;
 

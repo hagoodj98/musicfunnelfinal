@@ -1,23 +1,23 @@
 import crypto from 'crypto';
-import { mailchimpClient } from '@/app/utils/mailchimp';
+import { mailchimpClient } from '../../utils/mailchimp';
 import Bottleneck from 'bottleneck';
-import redis from '@/app/utils/redis';
+import redis from '../../utils/redis';
 import { serialize as serializeCookie } from 'cookie'
-import path from 'path';
- 
 
 // Bottleneck limiter configuration
 const limiter = new Bottleneck({
   maxConcurrent: 1, // Number of simultaneous requests
   minTime: 200,      // Minimum time between requests (in ms)
 });
+
 const listID = process.env.MAILCHIMP_LIST_ID; 
 
 //adding the subscriber
-export async function POST(request) {
-  const { email, name } = await request.json();
+export async function POST(req, res) {
+  const { email, name } = await req.json();
 
   console.log('recieved data:', { email, name });
+  
 
   try {
     const addSubscriber = limiter.wrap(async (email, name) => {
@@ -43,20 +43,23 @@ export async function POST(request) {
 
     //set session token in an HTTP-only cookie
     const cookie = serializeCookie('sessionToken', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
+      httpOnly: true, //Cookie inaccesible tp JavaScript's Document.cookie API
+      secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production
       path: '/',
-      maxAge: 3600 // 1 hour
+      maxAge: 3600, // 1 hour
+      sameSite: 'strict'
     });
 
-
-    return new Response(JSON.stringify({ status: 'pending' }), { status: 200 });
+    res.setHeader('Set-Cookie', cookie);
+    res.status(200).json({status: 'pending' });
+    // Add 'Set-Cookie' header to the response
+  
     } catch (error) {
       console.error('Error adding to Mailchimp:', error);
       if (error.response) {
         console.error('Mailchimp error response:', error.response.body);
       }
-      return new Response(JSON.stringify({ error: 'Subscription failed' }), {status: 500});
+      res.status(500).json({ error: 'Subscription failed' });
     }
 }
 
