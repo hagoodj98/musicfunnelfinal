@@ -45,10 +45,9 @@ describe('/api/subscribe', () => {
         expect(JSON.parse(res._getData()).status).toBe('pending');
     });
 
-    afterEach(() => {
-        nock.cleanAll();
-    });
+   
     afterAll(() => {
+        nock.cleanAll();
         nock.restore();
       });
 });

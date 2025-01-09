@@ -6,5 +6,4 @@ module.exports = {
     moduleNameMapper: {
         "^@/(.*)$": "musicfunnel/app/$1", 
     },
-    
  };

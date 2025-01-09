@@ -11,14 +11,17 @@ export async function GET(req) {
     const sessionToken = req.cookies.sessionToken;
     
     if (!sessionToken) {
-        return new Response(JSON.stringify({error: 'Session token is required'}), {status: 401});
+        return res.status(401).json({error: 'Session token is required'});
     }
 
     const sessionData = await redis.get(`session:${sessionToken}`);
 
-    if (sessionData) {
-        return new Response(JSON.stringify({valid: true}), { status: 200 });
-    } else {
-        return new Response(JSON.stringify({valid: false }), { status: 200 });
+    if (!sessionData) {
+        return res.status(401).json({valid: false});
     }
+    const sessionInfo = JSON.parse(sessionData);
+    if (req.path.includes('/thankyou') && !sessionInfo.purchased) {
+        return res.status(403).json({error: 'Access denied: No purchase found'});
+    }
+    return res.status(200).json({ valid: true });
 }
