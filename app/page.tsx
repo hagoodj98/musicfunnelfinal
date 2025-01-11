@@ -48,7 +48,7 @@ export default function Home () {
             </div>
           </div>
           <div className='tw-w-1/2'>
-            <Image alt='Latest Music Cover' src={MusicCover} />
+            <Image alt='Latest Music Cover' src={MusicCover}  />
           </div>
       </div>
       </div>

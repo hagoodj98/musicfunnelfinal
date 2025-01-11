@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <div className='tw-flex tw-bg-lighterblue'>
         <div className='tw-w-56'>
-            <Image src={Logo}/>
+            <Image src={Logo} alt='My personal logo'/>
         </div>
         <div>
             <p className='tw-text-2xl tw-text-white'>Privacy | Terms and Conditions</p>

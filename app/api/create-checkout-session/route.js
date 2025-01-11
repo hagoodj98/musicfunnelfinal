@@ -11,10 +11,16 @@ export async function POST(req, res) {
         //Parse cookies to access the sessionToken
         parseCookies(req);
         const sessionToken = req.cookies.sessionToken;
-
         if(!sessionToken) {
             return res.status(401).json({error: "Session token is required" });
         }
+        const sessionDataString = await redis.get(`session:${sessionToken}`);
+        //Whenever I retrieve existing data, it is always good practice to check if exists.
+        if (!sessionDataString) {
+            return res.status(401).json({error: "Session not found or expired"});
+        }
+        const sessionData = JSON.parse(sessionDataString);
+
          // Define the checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],    

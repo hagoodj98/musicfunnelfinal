@@ -19,7 +19,7 @@ export async function POST(req, res) {
 
   if (!validateEmail(email)) {
     console.error(`Invalid email format for email: ${email}`);
-    return res.status(400).json({ error: 'Invalid email format' });
+    return new Response(JSON.stringify({ error: 'Invalid email format' }), { status: 400 });
 }
 
   console.log(`Received data: Email: ${email}, Name: ${name}`);
@@ -53,14 +53,17 @@ export async function POST(req, res) {
     // Store the email to hash and salt mapping. This will allow me to get access to the salt in other parts of the application
     await redis.set(`emailToHashMapping:${email}`, JSON.stringify({ emailHash, salt }), 'EX', 3600)
 
-    res.status(200).json({message: "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!", status: 'pending' });
+    return new Response(JSON.stringify({message: "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!", status: 'pending' }), { status: 200 });
    
     } catch (error) {
       console.error(`Error during subscription process for email: ${email}`, error);
-      if (error.response) {
-        console.error('Mailchimp error response:', error.response.body);
-      }
-      res.status(500).json({ error: 'Subscription failed' });
+      if (error.response && error.response.status === 500) {
+        console.error('Mailchimp error response:', error.response.data);
+        // Specific message if Mailchimp is down
+        return new Response(JSON.stringify({ error: 'Subscription service temporarily unavailable. Please try again later.' }), { status: 503 });
+    } else {
+        return new Response(JSON.stringify({ error: 'Subscription failed due to an internal error' }), { status: 500 });
+    }
     }
 }
 

@@ -2,14 +2,6 @@ import Redis from "ioredis";
 import fs from 'fs';
 
 
-console.log({
-    port: process.env.REDIS_PORT,
-    host: process.env.REDIS_HOST,
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
-    certificatePath: process.env.CERT_REDIS
-});
-
 // Create a Redis client instance
 const redis = new Redis({
     port: process.env.REDIS_PORT,  // Redis port

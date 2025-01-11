@@ -8,9 +8,11 @@ import Modal from 'react-bootstrap/Modal';
 import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
+import { useSubscription } from '../context/SubscriptionContext';
 import GroupIcon from '@mui/icons-material/Group';
 
 const SubscriptionForm = () => {
+    const { setUserEmail } = useSubscription(); // Get the setUserEmail method from context
     const [userInfo, setUserInfo] = useState({
         name: "",
         email: ""
@@ -41,8 +43,6 @@ const SubscriptionForm = () => {
 
         return () => clearInterval(interval); //cleanup on unmount
     },[email]);
-
-   
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -64,14 +64,16 @@ const SubscriptionForm = () => {
                     email: userInfo.email
                 })
             });
-            
+            if (response.ok) {
+                setUserEmail(userInfo.email);// Set email in context after successful subscription
+                setStatus('Success');
+            }
         } catch (error) {
             console.error('Subscription error:', error);
             setStatus('error');
             setErrorMessage(error.message || 'Failed to subscribe');
         }
     }
-        
         function handleChange(event) {
             const {name, value}= event.target;
            
