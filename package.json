@@ -2,13 +2,15 @@
   "name": "musicfunnel",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:integration": "jest --config jest.integration.config.js"
+    "test:integration": "jest --config jest.integration.config.js",
+    "start-ws": "node websocketServer.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -29,7 +31,8 @@
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.7",
     "react-dom": "^19.0.0",
-    "stripe": "^17.5.0"
+    "stripe": "^17.5.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",

@@ -20,29 +20,7 @@ const SubscriptionForm = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [status, setStatus] = useState('idle')
     const [lgShow, setLgShow] = useState(false);
-    const email = userInfo.email;
-    useEffect(() => {
-         if (!email) return; // Prevent polling if email is not set
-        const interval = setInterval(async () => {
-            try {
-                const response = await fetch(`/api/check-status?email=${encodeURIComponent(email)}`);
-                if (!response.ok) {
-                    throw new Error("Failed to fetch subscription status");
-                }
-                const data = await response.json();
-                setStatus(data.status);
-                if (data.status === 'subscribed') {
-                    clearInterval(interval);
-                    window.location.href = '/landing';
-                }
-            } catch (error) {
-                console.error('Error fetching subscription status:', error);
-                setStatus('error');
-            }
-            }, 5000); //Poll every 5 seconds
-
-        return () => clearInterval(interval); //cleanup on unmount
-    },[email]);
+    
     const handleSubmit = async (event) => {
         event.preventDefault();
 

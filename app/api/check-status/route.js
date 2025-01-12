@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import redis from '../../utils/redis';
 import { serialize as serializeCookie } from 'cookie'
 
-
 export async function GET(req, res) {
     const email = req.nextUrl.searchParams.get('email');
 
