@@ -8,11 +8,9 @@ import Modal from 'react-bootstrap/Modal';
 import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
-import { useSubscription } from '../context/SubscriptionContext';
 import GroupIcon from '@mui/icons-material/Group';
 
 const SubscriptionForm = () => {
-    const { setUserEmail } = useSubscription(); // Get the setUserEmail method from context
     const [userInfo, setUserInfo] = useState({
         name: "",
         email: ""
@@ -23,16 +21,17 @@ const SubscriptionForm = () => {
     
     const handleSubmit = async (event) => {
         event.preventDefault();
-
-        if(!userInfo.email) {
+    
+        if (!userInfo.email) {
             setErrorMessage('Email is required');
             return;
         }
+    
         setStatus('pending');
         setErrorMessage(''); // Clear previous errors
-
+    
         try {
-            const response = await fetch('/api/subscribe', {
+            const subscribeResponse = await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,14 +41,28 @@ const SubscriptionForm = () => {
                     email: userInfo.email
                 })
             });
-            if (response.ok) {
-                setUserEmail(userInfo.email);// Set email in context after successful subscription
-                setStatus('Success');
+            if (!subscribeResponse.ok) {
+                throw new Error(`Something went wrong. please try again!`);
             }
+            
+            const checkStatusResponse = await fetch('/api/check-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userInfo.email }),
+            });
+            if (!checkStatusResponse.ok) {
+                throw new Error(`HTTP error! status: ${checkStatusResponse.status}`);
+            }
+            const data = await checkStatusResponse.json();
+            console.log('Success', data);
+            setStatus('success');
+            
         } catch (error) {
             console.error('Subscription error:', error);
             setStatus('error');
-            setErrorMessage(error.message || 'Failed to subscribe');
+            setErrorMessage(error.message || 'Failed to process subscription request!');
         }
     }
         function handleChange(event) {
@@ -117,5 +130,3 @@ const SubscriptionForm = () => {
     </div>
   )
 }
-
-export default SubscriptionForm;

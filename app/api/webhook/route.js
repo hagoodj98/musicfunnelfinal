@@ -1,7 +1,6 @@
 
 import crypto from 'crypto';
 import redis from '../../utils/redis';
-import { error } from 'console';
 
 export async function POST(req) {
   try {
@@ -17,7 +16,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({error: 'Invalid or missing data'}), { status: 400 });
     } 
     //This is to get access to the second redis database set up. Which contains the hash and salt that this email is associated with.
-    const mappingString = await redis.get(`emailToHashMapping${email}`);
+    const mappingString = await redis.get(`emailToHashMapping:${email}`);
     //This checks if this email even exist. If not, then that means the user has not done anything.
     if (!mappingString) {
       console.error('Webhook Error: No mapping found for email:', email);
