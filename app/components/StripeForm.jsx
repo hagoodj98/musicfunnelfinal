@@ -9,14 +9,27 @@ const StripeForm = () => {
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState('');
 
-//This handles the checkout session from the back-end
+// Function to get CSRF token from cookies
+const getCsrfToken = () => {
+    const value = `; ${document.cookie}`; // all subsequent cookies will be preceded by ;
+    const parts = value.split(`; csrfToken=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+};
+
+//This handles the checkout session creation
 const handleCheckout = async () => {
     setLoading(true);
     setError('');
+    const csrfToken= getCsrfToken(); //Get CSRF from cookies
     try {
         //call the backend to create checkout session
         const response = await fetch('/api/create-checkout-session', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken, //Include CSRF token in request headers
+            }
         });
         if (!response.ok) {
             throw new Error('Network response was not Ok.');

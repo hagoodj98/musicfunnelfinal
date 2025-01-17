@@ -10,7 +10,9 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
 
+
 const SubscriptionForm = () => {
+
     const [userInfo, setUserInfo] = useState({
         name: "",
         email: ""
@@ -19,6 +21,7 @@ const SubscriptionForm = () => {
     const [status, setStatus] = useState('idle')
     const [lgShow, setLgShow] = useState(false);
     
+
     const handleSubmit = async (event) => {
         event.preventDefault();
     
@@ -35,6 +38,7 @@ const SubscriptionForm = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                   
                 },
                 body: JSON.stringify({
                     name: userInfo.name,

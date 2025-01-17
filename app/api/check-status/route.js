@@ -25,14 +25,14 @@ export async function POST(req, res) {
         if (sessionData.status === 'subscribed') {
             const sessionToken = crypto.randomBytes(24).toString('hex');
             const csrfToken = crypto.randomBytes(24).toString('hex'); // Generate CSRF token
-            await redis.set(`session:${sessionToken}`, JSON.stringify({...sessionData, csrfToken}), 'EX', 3600);
+            await redis.set(`session:${sessionToken}`, JSON.stringify({...sessionData, csrfToken }), 'EX', 3600);
     //set session token in an HTTP-only cookie
             const sessionCookie = serializeCookie('sessionToken', sessionToken, {
                 httpOnly: true, //Cookie inaccesible tp JavaScript's Document.cookie API
                 secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production
                 path: '/',
                 maxAge: 3600, // 1 hour
-                sameSite: 'strict'
+                sameSite: 'strict',
             });
             //Set CSRF token in a separate cookie that's accesible to JavaScript
             const csrfCookie = serializeCookie('csrfToken', csrfToken, {

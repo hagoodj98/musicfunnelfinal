@@ -4,22 +4,25 @@ import parseCookies from "../../utils/parseCookies";
 import { error } from "console";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req, res) {
-
     try {
         //Parse cookies to access the sessionToken
         parseCookies(req);
+        const csrfTokenClient= req.headers['CSRF-Token'];
         const sessionToken = req.cookies.sessionToken;
         if(!sessionToken) {
-            return res.status(401).json({error: "Session token is required" });
+            return new Response(JSON.stringify({error: "Session token is required"}), {status: 401});
         }
         const sessionDataString = await redis.get(`session:${sessionToken}`);
         //Whenever I retrieve existing data, it is always good practice to check if exists.
         if (!sessionDataString) {
-            return res.status(401).json({error: "Session not found or expired"});
+            return new Response(JSON.stringify({error: "Session not found or expired"}), {status: 401})
         }
         const sessionData = JSON.parse(sessionDataString);
+        //Validate CSRF token. If this passes,then the user can continue. 
+        if (csrfTokenClient !== sessionData.csrfToken) {
+            return new Response(JSON.stringify({error: 'Invalid CSRF token'}), {status: 403});
+        }
 
          // Define the checkout session
         const session = await stripe.checkout.sessions.create({
@@ -31,14 +34,24 @@ export async function POST(req, res) {
                 }
             ],
             mode: 'payment',
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/thankyou?sessionToken=${sessionToken}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/cancel`
+            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/thankyou`,
+            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/cancel`,
+            metadata: {
+                sessionToken: sessionToken //Storing session token in metadata for retrieval in webhook
+            }
         });
         
-        return res.status(200).json({id: session.id});
+        //Update Redis with checkout session initiation
+        const updatedSessionData= JSON.stringify({
+            ...sessionData, 
+            stripeSessionId: session.id, 
+            checkoutStatus: 'initiated'
+         });
+// Save the updated session data back to Redis
+        await redis.set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600);
+        return new Response(JSON.stringify({id: session.id}), {status: 200});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
-        return res.status(500).json({error: 'Unable to create checkout session' });
-        
+        return new Response(JSON.stringify({error: 'Unable to create checkout session'}), {status: 500});
     }
 }

@@ -10,16 +10,20 @@ export async function middleware(req) {
     }
     try {
         const response = await fetch(`${req.nextUrl.origin}/api/redis-handler?action=get&key=session:${sessionToken}`);
+        if (!response.ok) throw new Error('Failed to fetch session data');
+
         const { result } = await response.json();
-        if(!result) {
-            return NextResponse.redirect(new URL('/', req.url));
-        }
         const sessionData = JSON.parse(result);
-        if (sessionData && sessionData.purchased) {
-            return NextResponse.next();
-        } else {
+
+        if(!sessionData) {
             return NextResponse.redirect(new URL('/', req.url));
         }
+        //Ensure users are redirected correctly after checkout
+        if ((req.nextUrl.pathname.includes('/landing/thankyou') || req.nextUrl.pathname.includes('/landing/cancel')) && !sessionData.checkoutCompleted) {
+            console.log("Redirecting because checkout was not completed or cancelled properly.");
+            return NextResponse.redirect(new URL('/landing', req.url));
+        }
+        return NextResponse.next();
     } catch (error) {
         console.error('Middleware Error:', error);
         return NextResponse.redirect(new URL('/', req.url));

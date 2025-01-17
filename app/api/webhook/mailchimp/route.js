@@ -1,6 +1,6 @@
 
 import crypto from 'crypto';
-import redis from '../../utils/redis';
+import redis from '../../../utils/redis';
 
 export async function POST(req) {
   try {
