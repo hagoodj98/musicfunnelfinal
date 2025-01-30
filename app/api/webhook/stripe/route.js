@@ -1,19 +1,13 @@
 import Stripe from "stripe";
 import redis from "../../../utils/redis";
-import { buffer } from "next";
-
-
 
 export const config = {
     api: {
       bodyParser: false,
     },
   };
-  
-
 
 export async function POST(req, res) {
-       
         const  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
         try {
@@ -51,28 +45,33 @@ export async function POST(req, res) {
             console.error(`Webhook Error: ${error.message}`);
             return new Response(`Webhook Error: ${error.message}`, {status: 400 });
         }
-    
 }
 
 async function handlePaymentSucceeded(paymentIntent) {
     console.log(`Payment succeeded for ${paymentIntent.id}`);
      // Update Redis to mark the session as completed
-    const sessionDataString = await redis.get(`session:${paymentIntent.metadata.sessionToken}`);
+     const sessionToken = paymentIntent.metadata.sessionToken;
+    const sessionDataString = await redis.get(`session:${sessionToken}`);
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
         sessionData.checkoutStatus = 'completed';
-        await redis.set(`session:${paymentIntent.metadata.sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+        await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+        // Publish to Redis channel which WebSocket server is listening to
+        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCompleted', sessionToken }));
     }
 }
 
 async function handlePaymentCanceled(paymentIntent) {
     console.log(`Payment canceled for intent ${paymentIntent.id}`);
+    const sessionToken = paymentIntent.metadata.sessionToken;
     // Update Redis to mark the session as canceled
-    const sessionDataString = await redis.get(`session:${paymentIntent.metadata.sessionToken}`);
+    const sessionDataString = await redis.get(`session:${sessionToken}`);
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
         sessionData.checkoutStatus = 'canceled';
-        await redis.set(`session:${paymentIntent.metadata.sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+        await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+        // Publish to Redis channel which WebSocket server is listening to
+        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCanceled', sessionToken }));
     }
 }
 

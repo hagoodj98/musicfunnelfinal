@@ -49,7 +49,10 @@ export async function POST(req, res) {
          });
 // Save the updated session data back to Redis
         await redis.set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600);
-        return new Response(JSON.stringify({id: session.id}), {status: 200});
+
+        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutInitiated', sessionToken }));
+        
+        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken}), {status: 200});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         return new Response(JSON.stringify({error: 'Unable to create checkout session'}), {status: 500});

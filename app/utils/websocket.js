@@ -1,38 +1,92 @@
+//The purpose of this file to connect the server and the client. Whatever messages sent from the server, will be sent here, as long as the websocket connection is open.
+
+import { useEffect, useState } from "react";
 
 const isBrowser = typeof window !== "undefined";
 
-// Create WebSocket connection only if in the browser
-function createWebSocket(url, maxRetries = 5) {
-    let retries = 0;
-    let ws;
-    
-    function connect() {
-        if (!isBrowser) return null;
-        ws = new WebSocket(url);
-        ws.onopen = () => {
-            console.log('WebSocket connection established');
-            retries = 0; // Reset retry count upon a successful connection
-        };
-        ws.onclose = (event) => {
-            console.error('WebSocket connection closed', event);
-            if (!event.wasClean && retries < maxRetries) {
-                setTimeout(() => {
-                    console.log(`Attempting to reconnect...(${++retries})`);
-                    connect(); //Attempt to reconnect
-                }, Math.min(1000 * retries, 30000)); //Exponential backoff with a cap
-            };
-        }
-        ws.onerror = (error) => {
-            console.error('WebSocket encountered an error: ', error);
-            ws.close(); //Ensure the socket is closed properly
-        };
-        ws.onmessage = (event) => {
-            console.log('Received message: ', event.data);
-        };
-        return ws;
-    }
-    //This restarts the connection attempt
-    return connect();
-}
+// Hook to manage WebSocket connection and receive updates. This function returns two parameters, send and status
+export const useWebSocket = (url) => {
+    const [status, setStatus] = useState('disconnected');
 
-export const wsInstance = createWebSocket('ws://localhost:8080');
+    useEffect(() => {
+        let ws;
+        let retries = 0;
+        const maxRetries = 5; // Maximum retries before giving up
+
+        const connect = () => {
+            setStatus('connecting');
+            ws = new WebSocket(url);
+    
+            ws.onopen = () => {
+                console.log('WebSocket connection established');
+                setStatus('connected');
+                retries = 0; // Reset retry count upon a successful connection
+            };
+            ws.onclose = event => {
+                console.error('WebSocket connection closed', event);
+                setStatus('disconnected');
+                if (!event.wasClean && retries < maxRetries) {
+                    retries++;
+                    console.log(`WebSocket retrying connection... (${retries})`);
+                    setTimeout(connect, Math.min(1000 * retries, 30000)); // Exponential backoff with a cap
+                }
+            };
+            ws.onerror = error => {
+                console.error('WebSocket encountered an error:', error);
+                setStatus('error');
+                ws.close(); // Ensure the socket is closed properly
+            };
+        //This catches when messages are received from the backend
+            ws.onmessage = event => {
+                console.log('Received message:', event.data);
+                // Handle incoming messages
+                handleMessage(event.data);
+            };
+        };
+        // Start the WebSocket connection
+        connect();
+        // Function to handle incoming messages
+        const handleMessage = (data) => {
+            // Here you can parse and react to messages
+            try {
+                const message = JSON.parse(data);
+                console.log("Processed message:", message);
+                switch (message.action) {
+                    case 'confirmation':
+                        // Handle confirmation message
+                        alert('Checkout confirmed!');
+                        break;
+                    case 'error':
+                        // Handle error message
+                        setError(message.error);
+                        break;
+                    default:
+                        console.log('Unhandled message type');
+
+                }
+
+                // Further processing based on message content
+            } catch (error) {
+                console.error("Error parsing WebSocket message:", error);
+            }
+        };
+        //This is the clean up section of the useEffect hook
+        return () => {
+            ws.close();
+        };
+    },[url]); //Depending on which environment i am working in, the useEffect will rerun automatically on this change 
+    
+    return { 
+        //This send function handles messages sent from the client and send to backend. This is typically used for client-initiated actions that need to inform the server of something that happened. 
+        send: 
+            (message) => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(message));
+                } else {
+                    console.error("WebSocket is not open. Cannot send message");
+                }
+            }
+        ,
+        status
+    };
+};

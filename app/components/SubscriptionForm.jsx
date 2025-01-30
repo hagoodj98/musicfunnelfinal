@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -134,3 +134,5 @@ const SubscriptionForm = () => {
     </div>
   )
 }
+
+export default SubscriptionForm;
