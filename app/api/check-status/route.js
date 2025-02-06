@@ -2,14 +2,21 @@ import crypto from 'crypto';
 import redis from '../../utils/redis';
 import { serialize as serializeCookie } from 'cookie'
 
-export async function POST(req, res) {
+export async function POST(req) {
     const email = req.nextUrl.searchParams.get('email');
 
     if (!email) {
          return new Response(JSON.stringify({ error: 'Email parameter is required' }), { status: 400 });
     }
     try {
-        const mapping = await redis.get(`emailToHashMapping:${email}`);
+        let mapping; 
+        try {
+            mapping = await redis.get(`emailToHashMapping:${email}`);
+            
+        } catch (error) {
+            console.error("Redis Error: Failed to retrieve email hash mapping:", error);
+            return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+        }
         if (!mapping) {
             console.error("Status Check Error: No mapping found for email:", email);
             return new Response(JSON.stringify({ error: 'No session information found' }), { status: 404 });
@@ -24,7 +31,8 @@ export async function POST(req, res) {
         const sessionData = JSON.parse(sessionDataString);  // Now you have access to `email`, `name`, `status`
         if (sessionData.status === 'subscribed') {
             const sessionToken = crypto.randomBytes(24).toString('hex');
-            const csrfToken = crypto.randomBytes(24).toString('hex'); // Generate CSRF token
+            const csrfToken = crypto.randomBytes(24).toString('hex');
+             // Generate CSRF token
             await redis.set(`session:${sessionToken}`, JSON.stringify({...sessionData, csrfToken }), 'EX', 3600);
     //set session token in an HTTP-only cookie
             const sessionCookie = serializeCookie('sessionToken', sessionToken, {
@@ -46,8 +54,10 @@ export async function POST(req, res) {
             redis.publish('statusUpdates', JSON.stringify({email, status: sessionData.status }));
 
             console.log(`Status Check Success: Session token issued for email: ${email}`);
-            res.setHeader('Set-Cookie', [sessionCookie, csrfCookie]);
-            return new Response(JSON.stringify({ message: 'Session active', sessionToken }), { status: 200 });
+            return new Response(JSON.stringify({ message: 'Session active', sessionToken }), {
+                status: 200,
+                headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }
+            });
         } else {
             console.error('Status Check Error: Unauthorized access attempt for email:', email);
             return new Response(JSON.stringify({ error: 'Unauthorized access' }), { status: 401 });

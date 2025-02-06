@@ -25,13 +25,13 @@ export async function POST(req, res) {
                 event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
             } catch (error) {
                  // Signature verification failed
-                return new Response(`Webhook Error: ${err.message}`, { status: 400 })
+                return new Response(`Webhook Error: ${error.message}`, { status: 400 })
             }
             
                 // Handle the event
             switch (event.type) {
-                case 'payment_intent.succeeded':
-                    await handlePaymentSucceeded(event.data.object);
+                case 'checkout.session.completed':
+                    await handleCheckoutSessionCompleted(event.data.object);
                 break;
                 case 'payment_intent.canceled':
                     await handlePaymentCanceled(event.data.object);
@@ -47,7 +47,12 @@ export async function POST(req, res) {
         }
 }
 
-async function handlePaymentSucceeded(paymentIntent) {
+async function handleCheckoutSessionCompleted(paymentIntent) {
+    //to prevent my redis calls from failing, i want to check if paymentIntent includes metadata.sessionToken
+    if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
+        console.error("Missing sessionToken in payment metadata");
+        return;
+    }
     console.log(`Payment succeeded for ${paymentIntent.id}`);
      // Update Redis to mark the session as completed
      const sessionToken = paymentIntent.metadata.sessionToken;
@@ -55,13 +60,24 @@ async function handlePaymentSucceeded(paymentIntent) {
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
         sessionData.checkoutStatus = 'completed';
-        await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
-        // Publish to Redis channel which WebSocket server is listening to
-        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCompleted', sessionToken }));
+        try {
+            await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+            // Publish to Redis channel which WebSocket server is listening to
+            console.log(`Publishing checkout update: ${JSON.stringify({ action: 'checkoutCompleted', sessionToken })}`);
+            redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCompleted', sessionToken }));
+        } catch (redisError) {
+            console.error("Redis Error:", redisError);
+        }
+       
     }
 }
 
 async function handlePaymentCanceled(paymentIntent) {
+     //to prevent my redis calls from failing, i want to check if paymentIntent includes metadata.sessionToken
+    if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
+        console.error("Missing sessionToken in payment metadata");
+        return;
+    }
     console.log(`Payment canceled for intent ${paymentIntent.id}`);
     const sessionToken = paymentIntent.metadata.sessionToken;
     // Update Redis to mark the session as canceled
@@ -69,9 +85,15 @@ async function handlePaymentCanceled(paymentIntent) {
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
         sessionData.checkoutStatus = 'canceled';
-        await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
-        // Publish to Redis channel which WebSocket server is listening to
-        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCanceled', sessionToken }));
+        try {
+            await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
+            // Publish to Redis channel which WebSocket server is listening to
+            console.log(`Publishing checkout update: ${JSON.stringify({ action: 'checkoutCanceled', sessionToken })}`);
+            redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutCanceled', sessionToken }));
+        } catch (redisError) {
+            console.error("Redis Error:", redisError);
+        }
+       
     }
 }
 

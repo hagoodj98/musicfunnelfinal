@@ -23,13 +23,18 @@ export async function POST(req, res) {
         if (csrfTokenClient !== sessionData.csrfToken) {
             return new Response(JSON.stringify({error: 'Invalid CSRF token'}), {status: 403});
         }
+        //If the price ID ever changes in Stripe, my checkout will fail.
+        const priceId = process.env.STRIPE_PRICE_ID;
+        if (!priceId) {
+            return new Response(JSON.stringify({ error: 'Price ID is not configured'}), {status:500});
+        }
 
          // Define the checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],    
             line_items: [
                 {
-                    price: 'price_1Qa8KSLbkXiHlM808dxEGruU',
+                    price: priceId,
                     quantity: 1,
                 }
             ],
@@ -41,6 +46,11 @@ export async function POST(req, res) {
             }
         });
         
+// **Generate the WebSocket token only after successful Stripe session creation. This token is used to get the sessionToken from the user that initiated the websocket connection with the API Gateway. With that session token I will process it some way, shape or form.
+
+        const wsToken = crypto.randomBytes(16).toString("hex");
+        await redis.set(`wsToken:${wsToken}`, sessionToken, "EX", 900); // 15-minute expiration
+
         //Update Redis with checkout session initiation
         const updatedSessionData= JSON.stringify({
             ...sessionData, 
@@ -48,11 +58,15 @@ export async function POST(req, res) {
             checkoutStatus: 'initiated'
          });
 // Save the updated session data back to Redis
-        await redis.set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600);
+//No other process can modify the key between commands.
+//Ensures data consistency when handling session updates.
+        await redis.multi()
+            .set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600)
+            .exec();
 
         redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutInitiated', sessionToken }));
         
-        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken}), {status: 200});
+        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken, wsToken: wsToken}), {status: 200});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         return new Response(JSON.stringify({error: 'Unable to create checkout session'}), {status: 500});
