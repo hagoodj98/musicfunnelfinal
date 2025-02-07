@@ -14,7 +14,7 @@ const limiter = new Bottleneck({
 const listID = process.env.MAILCHIMP_LIST_ID; 
 
 //adding the subscriber
-export async function POST(req, res) {
+export async function POST(req) {
   const { email, name } = await req.json();
 
   if (!validateEmail(email)) {
@@ -45,7 +45,7 @@ export async function POST(req, res) {
     // Create an email hash
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
-     //Create session data including user details
+     //Create session data including user details. This is the piece of data I want mailchimp webhook to update because it has the status property in it. And I am using redis key emailToHashMapping to associate them together
      const preliminarysessionData = {email, name, status: 'pending', salt };
      console.log(`Storing session data in Redis for Email Hash: ${emailHash}`);
   // Store the session data

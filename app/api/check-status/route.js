@@ -3,7 +3,9 @@ import redis from '../../utils/redis';
 import { serialize as serializeCookie } from 'cookie'
 
 export async function POST(req) {
-    const email = req.nextUrl.searchParams.get('email');
+    //This retrieves the email that was submitted during the intital subscription process. 
+    const { email } = await req.json();
+    console.log(email);
 
     if (!email) {
          return new Response(JSON.stringify({ error: 'Email parameter is required' }), { status: 400 });
@@ -17,17 +19,26 @@ export async function POST(req) {
             console.error("Redis Error: Failed to retrieve email hash mapping:", error);
             return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
         }
+        //Checking if mapping exists. Again /subscribe creates two caches, if emailToHashMapping does not exists at this point, then the user never entered any data.
         if (!mapping) {
             console.error("Status Check Error: No mapping found for email:", email);
             return new Response(JSON.stringify({ error: 'No session information found' }), { status: 404 });
         }
+        //I don't have to check for the original salt anymore because mailchimps' webhook done that already and we set the key with the updated status to session:
         const { emailHash } = JSON.parse(mapping);
+        console.log(emailHash, "compare");
+        
         const sessionDataString = await redis.get(`session:${emailHash}`);
-        //Again if sessionDataString does not exist, then that means there was an error on the webhook route. Probably cause user did not confirm email
+        console.log(sessionDataString, "these are existing data I have access to before I check it exist");
+        
+        //Again if sessionDataString does not exist, then that means user did not confirm email yet. The reason why is because if user confirmed email, then the webhook would have set a session: key. 
         if (!sessionDataString) {
             console.error('Status Check Error: No session data found for email:', email);
             return new Response(JSON.stringify({ error: 'Session not found' }), { status: 404 });
         }
+
+        console.log(sessionDataString, "these are existing data I have access to after I check if it exists");
+        
         const sessionData = JSON.parse(sessionDataString);  // Now you have access to `email`, `name`, `status`
         if (sessionData.status === 'subscribed') {
             const sessionToken = crypto.randomBytes(24).toString('hex');
@@ -49,12 +60,9 @@ export async function POST(req) {
                 maxAge: 3600,
                 sameSite: 'strict'
             });
-
-            // Assuming sessionData.status has been updated to 'subscribed'. This is setting a statusUpdates channel for ws to listen to.
-            redis.publish('statusUpdates', JSON.stringify({email, status: sessionData.status }));
-
+           
             console.log(`Status Check Success: Session token issued for email: ${email}`);
-            return new Response(JSON.stringify({ message: 'Session active', sessionToken }), {
+            return new Response(JSON.stringify({ message: 'Session active', sessionToken: sessionToken }), {
                 status: 200,
                 headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }
             });

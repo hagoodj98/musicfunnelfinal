@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -9,6 +9,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
+// Import the EmailChecker component
+import EmailChecker from './EmailConfirmationChecker';
 
 
 const SubscriptionForm = () => {
@@ -38,7 +40,6 @@ const SubscriptionForm = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                   
                 },
                 body: JSON.stringify({
                     name: userInfo.name,
@@ -48,20 +49,6 @@ const SubscriptionForm = () => {
             if (!subscribeResponse.ok) {
                 throw new Error(`Something went wrong. please try again!`);
             }
-            
-            const checkStatusResponse = await fetch('/api/check-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: userInfo.email }),
-            });
-            if (!checkStatusResponse.ok) {
-                throw new Error(`HTTP error! status: ${checkStatusResponse.status}`);
-            }
-            const data = await checkStatusResponse.json();
-            console.log('Success', data);
-            setStatus('success');
             
         } catch (error) {
             console.error('Subscription error:', error);
@@ -96,7 +83,12 @@ const SubscriptionForm = () => {
         </Modal.Header>
         <Modal.Body >  
             {status === 'pending' && (
-            <p>Subscription pending... Please check your email to confirm. Don't see it? Check Spam!</p>
+                <div>
+                    <p>Subscription pending... Please check your email to confirm. Don't see it? Check Spam!</p>
+                     {/* Render the EmailChecker component and pass the email */}
+                     <EmailChecker email={userInfo.email} />
+                </div>
+           
             )}
             {status === 'error' && <p style={{ color: 'red' }}>{errorMessage}</p>}
             {(status === 'idle' || status === 'error' || status === 'pending') && 

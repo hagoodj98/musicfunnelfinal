@@ -49,7 +49,13 @@ export async function POST(req, res) {
 // **Generate the WebSocket token only after successful Stripe session creation. This token is used to get the sessionToken from the user that initiated the websocket connection with the API Gateway. With that session token I will process it some way, shape or form.
 
         const wsToken = crypto.randomBytes(16).toString("hex");
-        await redis.set(`wsToken:${wsToken}`, sessionToken, "EX", 900); // 15-minute expiration
+        await redis.set(`wsToken:${wsToken}`, sessionToken, "EX", 300); // 5-minute expiration
+
+        //Extend sessionToken expiration if its about to expire
+        const sessionTTL = await redis.ttl(`session${sessionToken}`);
+        if (sessionTTL < 60) { //If session expires in less than a minute, extend it
+            await redis.expire(`session${sessionToken}`, 300); //Extend by 5 more minutes
+        }
 
         //Update Redis with checkout session initiation
         const updatedSessionData= JSON.stringify({

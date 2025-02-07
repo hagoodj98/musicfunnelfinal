@@ -1,8 +1,7 @@
-import { json } from "stream/consumers";
 import redis from "../../utils/redis";
 
-export default async function loader({params}) {
-    const { action, key } = params;
+export async function POST(req) {
+    const { action, key } = await req.json();
     try {
         let result = null;
         switch (action) {
@@ -10,14 +9,14 @@ export default async function loader({params}) {
                 result = await redis.get(key);
                 break;
             case 'set':
-                result = await redis.set(key, params.value);
+                result = await redis.set(key, req.body.value);
                 break;
             default:
                 throw new Error('Unsupported action');
         }
-        return { json: { result } };
+        return new Response(JSON.stringify({ result }), { status: 200 });
     } catch (error) {
         console.error('Redis Handler Error:', error);
-        throw error;
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }

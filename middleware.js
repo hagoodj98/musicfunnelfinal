@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 
 export async function middleware(req) {
     console.log("Middleware is running");
-    const sessionToken = req.cookies.get('sessionToken');
+    //This one-liner uses optional chaining to safely access the .value property of the cookie, 
+    const sessionToken = req.cookies.get('sessionToken')?.value;
     // Redirect if no session token is found
     if (!sessionToken) {
         console.log("No session token found, redirecting...");
         return NextResponse.redirect(new URL('/', req.url));
     }
     try {
-        const response = await fetch(`${req.nextUrl.origin}/api/redis-handler?action=get&key=session:${sessionToken}`);
+        const response = await fetch(`${req.nextUrl.origin}/api/redis-handler`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'get', key: `session:${sessionToken}` })
+        });
         if (!response.ok) throw new Error('Failed to fetch session data');
 
         const { result } = await response.json();

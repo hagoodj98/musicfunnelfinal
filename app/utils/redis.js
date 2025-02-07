@@ -13,6 +13,7 @@ const redis = new Redis({
         ca: process.env.REDIS_CA_PATH ? fs.readFileSync(process.env.REDIS_CA_PATH) : undefined
       } : undefined
 });
+
 export function logEnvVars() {
 console.log({
     port: process.env.REDIS_PORT,

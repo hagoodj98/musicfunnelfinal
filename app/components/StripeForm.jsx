@@ -4,12 +4,13 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useWebSocket } from "../utils/websocket";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const CHECKOUT_TTL = 900; //15 Minutes (matching wsToken expiration)
 
 const StripeForm = () => {
 
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState('');
-
+const [timeLeft, setTimeLeft] = useState(CHECKOUT_TTL);
 const [sessionToken, setSessionToken] = useState(null);
 //This is a customized hook called useWebSocket. It returns the send function and the current status immediately because this hook manages it own state.
 const {send, status} = useWebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKETURL}`);
@@ -21,7 +22,19 @@ const getCsrfToken = () => {
     return '';
 };
 useEffect(() => {
-    
+//Starting the countdown when component mounts
+    const timer = setInterval( () => {setTimeLeft(prev => {  //The setTimeLeft updates the timeLeft state of course. The setTimeLeft uses the previous value (prev) to ensure React processes updates correctly.
+        if (prev <= 1) { //Time Expired
+            clearInterval(timer); //Stops the countdown.
+            alert("Your session has expired");
+            window.location.href = "/landing"; // Redirect after session expires
+            return 0;
+        }
+        //Decreases timeLeft by 1 second
+        return prev - 1;
+    });
+}, 1000); //Runs the function every second (1000 ms).
+
     // Add event listener for before unload. Using the beforeunload event to warn users if they are about to leave during an active session. This doesn’t prevent them from leaving but can reduce accidental closures.
     const handleBeforeUnload = (event) => {
         if (loading) {
@@ -42,14 +55,18 @@ useEffect(() => {
     //Defining the heartbet function to let us know session is alive
    
     return () => {
-    // Clean up WebSocket and unload event listener on unmount
-       
-        window.removeEventListener('beforeunload', handleBeforeUnload);
+    // Clean up unload event listener and the timer on unmount
+        () => clearInterval(timer); // Cleanup timer on unmount
+        window.removeEventListener('beforeunload', handleBeforeUnload); //Remove the event listener
     };
 }, [sessionToken, status, send]); // Rerun effect when sessionToken changes
 
 //This handles the checkout session creation
 const handleCheckout = async () => {
+    if (timeLeft <= 0) {
+        alert("Your session has expired. Please restart the checkout process.");
+        return;
+    }
     setLoading(true);
     setError('');
     const csrfToken = getCsrfToken(); //Get CSRF from cookies
@@ -115,6 +132,7 @@ const handleCheckout = async () => {
             <div>
                 <p>price</p>
             </div>
+            <p>Time remaining: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}</p>
             <button className="bg-white" disabled={loading}  onClick={handleCheckout}>
                 {loading ? 'Redirecting to Checkout...' : 'Buy Fan Pack'}
             </button>
