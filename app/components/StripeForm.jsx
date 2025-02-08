@@ -1,65 +1,17 @@
 'use client';
-import { useEffect, useState, useRef } from "react";
+
+import { useEffect, useState } from "react";
 import { loadStripe } from '@stripe/stripe-js';
-import { useWebSocket } from "../utils/websocket";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 const CHECKOUT_TTL = 900; //15 Minutes (matching wsToken expiration)
 
-const StripeForm = () => {
+const StripeForm = ({rememberMe}) => {
 
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState('');
-const [timeLeft, setTimeLeft] = useState(CHECKOUT_TTL);
-const [sessionToken, setSessionToken] = useState(null);
-//This is a customized hook called useWebSocket. It returns the send function and the current status immediately because this hook manages it own state.
-const {send, status} = useWebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKETURL}`);
-// Function to get CSRF token from cookies
-const getCsrfToken = () => {
-    const value = `; ${document.cookie}`; // all subsequent cookies will be preceded by ;
-    const parts = value.split(`; csrfToken=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return '';
-};
-useEffect(() => {
-//Starting the countdown when component mounts
-    const timer = setInterval( () => {setTimeLeft(prev => {  //The setTimeLeft updates the timeLeft state of course. The setTimeLeft uses the previous value (prev) to ensure React processes updates correctly.
-        if (prev <= 1) { //Time Expired
-            clearInterval(timer); //Stops the countdown.
-            alert("Your session has expired");
-            window.location.href = "/landing"; // Redirect after session expires
-            return 0;
-        }
-        //Decreases timeLeft by 1 second
-        return prev - 1;
-    });
-}, 1000); //Runs the function every second (1000 ms).
 
-    // Add event listener for before unload. Using the beforeunload event to warn users if they are about to leave during an active session. This doesn’t prevent them from leaving but can reduce accidental closures.
-    const handleBeforeUnload = (event) => {
-        if (loading) {
-            const message = 'You have an ongoing transaction. Are you sure you want to leave?';
-            event.preventDefault();
-            event.returnValue = message;
-            return message;
-        }
-        if (status === 'connected') {
-            // Use `send` to initiate actions, like notifying server of client actions
-            send({ 
-                action: 'checkoutAborted', 
-                sessionToken: sessionToken
-            });
-        }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    //Defining the heartbet function to let us know session is alive
-   
-    return () => {
-    // Clean up unload event listener and the timer on unmount
-        () => clearInterval(timer); // Cleanup timer on unmount
-        window.removeEventListener('beforeunload', handleBeforeUnload); //Remove the event listener
-    };
-}, [sessionToken, status, send]); // Rerun effect when sessionToken changes
+// Function to get CSRF token from cookies
 
 //This handles the checkout session creation
 const handleCheckout = async () => {
@@ -77,53 +29,31 @@ const handleCheckout = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'CSRF-Token': csrfToken, //Include CSRF token in request headers
-            }
+            },
+            body: JSON.stringify({rememberMe})
         });
         if (!response.ok) {
             throw new Error('Network response was not Ok.');
         }
         const session = await response.json();
-        setSessionToken(session.sessionToken); // Store session token so the sendHeartbeat and handleBeforeUnload functions can have access to the same sessionToken. So it can process on its' end.
-      
-       // Send WebSocket message: Checkout Initiated and its sessionToken to the websocket client, that's already checking if there is a connection. 
-       
         if (session.id) {
-            if (status === 'connected') {
-                send({ 
-                    action: 'checkoutInitiatedAuth', 
-                    sessionToken: session.sessionToken,
-                    //The wsToken is used to authenticate once the websocket connection has been made. That way I can access the sessiontoken.
-                    wsToken: session.wsToken
-                });
-            }
-            
             //redirect user to Stripe checkout page
             const stripe = await stripePromise; //instance once the library is fully loaded and ready to interact with
             //The result variable will work as long as the session.id is present, which means that everything that happened within the session variable inside the create-checkout-session was successful.
             const result = await stripe.redirectToCheckout({ sessionId: session.id });
             //Even though a session ID is successfully created, there are scenarios where the redirection might fail: network interruptions, browser restrictions, or conflicts in JavaScript execution that might prevent the redirection from occurring as expected.
-           
             if (result.error) {
-                send({ action: 'checkoutFailed', sessionToken: session.sessionToken });
                 throw result.error;
             }
-           
         }
+        
         } catch (error) {
             console.error('Error during checkout:', error);
             setError('Failed to redirect to checkout. Please try again.');
-            setLoading(false);  
-            // Send WebSocket message: Checkout Failed
                 
         } finally {
             setLoading(false);
         }
-         // Display connection status
-        useEffect(() => {
-            if (status === 'disconnected') {
-                setError('WebSocket connection lost. Please check your network.');
-            }
-        }, [status]);
     };
 
   return (
@@ -132,7 +62,6 @@ const handleCheckout = async () => {
             <div>
                 <p>price</p>
             </div>
-            <p>Time remaining: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}</p>
             <button className="bg-white" disabled={loading}  onClick={handleCheckout}>
                 {loading ? 'Redirecting to Checkout...' : 'Buy Fan Pack'}
             </button>

@@ -45,13 +45,13 @@ export async function POST(req) {
             const csrfToken = crypto.randomBytes(24).toString('hex');
              // Generate CSRF token
             await redis.set(`session:${sessionToken}`, JSON.stringify({...sessionData, csrfToken }), 'EX', 3600);
-    //set session token in an HTTP-only cookie
+    //I have a cookie(sticker) (with its name, value, and instructions) and I needed to write all that information down in a specific format(into a string) so the website can understand it later. This string is then sent in the HTTP response headers with the Set-Cookie header.
             const sessionCookie = serializeCookie('sessionToken', sessionToken, {
-                httpOnly: true, //Cookie inaccesible tp JavaScript's Document.cookie API
-                secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production
-                path: '/',
-                maxAge: 3600, // 1 hour
-                sameSite: 'strict',
+                httpOnly: true, //Cookie inaccesible tp JavaScript's Document.cookie API. This cookie(sticker) is in a locked envelope that only the server can open.
+                secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production. When the website is in production (not development), the cookie is only sent over a secure (encrypted) connection, so others can’t easily peek at it.
+                path: '/',// This tells the cookie(sticker), “I belong everywhere in this place!”
+                maxAge: 3600, // The cookie will expire after 3600 seconds (which is one hour). After that, the sticker is no longer valid.
+                sameSite: 'strict',//With sameSite: 'strict', the cookie will only be sent if you are on the same site that set it, protecting it from being sent to other sites unintentionally.
             });
             //Set CSRF token in a separate cookie that's accesible to JavaScript
             const csrfCookie = serializeCookie('csrfToken', csrfToken, {
@@ -60,11 +60,13 @@ export async function POST(req) {
                 maxAge: 3600,
                 sameSite: 'strict'
             });
+
+            //Parsing a cookie means taking that string (from the HTTP request’s Cookie header) and converting it back into an object that your code can work with
            
             console.log(`Status Check Success: Session token issued for email: ${email}`);
             return new Response(JSON.stringify({ message: 'Session active', sessionToken: sessionToken }), {
                 status: 200,
-                headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }
+                headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }//This tells the browser, “Here are your stickers (cookies).”
             });
         } else {
             console.error('Status Check Error: Unauthorized access attempt for email:', email);

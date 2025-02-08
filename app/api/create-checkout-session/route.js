@@ -1,18 +1,20 @@
 import Stripe from "stripe";
 import redis from "../../utils/redis";
-import parseCookies from "../../utils/parseCookies";
-import { error } from "console";
+import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-export async function POST(req, res) {
+export async function POST(req) {
     try {
-        //Parse cookies to access the sessionToken
-        parseCookies(req);
-        const csrfTokenClient= req.headers['CSRF-Token'];
-        const sessionToken = req.cookies.sessionToken;
+        //This gets all available cookies
+        //This code is like opening your secret sticker collection and reading what’s on each sticker.
+        const cookieStore = cookies();
+        const sessionToken = cookieStore.get('sessionToken')?.value;//my session sticker/cookie tells the server who the user is.
+        const csrfToken = cookieStore.get('csrfToken')?.value;//Another secret sticker/cookie that helps protect against attacks.
+        
         if(!sessionToken) {
             return new Response(JSON.stringify({error: "Session token is required"}), {status: 401});
         }
+        //This redis key was generated after check-status verifed the subscription status
         const sessionDataString = await redis.get(`session:${sessionToken}`);
         //Whenever I retrieve existing data, it is always good practice to check if exists.
         if (!sessionDataString) {
@@ -20,8 +22,8 @@ export async function POST(req, res) {
         }
         const sessionData = JSON.parse(sessionDataString);
         //Validate CSRF token. If this passes,then the user can continue. 
-        if (csrfTokenClient !== sessionData.csrfToken) {
-            return new Response(JSON.stringify({error: 'Invalid CSRF token'}), {status: 403});
+        if (csrfToken !== sessionData.csrfToken) {
+            return new Response(JSON.stringify({error: 'Invalid CSRF token. Unauthorized! '}), {status: 403});
         }
         //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
@@ -46,15 +48,10 @@ export async function POST(req, res) {
             }
         });
         
-// **Generate the WebSocket token only after successful Stripe session creation. This token is used to get the sessionToken from the user that initiated the websocket connection with the API Gateway. With that session token I will process it some way, shape or form.
-
-        const wsToken = crypto.randomBytes(16).toString("hex");
-        await redis.set(`wsToken:${wsToken}`, sessionToken, "EX", 300); // 5-minute expiration
-
-        //Extend sessionToken expiration if its about to expire
-        const sessionTTL = await redis.ttl(`session${sessionToken}`);
+        //Extend sessionToken expiration if its about to expire. This time should be referencing the session lifespan once issued in /check-srtatus
+        const sessionTTL = await redis.ttl(`session:${sessionToken}`);
         if (sessionTTL < 60) { //If session expires in less than a minute, extend it
-            await redis.expire(`session${sessionToken}`, 300); //Extend by 5 more minutes
+            await redis.expire(`session:${sessionToken}`, 300); //Extend by 5 more minutes
         }
 
         //Update Redis with checkout session initiation
@@ -69,10 +66,8 @@ export async function POST(req, res) {
         await redis.multi()
             .set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600)
             .exec();
-
-        redis.publish('checkoutUpdates', JSON.stringify({ action: 'checkoutInitiated', sessionToken }));
         
-        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken, wsToken: wsToken}), {status: 200});
+        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken}), {status: 200});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         return new Response(JSON.stringify({error: 'Unable to create checkout session'}), {status: 500});

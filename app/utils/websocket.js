@@ -1,4 +1,33 @@
 //The purpose of this file to connect the server and the client. Whatever messages sent from the server, will be sent here, as long as the websocket connection is open.
+//This is a customized hook called useWebSocket. It returns the send function and the current status immediately because this hook manages it own state.
+//const {send, status} = useWebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKETURL}`);
+//import { useWebSocket } from "../utils/websocket";
+
+/*
+
+  if (status === 'connected') {
+            // Use `send` to initiate actions, like notifying server of client actions
+            send({ 
+                action: 'checkoutAborted', 
+                sessionToken: sessionToken
+            });
+        }
+
+
+
+
+                if (session.id) {
+            if (status === 'connected') {
+                send({ 
+                    action: 'checkoutInitiatedAuth', 
+                    sessionToken: session.sessionToken,
+                    //The wsToken is used to authenticate once the websocket connection has been made. That way I can access the sessiontoken.
+                    wsToken: session.wsToken
+                });
+            }
+            */
+
+
 
 import { useEffect, useState } from "react";
 
