@@ -51,14 +51,15 @@ export async function POST(req) {
                 secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production. When the website is in production (not development), the cookie is only sent over a secure (encrypted) connection, so others can’t easily peek at it.
                 path: '/',// This tells the cookie(sticker), “I belong everywhere in this place!”
                 maxAge: 3600, // The cookie will expire after 3600 seconds (which is one hour). After that, the sticker is no longer valid.
-                sameSite: 'strict',//With sameSite: 'strict', the cookie will only be sent if you are on the same site that set it, protecting it from being sent to other sites unintentionally.
+                sameSite: 'lax',//With sameSite: 'strict', the cookie will only be sent if you are on the same site that set it, protecting it from being sent to other sites unintentionally.
             });
             //Set CSRF token in a separate cookie that's accesible to JavaScript
             const csrfCookie = serializeCookie('csrfToken', csrfToken, {
+                httpOnly: true, // If you want it hidden from JS; remove if you need JS access
                 secure: process.env.NODE_ENV !== 'development',
                 path: '/',
                 maxAge: 3600,
-                sameSite: 'strict'
+                sameSite: 'lax'
             });
 
             //Parsing a cookie means taking that string (from the HTTP request’s Cookie header) and converting it back into an object that your code can work with

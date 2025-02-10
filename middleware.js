@@ -26,8 +26,8 @@ export async function middleware(req) {
             return NextResponse.redirect(new URL('/', req.url));
         }
         //Ensure users are redirected correctly after checkout
-        if ((req.nextUrl.pathname.includes('/landing/thankyou') || req.nextUrl.pathname.includes('/landing/cancel')) && !sessionData.checkoutCompleted) {
-            console.log("Redirecting because checkout was not completed or cancelled properly.");
+        if (req.nextUrl.pathname.includes('/landing/thankyou') && sessionData.checkoutStatus !== 'completed') {
+            console.log("Redirecting because checkout was not completed or canceled properly.");
             return NextResponse.redirect(new URL('/landing', req.url));
         }
         return NextResponse.next();

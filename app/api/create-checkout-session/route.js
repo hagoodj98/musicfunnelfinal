@@ -7,7 +7,7 @@ export async function POST(req) {
     try {
         //This gets all available cookies
         //This code is like opening your secret sticker collection and reading what’s on each sticker.
-        const cookieStore = cookies();
+        const cookieStore = await cookies();
         const sessionToken = cookieStore.get('sessionToken')?.value;//my session sticker/cookie tells the server who the user is.
         const csrfToken = cookieStore.get('csrfToken')?.value;//Another secret sticker/cookie that helps protect against attacks.
         
@@ -41,8 +41,8 @@ export async function POST(req) {
                 }
             ],
             mode: 'payment',
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/thankyou`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing/cancel`,
+            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}landing/thankyou`,
+            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}landing`,
             metadata: {
                 sessionToken: sessionToken //Storing session token in metadata for retrieval in webhook
             }

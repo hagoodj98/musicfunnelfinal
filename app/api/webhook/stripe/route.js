@@ -57,12 +57,11 @@ export async function POST(req) {
 */
 
 //Based on the type, the following code executes. I want access to the object because it has the metadata key, which is the sessionToken I set in /create-checkout-session
+console.log(event);
+
             switch (event.type) {
                 case 'checkout.session.completed':
                     await handleCheckoutSessionCompleted(event.data.object);
-                    break;
-                case 'payment_intent.canceled':
-                    await handlePaymentCanceled(event.data.object);
                     break;
 //This event is triggered when a Stripe Checkout Session expires. Typically, if the user doesn’t complete the session within the allotted time, the session will expire automatically.
                 case 'checkout.session.expired':
@@ -70,7 +69,7 @@ export async function POST(req) {
                     break;
                 default:
                     console.log(`Unhandled event type ${event.type}`);
-            }
+            } 
             return new Response(JSON.stringify({received: true}), { status: 200 });
         } catch (error) {
             console.error(`Webhook Error: ${error.message}`);
@@ -93,6 +92,8 @@ async function handleCheckoutSessionExpired(paymentIntent) {
 }
 //////////////////////////
 async function handleCheckoutSessionCompleted(paymentIntent) {
+    console.log(paymentIntent);
+
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in payment metadata");
         return;
@@ -109,17 +110,6 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     }
 }
 /////////////////////////
-//This is the event function that listens for if the user cancels the checkout. The paymentIntent parameter comes from the events' data object. At the beginning of the switch statement you can get an idea of what the payload coming from Stripe looks like
-async function handlePaymentCanceled(paymentIntent) {
-    if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
-        console.error("Missing sessionToken in payment metadata");
-        return;
-    }
-    const sessionToken = paymentIntent.metadata.sessionToken;
-    console.log(`Payment canceled for intent ${paymentIntent.id}`);
-    await updateSessionStatus(sessionToken, 'canceled');
-}
-////////////////////////
 
 //helper function to update the session status. This avoids code duplication and makes future changes easier. This function is called inside the event functions, and the event functions are called in the switch statements according to its case. This function takes two arguments, the sessionToken arugment comes from the events' payload(event.data.object). Inside of this object lies the sessionToken thats associated and responsible for the Stripe Form's initial render. The second argument comes from or is set in the event functions. Each event function checks if metadata exists, this is important as to keep track of who initiated the stripe form. If metadata exists, then extract the metadata's sessionToken and put it into the first parameter here. And based on which event function was called, depending on the switch statements, set the 2nd parameter to one word that describes the event, such as cancel, completed, expired. 
 async function updateSessionStatus(sessionToken, newStatus) {
@@ -144,6 +134,8 @@ async function updateSessionStatus(sessionToken, newStatus) {
 async function triggerZapier(sessionData) {
     try {
         const zapierWebhookURL= process.env.ZAPIER_WEBHOOK;
+        console.log('This is what is avaibale as session data. Data that is sent to Zapier in a payload.');
+        
         const payload = {
             email: sessionData.email,
             name: sessionData.name,
