@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 import redis from "../../../utils/redis";
 import axios from "axios";
+import { updateMailchimpAddress } from '../../../utils/updateMailchimpAddress';
+import { updateMailchimpTag } from '../../../utils/updateMailchimpTag';
 
 //Purpose: Next.js automatically parses incoming request bodies and converts them into JSON or a query object. For Stripe webhooks, I need to access the raw request body as a buffer to verify the webhook signature correctly. Disabling the default body parser lets you manually handle the incoming request data as raw bytes.
 export const config = {
@@ -93,67 +95,40 @@ async function handleCheckoutSessionExpired(paymentIntent) {
 //////////////////////////
 async function handleCheckoutSessionCompleted(paymentIntent) {
     console.log(paymentIntent);
-
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in payment metadata");
         return;
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Payment succeeded for ${paymentIntent.id}`);
-    // Update the session status in Redis to 'completed'
-    await updateSessionStatus(sessionToken, 'completed');
-     // Retrieve updated session data from Redis if needed (or use the original sessionData if available)
+    // Retrieve updated session data from Redis if needed (or use the original sessionData if available)
     const sessionDataString = await redis.get(`session:${sessionToken}`);
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
-        await triggerZapier(sessionData);
-    }
-}
-/////////////////////////
-
-//helper function to update the session status. This avoids code duplication and makes future changes easier. This function is called inside the event functions, and the event functions are called in the switch statements according to its case. This function takes two arguments, the sessionToken arugment comes from the events' payload(event.data.object). Inside of this object lies the sessionToken thats associated and responsible for the Stripe Form's initial render. The second argument comes from or is set in the event functions. Each event function checks if metadata exists, this is important as to keep track of who initiated the stripe form. If metadata exists, then extract the metadata's sessionToken and put it into the first parameter here. And based on which event function was called, depending on the switch statements, set the 2nd parameter to one word that describes the event, such as cancel, completed, expired. 
-async function updateSessionStatus(sessionToken, newStatus) {
-    //Take the sessionToken found in the metadata and get the redis key associated.
-    const sessionDataString = await redis.get(`session:${sessionToken}`);
-
-    //If it exists, then parse the JSON. Update the checkoutStatus from the parsed JSON and set it to the second parameter. Then update the redis with the newly tracked status based on interaction of the stripe form. 
-    if (sessionDataString) {
-        const sessionData = JSON.parse(sessionDataString);
-        sessionData.checkoutStatus = newStatus;
+        sessionData.checkoutStatus = 'completed';// Directly update the checkout status. This line of code is what middleware.js is checking for, the value. We store that value back in redis. 
+         
+        
+        // Save the updated session data back to Redis
         try {
             await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
         } catch (redisError) {
             console.error("Redis Error:", redisError);
         }
+         // ***** Call Mailchimp to update the mailing address *****. Extract shipping details and the email. Since I already know that shipping_details and the address exist, its always good to check if the properties exists so that there won't be any potential errors. Its almost similiar to lines 85 and 96. Mailchimp expects a JSON object. So looking at the payload of the checkout session complted event, we want to get the address object from the shipping_details property. In this conditional statement, if shipping_details and shipping_details.address exists, also check if sessiionData JSON has a key 'email' stored in Redis. Since I expect them to always have these properties, the paymentIntent.shipping_details.address and sessionData.email are the two parameters that go into the updateMailchimpAddress helper function that we imported in to make an API call to mailchimp. 
+        if (paymentIntent.shipping_details && paymentIntent.shipping_details.address && sessionData.email) {
+            await updateMailchimpAddress(sessionData.email, paymentIntent.shipping_details.address);
+        }
+        // /NEW: Update the subscriber's tag to "Fan Purchaser" *****
+        if (sessionData.email) {
+            await updateMailchimpTag(sessionData.email, 'Fan Purchaser', 'active');
+        }
     } else {
         console.warn(`No session data found for sessionToken: ${sessionToken}`);
     }
 }
+/////////////////////////
 
-// Helper function to trigger Zapier via an axios POST request
-async function triggerZapier(sessionData) {
-    try {
-        const zapierWebhookURL= process.env.ZAPIER_WEBHOOK;
-        console.log('This is what is avaibale as session data. Data that is sent to Zapier in a payload.');
-        
-        const payload = {
-            email: sessionData.email,
-            name: sessionData.name,
-            status: 'completed',
-            sessionToken: sessionData.sessionToken,
-        };
-        //This API post request is sending data to the zapier webhook url. The data that is being sent is the payload, and the configuration is letting the server know what type of data being sent. The configuration part is crucial because without it, the server might not know how to properly interpret it.
-        const response = await axios.post(zapierWebhookURL, payload, {
-            headers: {
-                'Content-Type': 'application/json' //This value indicates that the data being sent is in JSON format. This can be known as the label of the message(payload)
-            }
-        });
-        //For logging, taking a look at the response being sent to Zapier
-        console.log('Zapier response:', response.data);
-    } catch (error) {
-        console.error('Error triggering Zapier:', error.message);
-    }
-}
+
 export function GET() {
     return new Response('Stripe webhook endpoint is live', { status: 200 });
   }

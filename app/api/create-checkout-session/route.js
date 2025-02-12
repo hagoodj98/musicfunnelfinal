@@ -43,6 +43,10 @@ export async function POST(req) {
             mode: 'payment',
             success_url: `${process.env.NEXT_PUBLIC_SITE_URL}landing/thankyou`,
             cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}landing`,
+            billing_address_collection: 'required', //Set to 'required' to collect billing address
+            shipping_address_collection: {
+                allowed_countries: ['US'], // Specify the countries to which I am willing to ship
+            },
             metadata: {
                 sessionToken: sessionToken //Storing session token in metadata for retrieval in webhook
             }
