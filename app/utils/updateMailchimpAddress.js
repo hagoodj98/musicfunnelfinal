@@ -30,7 +30,7 @@ export async function updateMailchimpAddress(email, addressData) {
         console.log('Mailchimp address updated successfully:', response);
         
     } catch (error) {
-        console.error('Error updating Mailchimp address:', error);
+        console.error('Error updating Mailchimp address:', error.response);
         // I can also re-throw the error or handle it further if necessary.
     }
 

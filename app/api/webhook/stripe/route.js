@@ -1,8 +1,8 @@
 import Stripe from "stripe";
 import redis from "../../../utils/redis";
-import axios from "axios";
 import { updateMailchimpAddress } from '../../../utils/updateMailchimpAddress';
 import { updateMailchimpTag } from '../../../utils/updateMailchimpTag';
+import { updateSessionStatus } from '../../../utils/updateSessionStatus';
 
 //Purpose: Next.js automatically parses incoming request bodies and converts them into JSON or a query object. For Stripe webhooks, I need to access the raw request body as a buffer to verify the webhook signature correctly. Disabling the default body parser lets you manually handle the incoming request data as raw bytes.
 export const config = {
@@ -90,33 +90,40 @@ async function handleCheckoutSessionExpired(paymentIntent) {
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Checkout session expired for ${paymentIntent.id}`);
+
+    // Use the helper to update the checkout status to 'expired'
     await updateSessionStatus(sessionToken, 'expired');
 }
 //////////////////////////
 async function handleCheckoutSessionCompleted(paymentIntent) {
-    console.log(paymentIntent);
+    console.log(paymentIntent);//For debugging purposes
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in payment metadata");
         return;
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Payment succeeded for ${paymentIntent.id}`);
-    // Retrieve updated session data from Redis if needed (or use the original sessionData if available)
+
+    // Use the helper to update the checkout status to 'completed'
+    await updateSessionStatus(sessionToken, 'completed');// Directly update the checkout status. This line of code is what middleware.js is checking for, the value. We store that value back in redis. 
+
+    // Retrieve updated session data from Redis because we need to update a subscribers information like tag and mailing address. In order to do that, we have to get the updated redis checkoutStatus
     const sessionDataString = await redis.get(`session:${sessionToken}`);
     if (sessionDataString) {
         const sessionData = JSON.parse(sessionDataString);
-        sessionData.checkoutStatus = 'completed';// Directly update the checkout status. This line of code is what middleware.js is checking for, the value. We store that value back in redis. 
-         
-        
-        // Save the updated session data back to Redis
-        try {
-            await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', 3600);
-        } catch (redisError) {
-            console.error("Redis Error:", redisError);
-        }
          // ***** Call Mailchimp to update the mailing address *****. Extract shipping details and the email. Since I already know that shipping_details and the address exist, its always good to check if the properties exists so that there won't be any potential errors. Its almost similiar to lines 85 and 96. Mailchimp expects a JSON object. So looking at the payload of the checkout session complted event, we want to get the address object from the shipping_details property. In this conditional statement, if shipping_details and shipping_details.address exists, also check if sessiionData JSON has a key 'email' stored in Redis. Since I expect them to always have these properties, the paymentIntent.shipping_details.address and sessionData.email are the two parameters that go into the updateMailchimpAddress helper function that we imported in to make an API call to mailchimp. 
         if (paymentIntent.shipping_details && paymentIntent.shipping_details.address && sessionData.email) {
-            await updateMailchimpAddress(sessionData.email, paymentIntent.shipping_details.address);
+             // Format the address correctly for Mailchimp. Mailchimp expects an object with keys such as addr1,addr2, etc
+            const formattedAddress = {
+                addr1: paymentIntent.shipping_details.address.line1,
+                addr2: paymentIntent.shipping_details.address.line2 || "",
+                city: paymentIntent.shipping_details.address.city,
+                state: paymentIntent.shipping_details.address.state,
+                zip: paymentIntent.shipping_details.address.postal_code,
+                country: paymentIntent.shipping_details.address.country,
+            };
+            //This helper function gets the email, and the JSON object that mailchimp expects
+            await updateMailchimpAddress(sessionData.email, formattedAddress);
         }
         // /NEW: Update the subscriber's tag to "Fan Purchaser" *****
         if (sessionData.email) {
