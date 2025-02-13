@@ -39,7 +39,8 @@ export async function POST(req) {
     await addSubscriber(email, name);
    
     console.log('Adding subscriber to Mailchimp:', email);
-
+    
+//Using cryptographic methods (e.g., crypto.randomBytes and HMAC) ensures that the identifiers are secure.
     //Generate a salt for more security
     const salt = crypto.randomBytes(16).toString('hex');
     // Create an email hash

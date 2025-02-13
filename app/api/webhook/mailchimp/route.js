@@ -1,4 +1,14 @@
 
+/* This endpoint
+
+  •	Verifies the incoming email by matching its hash using the stored salt.
+	•	Retrieves the preliminary session data from Redis.
+	•	Updates the user’s status to “subscribed” in the session data.
+	•	Saves this updated session data back in Redis.
+*/
+
+
+
 import crypto from 'crypto';
 import redis from '../../../utils/redis';
 

@@ -1,6 +1,6 @@
 import Stripe from "stripe";
-import redis from "../../utils/redis";
 import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
+import { getSessionDataByToken, extendSessionTTLIfNeeded, updateSessionData, HttpError } from '../../utils/sessionHelpers';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export async function POST(req) {
@@ -11,24 +11,21 @@ export async function POST(req) {
         const sessionToken = cookieStore.get('sessionToken')?.value;//my session sticker/cookie tells the server who the user is.
         const csrfToken = cookieStore.get('csrfToken')?.value;//Another secret sticker/cookie that helps protect against attacks.
         
-        if(!sessionToken) {
-            return new Response(JSON.stringify({error: "Session token is required"}), {status: 401});
+        if (!sessionToken) {
+            throw new HttpError("Session token is required", 401);
         }
         //This redis key was generated after check-status verifed the subscription status
-        const sessionDataString = await redis.get(`session:${sessionToken}`);
-        //Whenever I retrieve existing data, it is always good practice to check if exists.
-        if (!sessionDataString) {
-            return new Response(JSON.stringify({error: "Session not found or expired"}), {status: 401})
-        }
-        const sessionData = JSON.parse(sessionDataString);
+        const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
+        
         //Validate CSRF token. If this passes,then the user can continue. 
         if (csrfToken !== sessionData.csrfToken) {
-            return new Response(JSON.stringify({error: 'Invalid CSRF token. Unauthorized! '}), {status: 403});
+            throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
+
         //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
         if (!priceId) {
-            return new Response(JSON.stringify({ error: 'Price ID is not configured'}), {status:500});
+            throw new HttpError('Price ID is not configured', 500);
         }
 
          // Define the checkout session
@@ -47,9 +44,8 @@ export async function POST(req) {
             shipping_address_collection: {
                 allowed_countries: ['US'], // Specify the countries to which I am willing to ship
             },
-            metadata: {
-                sessionToken: sessionToken //Storing session token in metadata for retrieval in webhook
-            }
+            //Storing session token in metadata for retrieval in webhook
+            metadata: { sessionToken }
         });
         
         //Extend sessionToken expiration if its about to expire. This time should be referencing the session lifespan once issued in /check-srtatus
@@ -58,22 +54,23 @@ export async function POST(req) {
             await redis.expire(`session:${sessionToken}`, 300); //Extend by 5 more minutes
         }
 
-        //Update Redis with checkout session initiation
-        const updatedSessionData= JSON.stringify({
+        //// Update session data with the stripeSessionId and checkoutStatus
+        const updatedSessionData = {
             ...sessionData, 
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated'
-         });
+        };
 // Save the updated session data back to Redis
 //No other process can modify the key between commands.
 //Ensures data consistency when handling session updates.
-        await redis.multi()
-            .set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600)
-            .exec();
-        
-        return new Response(JSON.stringify({id: session.id, sessionToken: sessionToken}), {status: 200});
+        await redis.multi().set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600).exec();
+
+        return new Response(JSON.stringify({id: session.id, sessionToken}), {status: 200});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
+        if (error instanceof HttpError) {
+            return new Response(JSON.stringify({ error: error.message }), { status: error.status });
+        }
         return new Response(JSON.stringify({error: 'Unable to create checkout session'}), {status: 500});
     }
 }

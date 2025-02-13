@@ -3,10 +3,14 @@
 
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import RememberMe from "./RememberMe";
+import Timer from "./Timer";
+
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const CHECKOUT_WINDOW = 600; // 10 minutes or whatever time you choose
 
-export default function CheckoutInitiator({ rememberMe }) {
+const CheckoutInitiator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,8 +22,9 @@ export default function CheckoutInitiator({ rememberMe }) {
       // Make the API call on the server (via your API route)
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rememberMe }),
+        headers: { 
+          "Content-Type": "application/json" 
+        },
       });
 
       if (!response.ok) {
@@ -38,13 +43,21 @@ export default function CheckoutInitiator({ rememberMe }) {
       setLoading(false);
     }
   };
+  const handleTimerExpire = () => {
+    alert("Your checkout session has expired. Please check your email for a new purchase link.");
+    // Optionally, you might redirect or update the UI here.
+    window.location.href = "/landing"; // refresh the landing page
+  };
 
   return (
     <div>
+      <Timer initialTime={CHECKOUT_WINDOW} onExpire={handleTimerExpire}/>
+      <RememberMe />
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <button onClick={handleCheckout} disabled={loading}>
         {loading ? "Redirecting..." : "Buy Fan Pack"}
       </button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
-}
+};
+export default CheckoutInitiator;
