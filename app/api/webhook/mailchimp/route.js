@@ -6,15 +6,11 @@
 	•	Updates the user’s status to “subscribed” in the session data.
 	•	Saves this updated session data back in Redis.
 */
-
-
-
 import crypto from 'crypto';
 import redis from '../../../utils/redis';
 
 export async function POST(req) {
   try {
-
     const body = await req.text(); //parse text body that is coming in from mailchimp
     const params = new URLSearchParams(body);
     //I am interested in the parameters type and body cause that will give me the current status of user and what email its associated with

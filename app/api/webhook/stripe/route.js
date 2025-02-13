@@ -1,9 +1,6 @@
 import Stripe from "stripe";
-import redis from "../../../utils/redis";
-import { updateMailchimpAddress } from '../../../utils/updateMailchimpAddress';
-import { updateMailchimpTag } from '../../../utils/updateMailchimpTag';
-import { updateSessionStatus } from '../../../utils/updateSessionStatus';
-
+import { updateMailchimpTag, updateMailchimpAddress } from '../../../utils/mailchimpHelpers';
+import { getSessionDataByToken, updateSessionData } from "../../../utils/sessionHelpers";
 //Purpose: Next.js automatically parses incoming request bodies and converts them into JSON or a query object. For Stripe webhooks, I need to access the raw request body as a buffer to verify the webhook signature correctly. Disabling the default body parser lets you manually handle the incoming request data as raw bytes.
 export const config = {
     api: {
@@ -22,10 +19,8 @@ export async function POST(req) {
 //Stripe sends a signature in the request headers of each webhook event. This signature is used to verify that the events sent to the webhook are legitimately from Stripe and not from a third party.This extracts the stripe-signature header from the incoming request, which is crucial for the next step.
             const sig= req.headers.get('stripe-signature');
             const webhookSecret= process.env.STRIPE_WEBHOOK_SECRET;
-            
             // Verify the webhook
             let event;
-
             try {
 //This method from the Stripe Node SDK takes three arguments. My endpoint's secret (stripe_webhook_secret), which I obtain from the Stripe dashboard. This secret is unique to each webhook endpoint and is used to generate and validate the signature. The function attempts to reconstruct the event using the provided body and signature along with my endpoint’s secret. If the signature does not match (indicating potential tampering or an issue in the transmission), an error is thrown. If it matches, it means the event is indeed from Stripe and hasn’t been altered during transmission.
                 event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
@@ -35,7 +30,6 @@ export async function POST(req) {
 // 401 Unauthorized: The signature is invalid
                 return new Response(`Webhook Error: ${error.message}`, { status: 401 })
             }
-            
 // Handle the event, now that at this point in the code i know the event or the incoming webhook is legit. My webhook is configured to listen for three different events and processes the event's object.
 
 /* The event or payload coming from Stripe looks something like this
@@ -57,7 +51,6 @@ export async function POST(req) {
 }
 ********************  
 */
-
 //Based on the type, the following code executes. I want access to the object because it has the metadata key, which is the sessionToken I set in /create-checkout-session
 console.log(event);
 
@@ -103,6 +96,10 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Payment succeeded for ${paymentIntent.id}`);
+
+    // Retrieve current session data (using your helper)
+    const sessionData = await getSessionDataByToken(sessionToken);
+
 
     // Use the helper to update the checkout status to 'completed'
     await updateSessionStatus(sessionToken, 'completed');// Directly update the checkout status. This line of code is what middleware.js is checking for, the value. We store that value back in redis. 
