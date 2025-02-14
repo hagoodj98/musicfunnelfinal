@@ -1,8 +1,6 @@
 import crypto from 'crypto';
 import redis from './redis';
 import { serialize as serializeCookie } from 'cookie';
-
-
 /**
  * Custom error class that includes an HTTP status code.
  */
@@ -12,7 +10,6 @@ export class HttpError extends Error {
       this.status = status;
     }
   }
-
 /**
  * Retrieve the email mapping from Redis.
  * @param {string} email 
@@ -22,7 +19,11 @@ export class HttpError extends Error {
 export async function getEmailMapping(email) {
     try {
       const mapping = await redis.get(`emailToHashMapping:${email}`);
-//Checking if mapping exists. Again /subscribe creates two caches, if emailToHashMapping does not exists at this point, then the user never entered any data.
+//Checking if mapping exists. Again /subscribe creates two caches, if emailToHashMapping does not exists at this point, then the user never entered any data...
+
+//This comment comes from /webhook/mailchimp;  
+
+//This checks if this email even exists. If not, then that means the user has not submitted any data. If the user did, then a salt along with the emailHash would have been generated and stored in the emailToHashMapping key
       if (!mapping) throw new HttpError('Mapping not found', 404);
       return JSON.parse(mapping);
     } catch (error) {
@@ -33,7 +34,6 @@ export async function getEmailMapping(email) {
         throw new HttpError(`Error retrieving email mapping: ${error.message}`, 500);
     }
   }
-
   /**
  * Retrieve session data using a session token.
  * @param {string} sessionToken 
@@ -76,14 +76,15 @@ export async function getSessionDataByHash(emailHash) {
     }
 }
 /**
- * Generate a new session token and CSRF token.
- * @returns {Object} An object containing both tokens.
+ * Generates a secure token and salt.
+ * @param {number} length - The number of bytes to use (default is 24).
+ * @returns {Object} An object containing the token and salt as hex strings.
  */
-export function generateTokens() {
-    const sessionToken = crypto.randomBytes(24).toString('hex');
-    const csrfToken = crypto.randomBytes(24).toString('hex');
-    return { sessionToken, csrfToken };
-}
+export function generateTokenAndSalt(length = 24) {
+    const token = crypto.randomBytes(length).toString('hex');
+    const salt = crypto.randomBytes(length).toString('hex');
+    return { token, salt };
+  }
 
 /**
  * Create a serialized cookie.
@@ -104,9 +105,7 @@ export function createCookie(name, value, options = {}) {
       ...options, //other configuration options
     });
  //Parsing a cookie means taking that string (from the HTTP request’s Cookie header) and converting it back into an object that your code can work with
-
   }
-
 
   /**
  * Update the session data in Redis.
@@ -115,6 +114,7 @@ export function createCookie(name, value, options = {}) {
  * @param {number} ttl - Time-to-live in seconds.
  * @throws {HttpError} 500 on Redis error.
  */
+//This function does not return anything, it just updates whats in Redis. The getSessionDataByToken helper function fetches what's been updated by updateSessionData   
 export async function updateSessionData(sessionToken, sessionData, ttl = 3600) {
     try {
         await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', ttl);
@@ -134,3 +134,5 @@ export async function extendSessionTTLIfNeeded(sessionToken, threshold = 60, ext
       await redis.expire(`session:${sessionToken}`, extendBy);
     }
   }
+
+  

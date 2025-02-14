@@ -1,4 +1,4 @@
-import { getEmailMapping, getSessionDataByHash, generateTokens, createCookie, updateSessionData, HttpError } from '../../utils/sessionHelpers';
+import { getEmailMapping, getSessionDataByHash, generateTokenandSalt, createCookie, updateSessionData, HttpError } from '../../utils/sessionHelpers';
 
 
 export async function POST(req) {
@@ -18,6 +18,9 @@ export async function POST(req) {
     if (sessionData.status !== 'subscribed') {
         throw new HttpError('Unauthorized access', 401);
     }
+    // Generate new session and CSRF tokens
+    const { sessionToken, csrfToken } = generateTokenandSalt();
+
     // Update session data with the CSRF token and store it in Redis
     await updateSessionData(sessionToken, { ...sessionData, csrfToken });
 

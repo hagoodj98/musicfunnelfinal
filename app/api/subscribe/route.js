@@ -42,7 +42,7 @@ export async function POST(req) {
     
 //Using cryptographic methods (e.g., crypto.randomBytes and HMAC) ensures that the identifiers are secure.
     //Generate a salt for more security
-    const salt = crypto.randomBytes(16).toString('hex');
+    const { salt } = await generateTokenandSalt(); 
     // Create an email hash
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 

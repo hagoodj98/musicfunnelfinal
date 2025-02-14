@@ -1,12 +1,13 @@
 import Stripe from "stripe";
 import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
-import { getSessionDataByToken, extendSessionTTLIfNeeded, updateSessionData, HttpError } from '../../utils/sessionHelpers';
+import { getSessionDataByToken, updateSessionData, HttpError } from '../../utils/sessionHelpers';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export async function POST(req) {
     try {
-        //This gets all available cookies
-        //This code is like opening your secret sticker collection and reading what’s on each sticker.
+//This gets all available cookies
+//This code is like opening your secret sticker collection and reading what’s on each sticker.
         const cookieStore = await cookies();
         const sessionToken = cookieStore.get('sessionToken')?.value;//my session sticker/cookie tells the server who the user is.
         const csrfToken = cookieStore.get('csrfToken')?.value;//Another secret sticker/cookie that helps protect against attacks.
@@ -14,21 +15,21 @@ export async function POST(req) {
         if (!sessionToken) {
             throw new HttpError("Session token is required", 401);
         }
-        //This redis key was generated after check-status verifed the subscription status
+//This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
         
-        //Validate CSRF token. If this passes,then the user can continue. 
+//Validate CSRF token. If this passes,then the user can continue. 
         if (csrfToken !== sessionData.csrfToken) {
             throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
 
-        //If the price ID ever changes in Stripe, my checkout will fail.
+//If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
         if (!priceId) {
             throw new HttpError('Price ID is not configured', 500);
         }
 
-         // Define the checkout session
+// Define the checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],    
             line_items: [
@@ -44,26 +45,24 @@ export async function POST(req) {
             shipping_address_collection: {
                 allowed_countries: ['US'], // Specify the countries to which I am willing to ship
             },
-            //Storing session token in metadata for retrieval in webhook
+//Storing session token in metadata for retrieval in webhook
             metadata: { sessionToken }
         });
         
-        //Extend sessionToken expiration if its about to expire. This time should be referencing the session lifespan once issued in /check-srtatus
+//Extend sessionToken expiration if its about to expire. This time should be referencing the session lifespan once issued in /check-srtatus
         const sessionTTL = await redis.ttl(`session:${sessionToken}`);
         if (sessionTTL < 60) { //If session expires in less than a minute, extend it
             await redis.expire(`session:${sessionToken}`, 300); //Extend by 5 more minutes
         }
 
-        //// Update session data with the stripeSessionId and checkoutStatus
+//// Update session data with the stripeSessionId and checkoutStatus
         const updatedSessionData = {
             ...sessionData, 
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated'
         };
-// Save the updated session data back to Redis
-//No other process can modify the key between commands.
-//Ensures data consistency when handling session updates.
-        await redis.multi().set(`session:${sessionToken}`, updatedSessionData, 'EX', 3600).exec();
+// Save the updated session data back to Redis. No other process can modify the key between commands. Ensures data consistency when handling session updates.
+        await updateSessionData(sessionToken, updatedSessionData, 3600);
 
         return new Response(JSON.stringify({id: session.id, sessionToken}), {status: 200});
     } catch (error) {
