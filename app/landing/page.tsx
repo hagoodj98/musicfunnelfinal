@@ -1,14 +1,13 @@
 
 import CheckoutInitiator from '../components/CheckoutInitiator.client';
-import SessionManager from '../components/SessionManager';
-
+import SessionManagerProvider from '../components/SessionManagerProvider';
 
 const LandingPage = () => {
-  //Set a 5-minute checkout window (300 seconds)
-
+  
   return (
     <div>
-      <SessionManager  />
+      {/* This client component will fetch the TTL and then render the SessionManager */}
+      <SessionManagerProvider />
       <h1>Landing Page</h1>
       <CheckoutInitiator />
       <p>All content goes here</p>
