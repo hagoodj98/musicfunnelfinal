@@ -81,9 +81,10 @@ export async function getSessionDataByHash(emailHash) {
  * @returns {Object} An object containing the token and salt as hex strings.
  */
 export function generateTokenAndSalt(length = 24) {
-    const token = crypto.randomBytes(length).toString('hex');
+    const sessionToken = crypto.randomBytes(length).toString('hex');
+    const csrfToken = crypto.randomBytes(length).toString('hex');
     const salt = crypto.randomBytes(length).toString('hex');
-    return { token, salt };
+    return { sessionToken, csrfToken, salt };
   }
 
 /**
