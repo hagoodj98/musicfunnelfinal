@@ -1,6 +1,6 @@
 
 import CheckoutInitiator from '../components/CheckoutInitiator.client';
-
+import SessionManager from '../components/SessionManager';
 
 
 const LandingPage = () => {
@@ -8,6 +8,7 @@ const LandingPage = () => {
 
   return (
     <div>
+      <SessionManager  />
       <h1>Landing Page</h1>
       <CheckoutInitiator />
       <p>All content goes here</p>

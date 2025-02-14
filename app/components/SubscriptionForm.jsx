@@ -19,6 +19,7 @@ const SubscriptionForm = () => {
         name: "",
         email: ""
     });
+    const [rememberMe, setRememberMe]= useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [status, setStatus] = useState('idle')
     const [lgShow, setLgShow] = useState(false);
@@ -43,7 +44,8 @@ const SubscriptionForm = () => {
                 },
                 body: JSON.stringify({
                     name: userInfo.name,
-                    email: userInfo.email
+                    email: userInfo.email,
+                    rememberMe: rememberMe
                 })
             });
             if (!subscribeResponse.ok) {
@@ -115,6 +117,9 @@ const SubscriptionForm = () => {
                         },
                 }} 
                 type='email' name='email' label="Email" value={userInfo.email} onChange={handleChange}/>
+                <label>
+                    <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/>Remember Me
+                </label>
                 <Button variant="outlined" type='submit'>Subscribe</Button>
             </Form>
             )}

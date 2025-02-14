@@ -3,13 +3,17 @@ import { getEmailMapping, getSessionDataByHash, generateTokenandSalt, createCook
 
 export async function POST(req) {
     try {
-    //This retrieves the email that was submitted during the intital subscription process. 
-    const { email } = await req.json();
-    console.log(email);
-
+    //This retrieves the email that was submitted during the intital subscription process along with a flag "rememberMe". 
+    const { email, rememberMe } = await req.json();
+    
+    
     if (!email) {
         throw new HttpError('Email parameter is required', 400);
     }
+//If the radio button is checked then ttl will equal 604800. I would use the value of the ttl when updating the sessionData using updateSessionData. That way, the session stored in Redis will expire according to the rememberMe setting.
+
+    const ttl = rememberMe ? 604800 : 3600; // 1 week vs 1 hour
+
     // Get the email mapping and corresponding session data
     const mapping = await getEmailMapping(email);
     const { emailHash } = mapping;
@@ -18,15 +22,16 @@ export async function POST(req) {
     if (sessionData.status !== 'subscribed') {
         throw new HttpError('Unauthorized access', 401);
     }
+        
     // Generate new session and CSRF tokens
     const { sessionToken, csrfToken } = generateTokenandSalt();
 
     // Update session data with the CSRF token and store it in Redis
-    await updateSessionData(sessionToken, { ...sessionData, csrfToken });
+    await updateSessionData(sessionToken, { ...sessionData, csrfToken }, ttl);
 
-    // Create cookies for session and CSRF tokens
-    const sessionCookie = createCookie('sessionToken', sessionToken);
-    const csrfCookie = createCookie('csrfToken', csrfToken);
+    // Create cookies for session and CSRF tokens. The ttl value is based on if subscriber clicked the rememberMe feature.
+    const sessionCookie = createCookie('sessionToken', sessionToken, { maxAge: ttl } );
+    const csrfCookie = createCookie('csrfToken', csrfToken, { maxAge: ttl });
 
     console.log(`Status Check Success: Session token issued for email: ${email}`);
 

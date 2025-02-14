@@ -49,11 +49,6 @@ export async function POST(req) {
             metadata: { sessionToken }
         });
         
-//Extend sessionToken expiration if its about to expire. This time should be referencing the session lifespan once issued in /check-srtatus
-        const sessionTTL = await redis.ttl(`session:${sessionToken}`);
-        if (sessionTTL < 60) { //If session expires in less than a minute, extend it
-            await redis.expire(`session:${sessionToken}`, 300); //Extend by 5 more minutes
-        }
 
 //// Update session data with the stripeSessionId and checkoutStatus
         const updatedSessionData = {
