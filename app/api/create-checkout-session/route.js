@@ -30,6 +30,9 @@ export async function POST(req) {
             throw new HttpError('Price ID is not configured', 500);
         }
 
+        // Calculate expiration timestamp: 30 minutes from now in Unix time (seconds). Math.floor(Date.now() / 1000) gets the current time in seconds (Unix timestamp). Adding 30 * 60 (which equals 1800 seconds) sets the expiration 30 minutes into the future.
+        const expiresAt = Math.floor(Date.now() / 1000) + (30 * 60);
+
 // Define the checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],    
@@ -46,8 +49,11 @@ export async function POST(req) {
             shipping_address_collection: {
                 allowed_countries: ['US'], // Specify the countries to which I am willing to ship
             },
+            expires_at: expiresAt, //When I want this session to expire automatically
+            metadata: { 
+                sessionToken: sessionToken, ////Storing session token in metadata for retrieval in webhook. Including the old cookie in the metadata allows me to identify the original session that initiated the checkout. This is especially useful in the webhook, where i might need to correlate the Stripe session with the user’s session data in Redis.
 
-            metadata: { sessionToken }//Storing session token in metadata for retrieval in webhook. Including the old cookie in the metadata allows me to identify the original session that initiated the checkout. This is especially useful in the webhook, where i might need to correlate the Stripe session with the user’s session data in Redis.
+            }
         });
 //token rotation (more secure): Since i am creating new cookies, might as well generate new tokens
         const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();

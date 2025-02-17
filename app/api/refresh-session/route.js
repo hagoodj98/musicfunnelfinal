@@ -7,9 +7,13 @@ export async function POST(req) {
 //Get current cookies (sessionToken and CSRF)
         const cookieStore =  await cookies();
         const sessionToken = cookieStore.get('sessionToken')?.value; //It always good to get the value safely
+        const csrfTokenFromCookie = cookieStore.get('csrfToken')?.value;
 
         if (!sessionToken) {
             throw new HttpError("Session token is required", 401);
+        }
+        if (!csrfTokenFromCookie) {
+            throw new HttpError("CSRF token is required", 401);
         }
 
 // Retrieve current session data. The way to get the current session is by using the getSessionDataByToken
@@ -17,6 +21,11 @@ export async function POST(req) {
         if (!currentSessionData) {
             throw new HttpError("Session not found or expired", 401);
         }
+// Verify that the CSRF token from the cookie matches the one stored in session data
+        if (csrfTokenFromCookie !== currentSessionData.csrfToken) {
+            throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
+        }
+      
         //This line considers if a user clicked the rememberMe button, if so, then we would not want to refresh the session for only an hour simply becasue the user wanted the application to remmeber them. So we would set the ttl for about a week instead. If their is no  rememberMe flag, then yes, the session refreshes for another hour.
         const ttl = currentSessionData.rememberMe ? 604800 : 3600;
 
