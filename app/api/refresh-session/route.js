@@ -21,7 +21,7 @@ export async function POST(req) {
         if (!currentSessionData) {
             throw new HttpError("Session not found or expired", 401);
         }
-// Verify that the CSRF token from the cookie matches the one stored in session data
+// Verify that the CSRF token from the cookie matches the one stored in session data. The cookies are either the first set that were issued in /check-status or it could be a new set of cookies if user refreshed the session.
         if (csrfTokenFromCookie !== currentSessionData.csrfToken) {
             throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
         }

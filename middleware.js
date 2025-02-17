@@ -8,6 +8,7 @@ export async function middleware(req) {
     // Redirect if no session token is found. This means that the cookie called sessionToken which I set in /check-status has expired or invalid. Redirect the user back to squeeze page
     if (!sessionToken) {
         console.log("No session token found, redirecting...");
+        
         return NextResponse.redirect(new URL('/', req.url));
     }
     //If the cookie does exist, whatever the next url is ${req.nextUrl.origin}, go ahead and make a request to the redis-handler since this middleware only exists in the edge environment. Meaning, node is very limtied. So we have to make a request to an endpoint that can handle node normally.
@@ -48,7 +49,12 @@ When you go to the club gate (which is like the middleware), the guard asks you 
 //Ensure users are redirected correctly after checkout. If a user ever try to include /landing/thankyou in the url and the sessionData, coming from the sessionToken i just verified; AND the checkoutStatus is not set to completed, then redirect the user back to /landing. The checkoutStatus property is updated after user completes the stripe form. I have a stripe webhook that lets me know if user completed-checkout-session. If so, then update the checkoutStatus to completed using redis.
         if (req.nextUrl.pathname.includes('/landing/thankyou') && sessionData.checkoutStatus !== 'completed') {
             console.log("Redirecting because checkout was not completed or canceled properly.");
-            return NextResponse.redirect(new URL('/landing', req.url));
+            const redirectUrl = new URL('/landing', req.url);
+            if (sessionData.message) {
+                //This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
+                redirectUrl.searchParams.append('msg', encodeURIComponent(sessionData.message));
+            }
+            return NextResponse.redirect(redirectUrl);
         }
         return NextResponse.next();
     } catch (error) {

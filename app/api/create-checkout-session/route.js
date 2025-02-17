@@ -15,6 +15,9 @@ export async function POST(req) {
         if (!sessionToken) {
             throw new HttpError("Session token is required", 401);
         }
+        if (!csrfToken) {
+            throw new HttpError("CSRF token is required", 401);
+        }
 //This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
         
@@ -57,21 +60,21 @@ export async function POST(req) {
         });
 //token rotation (more secure): Since i am creating new cookies, might as well generate new tokens
         const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();
-//// Update session data with the stripeSessionId and checkoutStatus
+//// Update session data with the stripeSessionId and checkoutStatus and the new csrf token that was rotated for extra security. Read the following comments on why this was done
         const updatedSessionData = {
             ...sessionData, 
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated',
             csrf: newCsrfToken
         };
-// Save the updated session data back to Redis. No other process can modify the key between commands. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me.”
+// Save the updated session data back to Redis. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me” which also requires updating the cookie. Which means we can create a new set of cookies because the ttl that we got if the users selected the rememberMe means no only do we update the session with the new ttl, but also set the cookies with the same ttl. Because we do not want the cookie to expire before the session data. That is why we are generating new cookies. We want the session data and the cookies in sync
         await updateSessionData(newSessionToken, updatedSessionData, ttl);
 
-        //When you rotate the token (generate a new value) and then send a new cookie with that same name, the browser overwrites the old cookie with the new value. This means that any attacker who might have captured the old token no longer has a valid token because it’s been replaced.
+        //When you rotate the token (generate a new value) and then send a new cookie with that same name, the browser overwrites the old cookie with the new value. This means that any attacker who might have captured the old token no longer has a valid token because it’s been replaced. The new csrf token comes into play for subsequent request. Before any future state changes in this application will check for this new csrf first, not the old csrf token. This help prevent CSRF attacks too.
         const sessionCookie = createCookie('sessionToken', newSessionToken, {maxAge: ttl, sameSite: 'lax'});
         const csrfCookie = createCookie('csrf', newCsrfToken, {maxAge: ttl, sameSite: 'lax'});
 
-        return new Response(JSON.stringify({id: session.id, sessionToken}), {status: 200, headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }});
+        return new Response(JSON.stringify({id: session.id}), {status: 200, headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         if (error instanceof HttpError) {
