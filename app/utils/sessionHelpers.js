@@ -66,7 +66,9 @@ export async function getSessionDataByToken(sessionToken) {
 export async function getSessionDataByHash(emailHash) {
     try {
       const sessionDataString = await redis.get(`session:${emailHash}`);
-      if (!sessionDataString) throw new HttpError('Session not found', 404);
+      if (!sessionDataString) {
+        throw new HttpError('Session not found', 404);
+      } 
       return JSON.parse(sessionDataString);
     } catch (error) {
         if (error instanceof HttpError) {
@@ -102,12 +104,11 @@ export function createCookie(name, value, options = {}) {
       secure: process.env.NODE_ENV !== 'development', //Use secure cookies in production. When the website is in production (not development), the cookie is only sent over a secure (encrypted) connection, so others can’t easily peek at it.
       path: '/', // This tells the cookie(sticker), “I belong everywhere in this place!”
       maxAge: 3600, // The cookie will expire after 3600 seconds (which is one hour). After that, the sticker is no longer valid.
-      sameSite: 'strict',//With sameSite: 'strict', the cookie will only be sent if you are on the same site that set it, protecting it from being sent to other sites unintentionally.
+      sameSite: 'strict',//With sameSite: 'strict', the cookie will only be sent if you are on the same site that set it, protecting it from being sent to other sites unintentionally. The cookie is only sent with requests originating from the same site that set the cookie. This is very secure because it prevents the cookie from being sent on cross-site requests.
       ...options, //other configuration options
     });
  //Parsing a cookie means taking that string (from the HTTP request’s Cookie header) and converting it back into an object that your code can work with
   }
-
   /**
  * Update the session data in Redis.
  * @param {string} sessionToken 
@@ -116,7 +117,7 @@ export function createCookie(name, value, options = {}) {
  * @throws {HttpError} 500 on Redis error.
  */
 //This function does not return anything, it just updates whats in Redis. The getSessionDataByToken helper function fetches what's been updated by updateSessionData   
-export async function updateSessionData(sessionToken, sessionData, ttl = 3600) {
+export async function updateSessionData(sessionToken, sessionData, ttl) {
     try {
         await redis.set(`session:${sessionToken}`, JSON.stringify(sessionData), 'EX', ttl);
     } catch (error) {

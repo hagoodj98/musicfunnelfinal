@@ -4,6 +4,7 @@ const EmailConfirmationChecker = ({ email }) => {
   const [status, setStatus] = useState("waiting");
   const [error, setError] = useState("");
 
+
   useEffect(() => {
     console.log("EmailConfirmationChecker mounted with email:", email);
     // Poll every 10 seconds
@@ -45,7 +46,7 @@ const EmailConfirmationChecker = ({ email }) => {
 
   return (
     <div>
-      {status === "waiting" && <p>Please confirm your email. Waiting for confirmation...</p>}
+      {status === "waiting" && <p>Subscription pending... Please check your email to confirm. Don't see it? Check Spam!</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );

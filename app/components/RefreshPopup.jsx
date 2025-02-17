@@ -32,7 +32,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
         setSuccess(null);
 
         try {
-            //If the user clicks “Refresh Session,” the popup makes an API call to refresh the session.
+            //If the user clicks “Refresh Session,” the popup makes an API call to refresh the session.. This route regenerates both tokens, updated in redis and creates two new cookies off those tokens. We are not sending a body because we plan to get the key that is already stored in redis. We just grab the existing cookies and proceed 
             const response = await fetch("/api/refresh-session", {
                 method: "POST",
             });
@@ -45,6 +45,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
             //Hiding popup on success
             onClose();
             setSuccess(data.message);
+            //This reloads the whole /landing
             window.location.reload();
             // On successful refresh, hide the popupz
         } catch (error) {
@@ -57,6 +58,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
 
     return (
         <div className="modal show" style={{ display: 'block', position: 'initial' }}>
+          {/*The onHide is a prop expected by the React-Bootstrap Modal. It is a callback that is triggered when the user tries to close the modal (for example, by clicking the close button in the header). In my code, we pass our onClose function to onHide, so that whether the user clicks the close icon or the “Nope!” button, the same function (onClose) is called to hide the popup. */}
           <Modal.Dialog show onHide={onClose} backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
               <Modal.Title>Session Expire Soon</Modal.Title>
@@ -64,6 +66,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
             <Modal.Body>
                 <p>Your session will expire {timeLeft} seconds.</p>
                 <p>Would you like to refresh your session?</p>
+                {/* This error condition comes from the API  request to /refresh-session. If something wrong happens in the endpoint, then this error shows */}
                 {error && <p style={{ color: "red" }}>Error: {error}</p>}
                 {success && <p style={{ color: "green" }}>{success}</p>}
             </Modal.Body>

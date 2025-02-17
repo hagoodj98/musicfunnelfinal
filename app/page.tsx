@@ -37,6 +37,7 @@ export default function Home () {
             <div className='tw-flex tw-items-center'>
               <span className=' tw-text-4xl tw-mx-auto tw-my-7'>👇</span>
             </div>
+            {/* This is where everything starts. Regarding the backend logic. We start by rendering the Subscription Form*/}
             <Form />
           </div>
         </div>

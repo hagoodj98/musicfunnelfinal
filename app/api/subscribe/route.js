@@ -3,8 +3,7 @@ import { mailchimpClient } from '../../utils/mailchimp';
 import Bottleneck from 'bottleneck';
 import redis from '../../utils/redis';
 import { validateEmail } from '../../utils/validateEmail';
-
-
+import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers';
 // Bottleneck limiter configuration
 const limiter = new Bottleneck({
   maxConcurrent: 1, // Only one function runs at a time. Only one call to the wrapped function will execute at any given moment.
@@ -46,7 +45,7 @@ export async function POST(req) {
     
 //Using cryptographic methods (e.g., crypto.randomBytes and HMAC) ensures that the identifiers are secure.
 //Generate a salt for more security
-    const { salt } = await generateTokenandSalt(); 
+    const { salt } = generateTokenAndSalt(); 
 // Create an email hash
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
