@@ -9,6 +9,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
+import MessageNotify from './MessageNotify';
+
 // Import the EmailChecker component
 import EmailChecker from './EmailConfirmationChecker';
 
@@ -75,6 +77,8 @@ const SubscriptionForm = () => {
 
   return (
     <div className='tw-flex '>
+        <MessageNotify />
+        
         <Button onClick={() => setLgShow(true)} className=' tw-bg-secondary tw-p-2 tw-text-white tw-w-2/5 tw-mx-auto tw-text-xl'>Join The Family!</Button>
         <Modal
         size="lg"
@@ -101,6 +105,9 @@ const SubscriptionForm = () => {
             {(status === 'idle' || status === 'error' || status === 'pending') && 
             (
             <Form onSubmit={handleSubmit}>
+                 <div>
+            
+        </div>
                 <TextField fullWidth required id="outlined-required" slotProps={{
                 input: {
                 endAdornment: (

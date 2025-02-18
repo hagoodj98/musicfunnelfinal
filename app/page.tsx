@@ -5,9 +5,13 @@ import Button from '@mui/material/Button';
 import Me from '../public/IMG_1856(1).jpg';
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
+import FindMe from './components/FindMe';
+
 export default function Home () {
   return (
+   
     <div className="tw-bg-center ">
+       <FindMe />
       <div className='tw-container tw-mx-auto'>
         <div className='tw-py-20'>
           <h1 className='tw-text-center  tw-my-7 tw-text-white'>I'M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST 50 FANS, <span className='tw-text-secondary'>ABSOLUTELY FREE!</span></h1>
