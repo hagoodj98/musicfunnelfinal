@@ -13,7 +13,6 @@ import { getEmailMapping, HttpError, updateSessionData } from '../../../utils/se
 
 export async function POST(req) {
   try {
-
     const body = await req.text(); //parse text body that is coming in from mailchimp
     const params = new URLSearchParams(body);
     //I am interested in the parameters type and body cause that will give me the current status of user and what email its associated with
@@ -47,11 +46,12 @@ export async function POST(req) {
     }
     //Parse the session data into a sessionData JSON object to get the stored salt and update the status to subscribed
     const sessionData = JSON.parse(sessionDataString); 
+    const ttl = sessionData.rememberMe ? 604800 : 3600; 
     // Update the session data with the new status
     sessionData.status = 'subscribed';
     // Store the updated session data back in Redis with the new status. All that is left is for route check-status to check the status before issuing tokens
     // Use a multi/exec block to update the session data and delete the preliminary key atomically
-    await redis.multi().set(`session:${emailHash}`, JSON.stringify(sessionData), 'EX', 3600).del(`prelimSession:${emailHash}`).exec();
+    await redis.multi().set(`session:${emailHash}`, JSON.stringify(sessionData), 'EX', ttl).del(`prelimSession:${emailHash}`).exec();
     
     console.log(`Webhook Success: Subscription confirmed for email: ${email}`);
     return new Response(JSON.stringify({ status: 'subscribed', details: sessionData }), { status: 200 });

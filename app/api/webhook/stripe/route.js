@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { updateMailchimpTag, updateMailchimpAddress } from '../../../utils/mailchimpHelpers';
 import { getSessionDataByToken, updateSessionData } from "../../../utils/sessionHelpers";
+import { HttpError } from "../../../utils/sessionHelpers";
 //Purpose: Next.js automatically parses incoming request bodies and converts them into JSON or a query object. For Stripe webhooks, I need to access the raw request body as a buffer to verify the webhook signature correctly. Disabling the default body parser lets you manually handle the incoming request data as raw bytes.
 export const config = {
     api: {
@@ -64,11 +65,15 @@ export async function POST(req) {
                 break;
             default:
                 console.log(`Unhandled event type ${event.type}`);
+                return new Response(JSON.stringify({message: 'Event type not handled'}), {status:200});
         } 
         return new Response(JSON.stringify({received: true}), { status: 200 });
     } catch (error) {
         console.error(`Webhook Error: ${error.message}`);
-            // 500 Internal Server Error: Something went wrong on our end.
+    // 500 Internal Server Error: Something went wrong on our end.
+        if (error instanceof HttpError) {
+            return new Response(JSON.stringify({ error: error.message }), { status: error.status });
+        }
         return new Response(`Webhook Error: ${error.message}`, {status: 500 });
     }
     }
@@ -79,7 +84,7 @@ export async function POST(req) {
 async function handleCheckoutSessionExpired(paymentIntent) {
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in checkout session metadata");
-        return;
+       
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Checkout session expired for ${paymentIntent.id}`);
@@ -106,7 +111,7 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     console.log(paymentIntent);//For debugging purposes
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in payment metadata");
-        return;
+        throw new HttpError('Missing sessionToken in payment metadata"', 400);
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Payment succeeded for ${paymentIntent.id}`);

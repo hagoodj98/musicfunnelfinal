@@ -10,23 +10,20 @@ export async function POST(req) {
         const csrfTokenFromCookie = cookieStore.get('csrfToken')?.value;
 
         if (!sessionToken) {
-            throw new HttpError("Session token is required", 401);
+            throw new HttpError("Session token is required", 400);
         }
         if (!csrfTokenFromCookie) {
-            throw new HttpError("CSRF token is required", 401);
+            throw new HttpError("CSRF token is required", 400);
         }
 
 // Retrieve current session data. The way to get the current session is by using the getSessionDataByToken
         const currentSessionData = getSessionDataByToken(sessionToken);
-        if (!currentSessionData) {
-            throw new HttpError("Session not found or expired", 401);
-        }
 // Verify that the CSRF token from the cookie matches the one stored in session data. The cookies are either the first set that were issued in /check-status or it could be a new set of cookies if user refreshed the session.
         if (csrfTokenFromCookie !== currentSessionData.csrfToken) {
             throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
         }
       
-        //This line considers if a user clicked the rememberMe button, if so, then we would not want to refresh the session for only an hour simply becasue the user wanted the application to remmeber them. So we would set the ttl for about a week instead. If their is no  rememberMe flag, then yes, the session refreshes for another hour.
+//This line considers if a user clicked the rememberMe button, if so, then we would not want to refresh the session for only an hour simply becasue the user wanted the application to remmeber them. So we would set the ttl for about a week instead. If their is no  rememberMe flag, then yes, the session refreshes for another hour.
         const ttl = currentSessionData.rememberMe ? 604800 : 3600;
 
 //Generate new tokens (both session and CSRF). I assigned values to the existing properties provided by the generateTokenAndSalt so its clear which values are being returned and used. For example, newSessionToken contains the generated session token. All I did was set it to a property so I can use 
@@ -37,7 +34,6 @@ export async function POST(req) {
             ...currentSessionData,
             csrfToken: newCsrfToken,
         };
-
 
 //So that i generate a new session token and csrf token, I want to assign the updated information to the newly created sessionToken similar to how we did it through /check-status. What we updated was a new CSRF token along with any other existing data feom the old session token.
         await updateSessionData(newSessionToken, updatedSessionData, ttl);

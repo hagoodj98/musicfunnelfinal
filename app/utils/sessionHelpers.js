@@ -4,9 +4,22 @@ import { serialize as serializeCookie } from 'cookie';
 /**
  * Custom error class that includes an HTTP status code.
  * The HttpError class is a custom error type that extends JavaScript’s built‑in Error class. Its purpose is to include an HTTP status code along with the error message so that when you catch an error, you know not only what went wrong but also what HTTP status should be sent in the response.
+ * 
+ * When handling errors: for reference
+ *  400 Bad Request
+    -The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
+
+    401 Unauthorized
+    -Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response.
+
+    403 Forbidden
+    -The client does not have access rights to the content; that is, it is unauthorized, so the server is refusing to give the requested resource. Unlike 401 Unauthorized, the client's identity is known to the server.
+
+    404 Not Found
+    -The server cannot find the requested resource. In the browser, this means the URL is not recognized. In an API, this can also mean that the endpoint is valid but the resource itself does not exist. Servers may also send this response instead of 403 Forbidden to hide the existence of a resource from an unauthorized client. This response code is probably the most well known due to its frequent occurrence on the web.
  */
 export class HttpError extends Error {
-  //message: A string that describes the error (e.g., “Mapping not found”).status: An HTTP status code (e.g., 404 or 500) that indicates the type of error.	Usage: When you throw a new HttpError, you can then catch it later and use the status property to set the appropriate HTTP status in your response.
+  //message: A string that describes the error (e.g., “Mapping not found”).status: An HTTP status code (e.g., 404 or 500) that indicates the type of error.	Usage: When you throw a new HttpError, you can then catch it later and use the status property to set the appropriate HTTP status in your response. It allows you to cleanly manage errors with both a message and an HTTP status code.
     constructor(message, status) {
       super(message);      // Calls the parent Error class constructor with the message.
       this.status = status; // Sets a custom property 'status' that holds the HTTP status code.
@@ -48,7 +61,7 @@ export async function getSessionDataByToken(sessionToken) {
       const sessionDataString = await redis.get(`session:${sessionToken}`);
          //Whenever I retrieve existing data, it is always good practice to check if exists.
       if (!sessionDataString){
-        throw new HttpError('Session not found or expired', 401);
+        throw new HttpError('Session not found or expired', 404);
       } 
       return JSON.parse(sessionDataString); //// Now I have access to `email`, `name`, `status`
     } catch (error) {

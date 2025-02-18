@@ -18,12 +18,11 @@ export async function POST(req) {
 
   // Validate email is provided and in proper format
   if (!email) {
-    return new Response(JSON.stringify({ error: 'Email is required' }), { status: 400 });
+    throw new HttpError('Email is required', 400);
   }
 
   if (!validateEmail(email)) {
-    console.error(`Invalid email format for email: ${email}`);
-    return new Response(JSON.stringify({ error: 'Invalid email format' }), { status: 400 });
+    throw new HttpError('Invalid email format for email', 400);
   }
   try {
     console.log(`Received data: Email: ${email}, Name: ${name}`);
@@ -71,10 +70,5 @@ export async function POST(req) {
       // Otherwise, return a generic 500 Internal Server Error.
       return new Response(JSON.stringify({ error: 'Subscription failed due to an internal error' }), { status: 500 });
   }
-
- 
-
-    
-    
 }
 

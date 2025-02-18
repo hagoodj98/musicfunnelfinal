@@ -12,7 +12,7 @@ import { HttpError } from './sessionHelpers';
 export async function updateMailchimpAddress(email, addressData) {
   const listId = process.env.MAILCHIMP_LIST_ID;
   if (!listId) {
-    throw new HttpError("MAILCHIMP_LIST_ID is not configured in your environment.", 500);
+    throw new HttpError("MAILCHIMP_LIST_ID is not configured in your environment.", 400);
   }
   // Mailchimp requires the MD5 hash of the lowercase email
   const subscriberHash = crypto
@@ -45,7 +45,7 @@ export async function updateMailchimpTag(email, tagName, status = 'active' ) {
 
     const listId= process.env.MAILCHIMP_LIST_ID;
     if (!listId) {
-        throw new HttpError("MAILCHIMP_LIST_ID is not configured in my environment.", 500);
+        throw new HttpError("MAILCHIMP_LIST_ID is not configured in my environment.", 400);
     }
     // Mailchimp requires an MD5 hash of the lowercase email address.
     const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
@@ -61,8 +61,9 @@ export async function updateMailchimpTag(email, tagName, status = 'active' ) {
             ],
         });
         console.log(`Successfully updated tag "${tagName}" for ${email}:`, response);
+        return response;
     } catch (error) {
         console.error('Error updating Mailchimp tag:', error);
-        throw new HttpError("Failed to update Mailchimp address", 500);
+        throw new HttpError("Failed to update Mailchimp tag", 500);
     }
 }

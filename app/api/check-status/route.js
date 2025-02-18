@@ -7,6 +7,7 @@ export async function POST(req) {
     const { email, rememberMe } = await req.json();
     
     if (!email) {
+        // Throw an HttpError for missing email with a 400 status
         throw new HttpError('Email parameter is required', 400);
     }
 //If the radio button is checked then ttl will equal 604800. I would use the value of the ttl when updating the sessionData using updateSessionData. That way, the session stored in Redis will expire according to the rememberMe setting.
@@ -41,8 +42,10 @@ export async function POST(req) {
         headers: { 'Set-Cookie': [sessionCookie, csrfCookie] } //Once cookies are created, they are sent to the browser.
       }
     );
+   
 } catch (error) {
     console.error('Failed to process request:', error);
+     //	In the outer try/catch, if any error is thrown, check if it’s an instance of HttpError (it will have a status property according to what i had setup in the sessionHelper functions). Use that status in the response; otherwise, default to 500.
     if (error instanceof HttpError) {
         return new Response(JSON.stringify({ error: error.message }), { status: error.status });
     }
