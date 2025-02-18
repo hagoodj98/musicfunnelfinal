@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, createCookie } from '../../utils/sessionHelpers';
+import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, checkRateLimit, createCookie } from '../../utils/sessionHelpers';
 
 
 export async function POST(req) {
@@ -14,6 +14,13 @@ export async function POST(req) {
         }
         if (!csrfTokenFromCookie) {
             throw new HttpError("CSRF token is required", 400);
+        }
+// Before proceeding with the session refresh logic, check if the user has already refreshed their session. Rate limiting: allow refresh only once per session. 
+        const rateLimitKey = `refreshLimit:${sessionToken}`;
+        const allowed = await checkRateLimit(rateLimitKey, 1, 3600); // Allow only 1 call per hour (or adjust expireSeconds as needed)
+       
+        if (!allowed) {
+            throw new HttpError("Session refresh limit reached", 429);
         }
 
 // Retrieve current session data. The way to get the current session is by using the getSessionDataByToken

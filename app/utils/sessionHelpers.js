@@ -140,16 +140,21 @@ export async function updateSessionData(sessionToken, sessionData, ttl) {
     }
   }
   /**
- * Extend the TTL of a session if it's about to expire.
+ * This function increments a counter stored in Redis keyed by something unique (like refreshLimit:<sessionToken> or findMeLimit:<email>).
  * @param {string} sessionToken 
- * @param {number} threshold - TTL threshold in seconds.
- * @param {number} extendBy - Seconds to extend by.
+ * @param {number} limit - number to how many times the
+ * @param {number} expireSeconds- Seconds to extend by.
  */
-export async function extendSessionTTLIfNeeded(sessionToken, threshold = 60, extendBy = 300) {
-    const ttl = await redis.ttl(`session:${sessionToken}`);
-    if (ttl < threshold) {
-      await redis.expire(`session:${sessionToken}`, extendBy);
-    }
+// This helps protect my API from abuse and helps prevent my app from hitting Mailchimp’s API rate limits.
+export async function checkRateLimit(key, limit = 1, expireSeconds = 3600) {
+  // Use INCR to increment the counter atomically
+  const count = await redis.incr(key);
+  // If this is the first call, set an expiration on the key..///.The first time the API is called, the counter is 1, and you set an expiration on that counter (so it resets after some time).
+  if (count === 1) {
+    await redis.expire(key, expireSeconds);
   }
+  //If the counter goes above your allowed limit (which is 1 in our case), the function returns false, and you throw an HttpError (with status 429 “Too Many Requests”).
+  return count <= limit;
+}
 
   

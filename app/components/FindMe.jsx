@@ -20,7 +20,7 @@ const FindMe = () => {
             const data= await res.json();
             if (!res.ok) {
                  // Set the message state to the error message and show toast
-                 setMessage(data.message || 'Something went wrong. Please try again.');
+                 setMessage(data.error || 'Something went wrong. Please try again.');
                  setMessageType('error');
                  //toast.error(data.message || 'Something went wrong. Please try again.');
                 return;
