@@ -11,7 +11,7 @@ export default function Home () {
   return (
    
     <div className="tw-bg-center ">
-       <FindMe />
+      <FindMe />
       <div className='tw-container tw-mx-auto'>
         <div className='tw-py-20'>
           <h1 className='tw-text-center  tw-my-7 tw-text-white'>I'M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST 50 FANS, <span className='tw-text-secondary'>ABSOLUTELY FREE!</span></h1>

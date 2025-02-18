@@ -3,11 +3,13 @@ import redis from './redis';
 import { serialize as serializeCookie } from 'cookie';
 /**
  * Custom error class that includes an HTTP status code.
+ * The HttpError class is a custom error type that extends JavaScript’s built‑in Error class. Its purpose is to include an HTTP status code along with the error message so that when you catch an error, you know not only what went wrong but also what HTTP status should be sent in the response.
  */
 export class HttpError extends Error {
+  //message: A string that describes the error (e.g., “Mapping not found”).status: An HTTP status code (e.g., 404 or 500) that indicates the type of error.	Usage: When you throw a new HttpError, you can then catch it later and use the status property to set the appropriate HTTP status in your response.
     constructor(message, status) {
-      super(message);
-      this.status = status;
+      super(message);      // Calls the parent Error class constructor with the message.
+      this.status = status; // Sets a custom property 'status' that holds the HTTP status code.
     }
   }
 /**

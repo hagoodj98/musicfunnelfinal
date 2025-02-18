@@ -18,15 +18,15 @@ export async function POST(req) {
         const member = await mailchimpClient.lists.getListMember(listID, subscriberHash);
 
     // If we get here, the member was found.
-        return new Response(JSON.stringify({ message: "Email is subscribed", member }),{ status: 200 });
+        return new Response(JSON.stringify({ message: 'Ahh! We found that you are a subscriber. No need to proceed any further. Instead, please check email! 🙂✅' }),{ status: 200 });
     } catch (error) {
         console.error("Error in check-subscriber endpoint:", error);
            // If Mailchimp returns a 404 error (member not found), we respond accordingly.
-    if (error.status === 404) {
-        return new Response(JSON.stringify({ error: "Email not subscribed" }),{ status: 404 });
+    if (error.status === 404) { 
+        return new Response(JSON.stringify({ message: "Email is not found. You should subscribe 🙃!" }),{ status: 404 });
     }
 // For any other errors, return a 500 error.
-    return new Response(JSON.stringify({ error: "Internal Server Error" }),{ status: 500 });
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     
     }
 
