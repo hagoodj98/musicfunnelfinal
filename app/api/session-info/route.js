@@ -1,7 +1,7 @@
 
 import { cookies } from "next/headers";
 import redis from "../../utils/redis";
-import { HttpError } from "utils/sessionHelpers";
+import { HttpError } from "../../utils/sessionHelpers";
 
 export async function GET(req) {
     //Retrieve cookies from the request

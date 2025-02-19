@@ -1,16 +1,20 @@
 import Image from 'next/image';
-import Form from './components/SubscriptionForm';
+import SubscriptionForm from './components/SubscriptionForm';
 import MusicCover from '../public/GOOD (1).jpg';
 import Button from '@mui/material/Button';
 import Me from '../public/IMG_1856(1).jpg';
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import FindMe from './components/FindMe';
+import EmailPollingManager from './components/EmailPollingManager';
+import { EmailProvider } from './context/EmailContext';
 
 export default function Home () {
   return (
    
     <div className="tw-bg-center ">
+        {/* EmailPollingManager remains mounted continuously */}
+      
       <FindMe />
       <div className='tw-container tw-mx-auto'>
         <div className='tw-py-20'>
@@ -41,8 +45,13 @@ export default function Home () {
             <div className='tw-flex tw-items-center'>
               <span className=' tw-text-4xl tw-mx-auto tw-my-7'>👇</span>
             </div>
-            {/* This is where everything starts. Regarding the backend logic. We start by rendering the Subscription Form*/}
-            <Form />
+{/* EmailPollingManager and SubscriptionForm now have access to the EmailContext. Wrapping components in EmailProvider means that any component inside can get or update the email and rememberMe values without passing them down manually as props.*/}
+            <EmailProvider>
+{/*Place this in a separate file (e.g., EmailPollingManager.jsx) and render it on the home page outside the modal, so polling continues even when the modal is closed: */}
+              <EmailPollingManager />
+{/* This is where everything starts. Regarding the backend logic. We start by rendering the Subscription Form*/}
+              <SubscriptionForm />
+            </EmailProvider>
           </div>
         </div>
         <div className=' tw-bg-[rgba(239,77,18,0.34)] tw-flex '>

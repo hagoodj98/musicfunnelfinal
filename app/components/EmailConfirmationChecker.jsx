@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const EmailConfirmationChecker = ({ email }) => {
+const EmailConfirmationChecker = ({ email, rememberMe }) => {
   const [status, setStatus] = useState("waiting");
   const [error, setError] = useState("");
 
@@ -15,7 +15,7 @@ const EmailConfirmationChecker = ({ email }) => {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email, rememberMe })
         });
         if (response.ok) {
             console.log('Response went through');

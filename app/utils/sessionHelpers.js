@@ -146,7 +146,7 @@ export async function updateSessionData(sessionToken, sessionData, ttl) {
  * @param {number} expireSeconds- Seconds to extend by.
  */
 // This helps protect my API from abuse and helps prevent my app from hitting Mailchimp’s API rate limits.
-export async function checkRateLimit(key, limit = 1, expireSeconds = 3600) {
+export async function checkRateLimit(key, limit = 1, expireSeconds = 60) {
   // Use INCR to increment the counter atomically
   const count = await redis.incr(key);
   // If this is the first call, set an expiration on the key..///.The first time the API is called, the counter is 1, and you set an expiration on that counter (so it resets after some time).

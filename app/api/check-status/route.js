@@ -10,9 +10,10 @@ export async function POST(req) {
         // Throw an HttpError for missing email with a 400 status
         throw new HttpError('Email parameter is required', 400);
     }
+    
 //If the radio button is checked then ttl will equal 604800. I would use the value of the ttl when updating the sessionData using updateSessionData. That way, the session stored in Redis will expire according to the rememberMe setting.
 
-    const ttl = rememberMe ? 604800 : 3600; // 1 week vs 1 hour
+    const ttl = rememberMe ? 1000 : 300; // 1 week vs 1 hour
 
     // Get the email mapping and corresponding session data that we set in /subscribe first and set it to mapping which is now a json object to access the values of the key "emailToHashMapping:${email}"
     const mapping = await getEmailMapping(email);

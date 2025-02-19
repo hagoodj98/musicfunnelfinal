@@ -96,7 +96,7 @@ async function handleCheckoutSessionExpired(paymentIntent) {
     // Check if the session is still active
     
      // Determine TTL based on rememberMe flag:
-     const ttl = sessionData.rememberMe ? 604800 : 3600;
+     const ttl = sessionData.rememberMe ? 1000 : 300;
   
     // Update the checkoutStatus property on the retrieved session data
     sessionData.checkoutStatus = 'cancelled';
@@ -120,7 +120,7 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     //updating the sessionData JSON object. Grab its checkoutStatus property and change it to 'completed'
     sessionData.checkoutStatus = 'completed';
     sessionData.message = 'Your checkout session has processed successfully. Thank you for your purchase. Please continue to watch your email! God Bless!';
-    const ttl = sessionData.rememberMe ? 604800 : 3600;
+    const ttl = sessionData.rememberMe ? 1000 : 300;
 // Directly update the checkout status. This line of code is what middleware.js is checking for the checoutStatus property we just set/updated. Now we store that updated status back in redis. 
     await updateSessionData(sessionToken, sessionData, ttl);
  // ***** Call Mailchimp to update the mailing address *****. Extract shipping details and the email. Since I already know that shipping_details and the address exist, its always good to check if the properties exists so that there won't be any potential errors. Its almost similiar to lines 85 and 96. Mailchimp expects a JSON object. So looking at the payload of the checkout session complted event, we want to get the address object from the shipping_details property. In this conditional statement, if shipping_details and shipping_details.address exists, also check if sessiionData JSON has a key 'email' stored in Redis. Since I expect them to always have these properties, the paymentIntent.shipping_details.address and sessionData.email are the two parameters that go into the updateMailchimpAddress helper function that we imported in to make an API call to mailchimp. 

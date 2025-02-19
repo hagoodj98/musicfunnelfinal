@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -9,19 +9,14 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
-
-// Import the EmailChecker component
-import EmailChecker from './EmailConfirmationChecker';
-
+import { EmailContext } from '../context/EmailContext';
 
 const SubscriptionForm = () => {
-//I set the userInfo to an object with properties name and email since that is what we are collecting in the input fields below this component
-    const [userInfo, setUserInfo] = useState({
-        name: "",
-        email: ""
-    });
-//This state takes care of the rememberMe toggle feature where we want to extend the life of the cookie to remain valid in the eyes of the middleware which restricts access to the rest of the application based on the validity of the cookie. This tells the app to keep the user logged in for a longer period even if the user closed the browser. Instead of a short session (say, 1 hour), the session might last several days or even weeks.  And again, since the life of the cookie is extended, the middleware sees this cookie as still valid.
-    const [rememberMe, setRememberMe]= useState(false);
+//The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
+    const {email, setEmail, rememberMe, setRememberMe, shouldPoll, setShouldPoll } = useContext(EmailContext);
+
+//// Since the name is only used within SubscriptionForm, it remains local.
+    const [name, setName] = useState('');
 
     const [errorMessage, setErrorMessage] = useState('');
     //When user clicks the subscribe button, it triggers the handleSubmit function, assuming their is an email, we want to set the status to pending. If status equals 'pending' then show a pending message.
@@ -33,7 +28,7 @@ const SubscriptionForm = () => {
         event.preventDefault();
     
     //Once triggered we want to check if email exist first before proceeding with the remaining functionality of the handleSubmit function
-        if (!userInfo.email) {
+        if (!email) {
             setErrorMessage('Email is required');
             return;
         }
@@ -48,14 +43,16 @@ const SubscriptionForm = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    name: userInfo.name,
-                    email: userInfo.email,
+                    name: name,
+                    email: email,
                     rememberMe: rememberMe
                 })
             });
             if (!subscribeResponse.ok) {
                 throw new Error(`Something went wrong. please try again!`);
             }
+            // If subscription is initiated successfully, allow polling:
+            setShouldPoll(true);
             
         } catch (error) {
             console.error('Subscription error:', error);
@@ -63,16 +60,15 @@ const SubscriptionForm = () => {
             setErrorMessage(error.message || 'Failed to process subscription request!');
         }
     }
-        function handleChange(event) {
-            const {name, value}= event.target;
-           
-            setUserInfo(prevValue => {
-                return {
-                    ...prevValue,
-                    [name]: value
-                };
-            });
+// Unified change handler for both name and email
+    function handleChange(event) {
+        const {name, value}= event.target;
+        if (name === "name") {
+            setName(value);
+        } else if (name === 'email') {
+            setEmail(value);
         }
+    }
 
   return (
     <div className='tw-flex '>
@@ -89,14 +85,6 @@ const SubscriptionForm = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body >  
-            {/*This is initial. We want to render a pending message letting the user know what they should do next */}
-            {status === 'pending' && (
-                <div>
-                     {/* Render the EmailChecker component and pass the email because once the user hits the subscribe button we want to start checking for an updated status. This EmailChecker handles the polling that runs every 10 seconds watching for updates to the user subsscription status */}
-                     <EmailChecker email={userInfo.email} />
-                </div>
-           
-            )}
             {status === 'error' && <p style={{ color: 'red' }}>{errorMessage}</p>}
             {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
             {(status === 'idle' || status === 'error' || status === 'pending') && 
@@ -114,7 +102,7 @@ const SubscriptionForm = () => {
                         ),
                     },
                 }} 
-                label="Your Name" name='name' value={userInfo.name} onChange={handleChange}/>
+                label="Your Name" name='name' value={name} onChange={handleChange}/>
                 <TextField fullWidth required id="outlined-required"
                 slotProps={{
                     input: {
@@ -125,16 +113,17 @@ const SubscriptionForm = () => {
                             ),
                         },
                 }} 
-                type='email' name='email' label="Email" value={userInfo.email} onChange={handleChange}/>
+                type='email' name='email' label="Email" value={email} onChange={handleChange}/>
                 <label>
                     <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/>Remember Me
                 </label>
                 <Button variant="outlined" type='submit'>Subscribe</Button>
             </Form>
             )}
+            {status === 'pending' && <p>Processing subscription...</p>}
             {status === 'success' && (
             <p>Subscription confirmed! Redirecting to the landing page...</p>
-            )}
+          )}
         </Modal.Body>
       </Modal>
     </div>

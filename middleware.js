@@ -35,33 +35,36 @@ export async function middleware(req) {
         if(!sessionData) {
             return NextResponse.redirect(new URL('/', req.url));
         }
+// // ONLY check CSRF if user is heading to /landing/thankyou
+        if (req.nextUrl.pathname.includes('/landing/thankyou')) {
 //Since I rotated tokens and the new session data now contains a new CSRF token in /create-checkout-session, i want the middleware to verify that the CSRF token in the request (from the cookie) matches the new one stored in the session. This would help confirm that the session data being used is indeed the updated one. More importantly, it ensures the middleware is truly working with the updated session data—not just the session token name, but the new value (and new CSRF) that I expected. The reason why this is necessary is because i am using the same sessionToken name that the middleware is looking for. So to make sure the middleware is looking at the right sessionToken is by verifying the new csrf.
         const csrfFromCookie = req.cookies.get('csrf')?.value;
 /*
-*Imagine the session is like a secret club membership, and your CSRF token is like your secret handshake. When you first join the club, you get a certain handshake (the CSRF token) that’s stored on your membership card (the cookie) and in the club’s records (the session data in Redis).
-
+Imagine the session is like a secret club membership, and your CSRF token is like your secret handshake. When you first join the club, you get a certain handshake (the CSRF token) that’s stored on your membership card (the cookie) and in the club’s records (the session data in Redis).
+        
 Now, if for extra security the club decides to change the handshake (rotate the tokens), they give you a new secret handshake and update your membership record. Your membership card (the cookie) is also updated with the new handshake.
-
+        
 When you go to the club gate (which is like the middleware), the guard asks you for your secret handshake. The guard then checks the membership record to see what the current, new handshake should be. If what you show (csrfFromCookie) matches the new handshake in the record (sessionData.csrf), you’re allowed in. If not, then something is wrong and you’re not allowed in. 
-         */
+*/
         if (!csrfFromCookie || csrfFromCookie !== sessionData.csrf) {
 //When the CSRF tokens don’t match, it indicates a potential security issue. Redirecting the user to the home page (”/”)—rather than leaving them on /landing where they might click “Buy Now” again—ensures that i take the user back to a safer, more controlled starting point. This minimizes any risk by forcing the user to reinitiate the process from the very beginning, which is a more secure approach when there’s a possible threat.
             console.error("CSRF token mismatch or missing");
             return NextResponse.redirect(new URL('/',req.url));
         }
-
-//Ensure users are redirected correctly after checkout. If a user ever try to include /landing/thankyou in the url and the sessionData, coming from the sessionToken i just verified; AND the checkoutStatus is not set to completed, then redirect the user back to /landing. The checkoutStatus property is updated after user completes the stripe form. I have a stripe webhook that lets me know if user completed-checkout-session. If so, then update the checkoutStatus to completed using redis.
-        if (req.nextUrl.pathname.includes('/landing/thankyou') && sessionData.checkoutStatus !== 'completed') {
+// Also ensure checkoutStatus is completed//Ensure users are redirected correctly after checkout. If a user ever try to include /landing/thankyou in the url and the sessionData, coming from the sessionToken i just verified; AND the checkoutStatus is not set to completed, then redirect the user back to /landing. The checkoutStatus property is updated after user completes the stripe form. I have a stripe webhook that lets me know if user completed-checkout-session. If so, then update the checkoutStatus to completed using redis.
+        if (sessionData.checkoutStatus !== 'completed') {
             console.log("Redirecting because checkout was not completed or canceled properly.");
-            //When something goes wrong (like the checkout was cancelled), the middleware adds a little note (message) to the URL. It’s like attaching a sticky note to a package saying, “Oops, something went wrong!”
+//When something goes wrong (like the checkout was cancelled), the middleware adds a little note (message) to the URL. It’s like attaching a sticky note to a package saying, “Oops, something went wrong!”
             const redirectUrl = new URL('/landing', req.url);
             if (sessionData.message) {
-                //This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
+//This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
                 redirectUrl.searchParams.append('msg', encodeURIComponent(sessionData.message));
             }
             return NextResponse.redirect(redirectUrl);
         }
-        return NextResponse.next();
+    }
+    return NextResponse.next();
+
     } catch (error) {
         console.error('Middleware Error:', error);
         return NextResponse.redirect(new URL('/', req.url));

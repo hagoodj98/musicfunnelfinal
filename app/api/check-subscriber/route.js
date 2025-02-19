@@ -1,29 +1,22 @@
 import { mailchimpClient } from "../../utils/mailchimp";
 import crypto from 'crypto';
 import { HttpError, checkRateLimit } from '../../utils/sessionHelpers';
-import { rateLimiter } from "../../utils/ratelimiter";
 
 const listID = process.env.MAILCHIMP_LIST_ID;
 
+
 export async function POST(req) {
     try {
-        const ip = req.headers.get('x-forwarded-for') || req.headers.get('remote-addr') || 'unknown';
-        // Consume one point for this IP
-        try {
-            await rateLimiter.consume(ip);
-        } catch (rlRejected) {
-            // If rate limit is exceeded, rlRejected contains the remaining time
-            throw new HttpError("Too Many Requests, please try again later.", 429);
-        }
         const { email } =  await req.json();
         if (!email) {
            throw new HttpError('Email is required', 400);
         }
+         
     // Rate limiting: allow "Find me" call only once per email.
         const rateLimitKey = `findMeLimit:${email}`;
-        const allowed = await checkRateLimit(rateLimitKey, 1, 3600);
+        const allowed = await checkRateLimit(rateLimitKey, 1, 60);
         if (!allowed) {
-        throw new HttpError("You reached your limit. Please try again later.", 429);
+        throw new HttpError("You reached your limit. Please try again in one minute.", 429);
         }
 // Generate the subscriber hash required by Mailchimp (MD5 hash of the lowercase email)
         const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
@@ -52,4 +45,5 @@ export async function POST(req) {
 // For any other errors, return a 500 error.
         return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     }
+
 }

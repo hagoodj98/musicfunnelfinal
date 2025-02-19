@@ -26,7 +26,7 @@ export async function POST(req) {
             throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
 ///////The CSRF token protects the following process
-        const ttl = sessionData.rememberMe ? 604800 : 3600;
+        const ttl = sessionData.rememberMe ? 1000 : 300;
 //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
         if (!priceId) {
