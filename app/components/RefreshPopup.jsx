@@ -45,7 +45,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
             //Hiding popup on success
             onClose();
             setSuccess(data.message);
-            //This reloads the whole /landing
+            //This reloads the whole /landing to use the new session data
             window.location.reload();
             // On successful refresh, hide the popupz
         } catch (error) {
@@ -59,7 +59,8 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
     return (
         <div className="modal show" style={{ display: 'block', position: 'initial' }}>
           {/*The onHide is a prop expected by the React-Bootstrap Modal. It is a callback that is triggered when the user tries to close the modal (for example, by clicking the close button in the header). In my code, we pass our onClose function to onHide, so that whether the user clicks the close icon or the “Nope!” button, the same function (onClose) is called to hide the popup. */}
-          <Modal.Dialog show onHide={onClose} backdrop="static" keyboard={false}>
+          {/*backdrop="static" prevents closing the modal by clicking outside, ensuring the user makes an explicit choice. */}
+          <Modal show={true} onHide={onClose} backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
               <Modal.Title>Session Expire Soon</Modal.Title>
             </Modal.Header>
@@ -74,7 +75,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
               <Button variant="secondary" onClick={onClose} disabled={loading}>Nope!</Button>
               <Button onClick={handleRefresh} disabled={loading} variant="primary">{loading ? "Refreshing..." : "Refresh me!"}</Button>
             </Modal.Footer>
-          </Modal.Dialog>
+          </Modal>
         </div>
       );
 };

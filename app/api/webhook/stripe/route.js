@@ -84,19 +84,23 @@ export async function POST(req) {
 async function handleCheckoutSessionExpired(paymentIntent) {
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("Missing sessionToken in checkout session metadata");
-       
     }
+    
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Checkout session expired for ${paymentIntent.id}`);
+    
 
     // Use the helper to update the checkout status to 'expired'
     // Retrieve current session data using your helper
     
     const sessionData = await getSessionDataByToken(sessionToken);
-    // Check if the session is still active
+    if (sessionData && sessionData.checkoutStatus === 'completed') {
+        console.log("Session already completed, ignoring expired event.");
+        return new Response(JSON.stringify({ message: "Session already completed." }), { status: 200 });
+    }
     
      // Determine TTL based on rememberMe flag:
-     const ttl = sessionData.rememberMe ? 1000 : 300;
+     const ttl = sessionData.rememberMe ? 604800 : 3600;
   
     // Update the checkoutStatus property on the retrieved session data
     sessionData.checkoutStatus = 'cancelled';
@@ -104,7 +108,6 @@ async function handleCheckoutSessionExpired(paymentIntent) {
 // Now call updateSessionData with the updated session object
     await updateSessionData(sessionToken, sessionData, ttl);
     console.log("Session updated as expired for sessionToken:", sessionToken);
-  
 }
 //////////////////////////
 async function handleCheckoutSessionCompleted(paymentIntent) {
@@ -120,8 +123,10 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     //updating the sessionData JSON object. Grab its checkoutStatus property and change it to 'completed'
     sessionData.checkoutStatus = 'completed';
     sessionData.message = 'Your checkout session has processed successfully. Thank you for your purchase. Please continue to watch your email! God Bless!';
-    const ttl = sessionData.rememberMe ? 1000 : 300;
+    const ttl = sessionData.rememberMe ? 604800 : 3600;
 // Directly update the checkout status. This line of code is what middleware.js is checking for the checoutStatus property we just set/updated. Now we store that updated status back in redis. 
+console.log(sessionData, "hi I am in stripe webhook");
+
     await updateSessionData(sessionToken, sessionData, ttl);
  // ***** Call Mailchimp to update the mailing address *****. Extract shipping details and the email. Since I already know that shipping_details and the address exist, its always good to check if the properties exists so that there won't be any potential errors. Its almost similiar to lines 85 and 96. Mailchimp expects a JSON object. So looking at the payload of the checkout session complted event, we want to get the address object from the shipping_details property. In this conditional statement, if shipping_details and shipping_details.address exists, also check if sessiionData JSON has a key 'email' stored in Redis. Since I expect them to always have these properties, the paymentIntent.shipping_details.address and sessionData.email are the two parameters that go into the updateMailchimpAddress helper function that we imported in to make an API call to mailchimp. 
     if (paymentIntent.shipping_details && paymentIntent.shipping_details.address && sessionData.email) {
@@ -143,7 +148,6 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     }
 }
 /////////////////////////
-
 
 export function GET() {
     return new Response('Stripe webhook endpoint is live', { status: 200 });

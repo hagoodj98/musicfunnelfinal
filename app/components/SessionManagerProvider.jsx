@@ -48,6 +48,7 @@ if (loading) {
   return (
     <div>
       {/*This is giving SessionManager what it needs to function so that it can come back to the parent (SessionManagerProvider) */}
+      
         <SessionManager initialTime={initialTime}/>
     </div>
   )

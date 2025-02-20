@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
-import { getSessionDataByToken, updateSessionData, HttpError, createCookie, generateTokenAndSalt } from '../../utils/sessionHelpers';
+import { getSessionDataByToken, updateSessionData, HttpError, createCookie } from '../../utils/sessionHelpers';
+import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -20,13 +21,27 @@ export async function POST(req) {
         }
 //This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
+//In the event a user abandons the stripe form and tries to start a new one.
         
+          
 //Validate CSRF token. If this passes,then the user can continue. This prevents CSRF attacks
         if (csrfToken !== sessionData.csrfToken) {
             throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
+         // Limit checkout session attempts.
+        // Create a unique key for counting checkout attempts (e.g., per session token)
+        const attemptsKey = `checkoutAttempts:${sessionToken}`;
+        const attempts = await redis.incr(attemptsKey);
+        if (attempts === 2) {
+            // Set an expiration for the counter (for example, 1 hour)
+            await redis.expire(attemptsKey, 3600);
+        }
+        // Allow, for example, a maximum of 5 attempts per hour
+        if (attempts > 5) {
+            throw new HttpError("Too many checkout attempts. Please try again later.", 429);
+        }
 ///////The CSRF token protects the following process
-        const ttl = sessionData.rememberMe ? 1000 : 300;
+        const ttl = sessionData.rememberMe ? 604800 : 3600;
 //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
         if (!priceId) {
@@ -58,23 +73,22 @@ export async function POST(req) {
 
             }
         });
-//token rotation (more secure): Since i am creating new cookies, might as well generate new tokens
-        const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();
+//Only rotate the CSRF cookie (more secure): Since i am creating new CSRF cookie while leaving the sessionToken cookie as is, so the middleware, stripe webhook can update the same session with the same sessionToken
+const newCsrfToken = crypto.randomBytes(24).toString('hex');
 //// Update session data with the stripeSessionId and checkoutStatus and the new csrf token that was rotated for extra security. Read the following comments on why this was done
         const updatedSessionData = {
             ...sessionData, 
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated',
-            csrf: newCsrfToken
+            csrfToken: newCsrfToken
         };
 // Save the updated session data back to Redis. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me” which also requires updating the cookie. Which means we can create a new set of cookies because the ttl that we got if the users selected the rememberMe means no only do we update the session with the new ttl, but also set the cookies with the same ttl. Because we do not want the cookie to expire before the session data. That is why we are generating new cookies. We want the session data and the cookies in sync
-        await updateSessionData(newSessionToken, updatedSessionData, ttl);
+        await updateSessionData(sessionToken, updatedSessionData, ttl);
 
 //When you rotate the token (generate a new value) and then send a new cookie with that same name, the browser overwrites the old cookie with the new value. This means that any attacker who might have captured the old token no longer has a valid token because it’s been replaced. The new csrf token comes into play for subsequent request. Before any future state changes in this application will check for this new csrf first, not the old csrf token. This help prevent CSRF attacks too.
-        const sessionCookie = createCookie('sessionToken', newSessionToken, {maxAge: ttl, sameSite: 'lax'});
-        const csrfCookie = createCookie('csrf', newCsrfToken, {maxAge: ttl, sameSite: 'lax'});
+        const csrfCookie = createCookie('csrfToken', newCsrfToken, {maxAge: ttl, sameSite: 'lax'});
 
-        return new Response(JSON.stringify({id: session.id}), {status: 200, headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }});
+        return new Response(JSON.stringify({id: session.id}), {status: 200, headers: { 'Set-Cookie': [csrfCookie] }});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         if (error instanceof HttpError) {

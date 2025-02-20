@@ -13,7 +13,7 @@ export async function POST(req) {
     
 //If the radio button is checked then ttl will equal 604800. I would use the value of the ttl when updating the sessionData using updateSessionData. That way, the session stored in Redis will expire according to the rememberMe setting.
 
-    const ttl = rememberMe ? 1000 : 300; // 1 week vs 1 hour
+    const ttl = rememberMe ? 604800 : 3600; // 1 week vs 1 hour
 
     // Get the email mapping and corresponding session data that we set in /subscribe first and set it to mapping which is now a json object to access the values of the key "emailToHashMapping:${email}"
     const mapping = await getEmailMapping(email);
@@ -31,7 +31,8 @@ export async function POST(req) {
     await updateSessionData(sessionToken, { ...sessionData, csrfToken }, ttl);
 
     // Create cookies for session and CSRF tokens. The ttl value is based on if subscriber clicked the rememberMe button.
-    const sessionCookie = createCookie('sessionToken', sessionToken, { maxAge: ttl } );
+    const sessionCookie = createCookie('sessionToken', sessionToken, { maxAge: ttl, sameSite: 'lax' });
+    //This CSRF is 'strict'. Only avaiable on my app
     const csrfCookie = createCookie('csrfToken', csrfToken, { maxAge: ttl });
 
     console.log(`Status Check Success: Session token issued for email: ${email}`);
