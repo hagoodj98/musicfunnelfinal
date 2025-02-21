@@ -25,12 +25,12 @@ const CheckoutInitiator = () => {
           "Content-Type": "application/json" 
         },
       });
+      const session = await response.json();
   
       if (!response.ok) {
         setMessage(`${session.error || "Failed to create checkout session."}#${Date.now()}`);
         setMessageType('error');
       }
-      const session = await response.json();
 
       const stripe = await stripePromise;
       const result = await stripe.redirectToCheckout({ sessionId: session.id });

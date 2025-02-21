@@ -10,7 +10,7 @@ const redis = new Redis({
     username: process.env.REDIS_USERNAME,
     password: process.env.REDIS_PASSWORD,
     tls: process.env.REDIS_TLS === 'true' ? {
-        ca: process.env.REDIS_CA_PATH ? fs.readFileSync(process.env.REDIS_CA_PATH) : undefined
+        ca: process.env.CERT_REDIS ? fs.readFileSync(process.env.CERT_REDIS) : undefined
       } : undefined
 });
 

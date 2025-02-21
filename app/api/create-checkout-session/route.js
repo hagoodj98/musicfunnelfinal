@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
 import { getSessionDataByToken, updateSessionData, HttpError, createCookie } from '../../utils/sessionHelpers';
 import crypto from 'crypto';
+import redis from '../../utils/redis';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -29,16 +30,18 @@ export async function POST(req) {
             throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
          // Limit checkout session attempts.
-        // Create a unique key for counting checkout attempts (e.g., per session token)
+        // It builds a key called checkoutAttempts:<sessionToken> using the user’s session token. This key uniquely tracks how many times this user (or session) has tried to start a checkout session.
         const attemptsKey = `checkoutAttempts:${sessionToken}`;
+        //It uses redis.incr(attemptsKey) to increase the counter by 1 each time the user makes an attempt.Think of it like a counter that goes up by one every time the user clicks “Buy Now.”
         const attempts = await redis.incr(attemptsKey);
+        //When the counter hits 2 (i.e. on the second attempt), it sets the counter to automatically expire after 3600 seconds (1 hour) using redis.expire(attemptsKey, 3600). This means that if the user doesn’t try again within an hour, the counter resets, and they get a fresh start.
         if (attempts === 2) {
             // Set an expiration for the counter (for example, 1 hour)
             await redis.expire(attemptsKey, 3600);
         }
-        // Allow, for example, a maximum of 5 attempts per hour
-        if (attempts > 5) {
-            throw new HttpError("Too many checkout attempts. Please try again later.", 429);
+        // In simple terms, if the user tries more than 5 times within an hour, the system stops them and tells them to check their email (or try again later).
+        if (attempts > 3) {
+            throw new HttpError("🛑Nope! Too many checkout attempts. If you want to make another purchaser, check your email.", 429);
         }
 ///////The CSRF token protects the following process
         const ttl = sessionData.rememberMe ? 604800 : 3600;
@@ -85,10 +88,12 @@ const newCsrfToken = crypto.randomBytes(24).toString('hex');
 // Save the updated session data back to Redis. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me” which also requires updating the cookie. Which means we can create a new set of cookies because the ttl that we got if the users selected the rememberMe means no only do we update the session with the new ttl, but also set the cookies with the same ttl. Because we do not want the cookie to expire before the session data. That is why we are generating new cookies. We want the session data and the cookies in sync
         await updateSessionData(sessionToken, updatedSessionData, ttl);
 
+        //All we are doing here is updating the sessionToken ttl when we update the session data so all the cookies and session data expire at the same time
+        const sessionCookie = createCookie('sessionToken', sessionToken, {maxAge: ttl});
 //When you rotate the token (generate a new value) and then send a new cookie with that same name, the browser overwrites the old cookie with the new value. This means that any attacker who might have captured the old token no longer has a valid token because it’s been replaced. The new csrf token comes into play for subsequent request. Before any future state changes in this application will check for this new csrf first, not the old csrf token. This help prevent CSRF attacks too.
         const csrfCookie = createCookie('csrfToken', newCsrfToken, {maxAge: ttl, sameSite: 'lax'});
 
-        return new Response(JSON.stringify({id: session.id}), {status: 200, headers: { 'Set-Cookie': [csrfCookie] }});
+        return new Response(JSON.stringify({id: session.id}), {status: 200, headers: { 'Set-Cookie': [sessionCookie, csrfCookie] }});
     } catch (error) {
         console.error('Error creating Stripe checkout session:', error);
         if (error instanceof HttpError) {

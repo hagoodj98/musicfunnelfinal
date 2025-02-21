@@ -19,10 +19,6 @@ const SessionManager = ({ initialTime }) => { //the time is set by SessionManage
     const [showPopup, setShowPopup] = useState(false);
 //In order for it to listen to when to show the popup, it needs to know the current time. This is the responsibly that the parent gave to the child so that the parent can do what they were designed to do.
     const [timeLeft, setTimeLeft] = useState(initialTime);
-      // We'll store the current session status here (e.g., 'initiated', 'completed', 'cancelled')
-    const [checkoutStatus, setCheckoutStatus]= useState(null);
-    
-
 
     useEffect(() => {
 // On mount, check sessionStorage to see if the popup was open and restore the timeLeft
@@ -37,35 +33,8 @@ const SessionManager = ({ initialTime }) => { //the time is set by SessionManage
         }
     }, []);
 
-// Polling effect to fetch the session data periodically (or use your existing polling mechanism)
-    useEffect(() => {
-        async function fetchSessionData() {
-        try {
-            const res = await fetch('/api/session-info'); // Should return JSON including checkoutStatus
-            if (res.ok) {
-            const data = await res.json();
-            setCheckoutStatus(data.checkoutStatus);
-            }
-        } catch (error) {
-            console.error('Error fetching session data:', error);
-        }
-        }
-// Poll every 10 seconds
-        fetchSessionData();
-        const intervalId = setInterval(fetchSessionData, 10000);
-        return () => clearInterval(intervalId);
-    }, []);
-
-    //This ensures that even if the Timer or any other logic would normally trigger the popup (like when time runs low), if the session status is “completed” the popup will not appear.
-    useEffect(() => {
-        if (checkoutStatus === 'initiated' || checkoutStatus === 'cancelled') {
-          setShowPopup(true);
-        } else {
-          setShowPopup(false);
-        }
-      }, [checkoutStatus]);
-
     // This callback gets called every second by Timer. Some parents have to keep an eye on their children to make sure, the children do the work they were asked. This updateTimeLeft does the same thing. Its an eye.
+    
     const updateTimeLeft = (timeLeft) => {
         //It get the current time from Timer using the timeLeft parameter, which is the timeLeft variable over at Timer is set by setTimeLeft, which transfers the current time from over at Timer to over here at SessionManager.
         setTimeLeft(timeLeft);
@@ -74,13 +43,12 @@ const SessionManager = ({ initialTime }) => { //the time is set by SessionManage
     };
     // This callback is called when Timer reaches 60 seconds left. This is what the child is responsible for. To let their parent know when they are done. These timeLeft parameters you see in handleWarning and updateTimeLeft comes from the child(Timer). And the setTimeLeft is how the parent keeps an eye on the child. Everything parent child relationship is a bit different, so the interaction may vary depending on the project.
     const handleWarning = (timeLeft) => {
-        if (checkoutStatus !== 'completed') {
-            setShowPopup(true);
-            setTimeLeft(timeLeft); // Update state with current time
+        
+        setShowPopup(true);
+        setTimeLeft(timeLeft); // Update state with current time
 //When the Timer warns (at 60 seconds), we set showPopup to true and store 'popupOpen' as 'true' along with the current time left.
-            sessionStorage.setItem('popupOpen', 'true');
-            sessionStorage.setItem('timeLeft', timeLeft.toString());
-        }
+        sessionStorage.setItem('popupOpen', 'true');
+        sessionStorage.setItem('timeLeft', timeLeft.toString());
     };
 // When the Timer expires, take appropriate action (e.g., redirect). We just call this function over at the Timer component since the Timer is keeping track anyway. We send this function as a prop to Timer. 
     const handleExpire = () => {
@@ -93,6 +61,7 @@ const SessionManager = ({ initialTime }) => { //the time is set by SessionManage
         setShowPopup(false);
         sessionStorage.removeItem('popupOpen');
     };
+
     return (
         <div>
             {/* here the initialTime is set, which is being sent to the Timer component. Then the Timer will have a prop called initialTime. The onWarning function is sent to Timer, cause Timer is suppose to let SessionManager know when 60 secs is left. Its like a reminder for SessionManager to know when to disply the popup.  The onTimeUpdate is the parent keeping an eye on the Timer*/}
