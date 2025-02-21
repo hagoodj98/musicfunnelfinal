@@ -3,6 +3,7 @@ import { cookies } from "next/headers";// This brings in all cookies from the br
 import { getSessionDataByToken, updateSessionData, HttpError, createCookie } from '../../utils/sessionHelpers';
 import crypto from 'crypto';
 import redis from '../../utils/redis';
+import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -22,8 +23,8 @@ export async function POST(req) {
         }
 //This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
-//In the event a user abandons the stripe form and tries to start a new one.
-        
+///////The CSRF token protects the following process
+        const ttl = sessionData.rememberMe ? 604800 : 3600;
           
 //Validate CSRF token. If this passes,then the user can continue. This prevents CSRF attacks
         if (csrfToken !== sessionData.csrfToken) {
@@ -37,14 +38,25 @@ export async function POST(req) {
         //When the counter hits 2 (i.e. on the second attempt), it sets the counter to automatically expire after 3600 seconds (1 hour) using redis.expire(attemptsKey, 3600). This means that if the user doesn’t try again within an hour, the counter resets, and they get a fresh start.
         if (attempts === 2) {
             // Set an expiration for the counter (for example, 1 hour)
-            await redis.expire(attemptsKey, 3600);
+            await redis.expire(attemptsKey, ttl);
         }
         // In simple terms, if the user tries more than 5 times within an hour, the system stops them and tells them to check their email (or try again later).
         if (attempts > 3) {
-            throw new HttpError("🛑Nope! Too many checkout attempts. If you want to make another purchaser, check your email.", 429);
+            const paymentLink = await stripe.paymentLinks.create({
+                line_items: [{
+                    price: process.env.STRIPE_PRICE_ID,
+                    quantity: 1
+                }],
+                after_completion: {
+                    type: 'redirect',
+                    redirect: {url: 'http://localhost:3000/landing/thankyou'}
+                }
+            });
+            const userEmail= sessionData.email;
+            await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
+            throw new HttpError("🛑Too many checkout attempts. If you want to make another purchaser, I just sent you an email, please open it and proceed that way🙂.", 429);
         }
-///////The CSRF token protects the following process
-        const ttl = sessionData.rememberMe ? 604800 : 3600;
+
 //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
         if (!priceId) {
@@ -83,13 +95,15 @@ const newCsrfToken = crypto.randomBytes(24).toString('hex');
             ...sessionData, 
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated',
-            csrfToken: newCsrfToken
+            csrfToken: newCsrfToken,
+            // Clear out any old success message
+            message: '',
         };
 // Save the updated session data back to Redis. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me” which also requires updating the cookie. Which means we can create a new set of cookies because the ttl that we got if the users selected the rememberMe means no only do we update the session with the new ttl, but also set the cookies with the same ttl. Because we do not want the cookie to expire before the session data. That is why we are generating new cookies. We want the session data and the cookies in sync
         await updateSessionData(sessionToken, updatedSessionData, ttl);
 
         //All we are doing here is updating the sessionToken ttl when we update the session data so all the cookies and session data expire at the same time
-        const sessionCookie = createCookie('sessionToken', sessionToken, {maxAge: ttl});
+        const sessionCookie = createCookie('sessionToken', sessionToken, {maxAge: ttl, sameSite: 'lax'});
 //When you rotate the token (generate a new value) and then send a new cookie with that same name, the browser overwrites the old cookie with the new value. This means that any attacker who might have captured the old token no longer has a valid token because it’s been replaced. The new csrf token comes into play for subsequent request. Before any future state changes in this application will check for this new csrf first, not the old csrf token. This help prevent CSRF attacks too.
         const csrfCookie = createCookie('csrfToken', newCsrfToken, {maxAge: ttl, sameSite: 'lax'});
 

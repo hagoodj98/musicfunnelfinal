@@ -9,6 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
+import EmailChecker from './EmailConfirmationChecker';
 import { EmailContext } from '../context/EmailContext';
 
 const SubscriptionForm = () => {
@@ -84,7 +85,15 @@ const SubscriptionForm = () => {
           Join The Family!
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body >  
+        <Modal.Body >
+            {/*This is initial. We want to render a pending message letting the user know what they should do next */}
+            {status === 'pending' && (
+                <div>
+                     {/* Render the EmailChecker component and pass the email because once the user hits the subscribe button we want to start checking for an updated status. This EmailChecker handles the polling that runs every 10 seconds watching for updates to the user subsscription status */}
+                     <EmailChecker email={email} rememberMe={rememberMe} />
+                </div>
+           
+            )} 
             {status === 'error' && <p style={{ color: 'red' }}>{errorMessage}</p>}
             {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
             {(status === 'idle' || status === 'error' || status === 'pending') && 
@@ -120,7 +129,6 @@ const SubscriptionForm = () => {
                 <Button variant="outlined" type='submit'>Subscribe</Button>
             </Form>
             )}
-            {status === 'pending' && <p>Processing subscription...</p>}
             {status === 'success' && (
             <p>Subscription confirmed! Redirecting to the landing page...</p>
           )}

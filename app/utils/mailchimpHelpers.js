@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import { mailchimpClient } from './mailchimp';
 import { HttpError } from './sessionHelpers';
+import transporter from './mailer';
+
 
 /**
  * Updates a Mailchimp subscriber's mailing address.
@@ -66,4 +68,20 @@ export async function updateMailchimpTag(email, tagName, status = 'active' ) {
         console.error('Error updating Mailchimp tag:', error);
         throw new HttpError("Failed to update Mailchimp tag", 500);
     }
+}
+
+export async function sendPaymentLinkEmailViaMailchimp(userEmail, paymentLinkUrl) {
+  const mailOptions = {
+    from: `"JAPP" ${process.env.GMAIL_USER}`,
+    to: userEmail,
+    subject: 'Your Payment Link',
+    text: `Hi, \n\nPlease use the following link to complete your purchase:\n${paymentLinkUrl}\n\nThank you!`,
+    html:  `<p>Hi</p>
+            <p>Please use the following link to complete your purchase:</p>
+            <p><a href="${paymentLinkUrl}">${paymentLinkUrl}</a></p>
+            <p>Thank you!</p>`
+  };
+  const info = await transporter.sendMail(mailOptions);
+  console.log("Payment link email sent, Message ID:", info.messageId);
+  return info;
 }

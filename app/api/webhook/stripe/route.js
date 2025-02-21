@@ -104,7 +104,7 @@ async function handleCheckoutSessionExpired(paymentIntent) {
   
     // Update the checkoutStatus property on the retrieved session data
     sessionData.checkoutStatus = 'cancelled';
-    sessionData.message = 'Your checkout session has expired or was cancelled. Please try again or check your email for updates.';
+    sessionData.message = 'Your checkout session either cancelled or timedout. Please try again later';
 // Now call updateSessionData with the updated session object
     await updateSessionData(sessionToken, sessionData, ttl);
     console.log("Session updated as expired for sessionToken:", sessionToken);
@@ -113,8 +113,9 @@ async function handleCheckoutSessionExpired(paymentIntent) {
 async function handleCheckoutSessionCompleted(paymentIntent) {
     console.log(paymentIntent);//For debugging purposes
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
-        console.error("Missing sessionToken in payment metadata");
+        console.error("No sessionToken in payment metadata - possibly Payment Link purchase. Skipping session-based logic.");
         throw new HttpError('Missing sessionToken in payment metadata"', 400);
+        return;
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
     console.log(`Payment succeeded for ${paymentIntent.id}`);
@@ -122,7 +123,7 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     const sessionData = await getSessionDataByToken(sessionToken);
     //updating the sessionData JSON object. Grab its checkoutStatus property and change it to 'completed'
     sessionData.checkoutStatus = 'completed';
-    sessionData.message = 'Your checkout session has processed successfully. Thank you for your purchase. Please continue to watch your email! God Bless!';
+    sessionData.message = 'Your checkout session has processed successfully. ';
     const ttl = sessionData.rememberMe ? 604800 : 3600;
 // Directly update the checkout status. This line of code is what middleware.js is checking for the checoutStatus property we just set/updated. Now we store that updated status back in redis. 
 console.log(sessionData, "hi I am in stripe webhook");
