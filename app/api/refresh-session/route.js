@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, checkRateLimit, createCookie } from '../../utils/sessionHelpers';
+import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, createCookie } from '../../utils/sessionHelpers';
 
 
 export async function POST() {
@@ -15,14 +15,6 @@ export async function POST() {
         if (!csrfTokenFromCookie) {
             throw new HttpError("CSRF token is required", 400);
         }
-// Before proceeding with the session refresh logic, check if the user has already refreshed their session. Rate limiting: allow refresh only once per session. 
-        const rateLimitKey = `refreshLimit:${sessionToken}`;
-        const allowed = await checkRateLimit(rateLimitKey, 1, 3600); // Allow only 1 call per hour (or adjust expireSeconds as needed)
-       
-        if (!allowed) {
-            throw new HttpError("Session refresh limit reached", 429);
-        }
-
 // Retrieve current session data. The way to get the current session is by using the getSessionDataByToken
         const currentSessionData = await getSessionDataByToken(sessionToken);
 // Verify that the CSRF token from the cookie matches the one stored in session data. The cookies are either the first set that were issued in /check-status or it could be a new set of cookies if user refreshed the session.
@@ -34,7 +26,7 @@ export async function POST() {
         }
       
 //This line considers if a user clicked the rememberMe button, if so, then we would not want to refresh the session for only an hour simply becasue the user wanted the application to remmeber them. So we would set the ttl for about a week instead. If their is no  rememberMe flag, then yes, the session refreshes for another hour.
-        const ttl = currentSessionData.rememberMe ? 604800 : 3600;
+        const ttl = currentSessionData.rememberMe ? 200 : 120;
 
 //Generate new tokens (both session and CSRF). I assigned values to the existing properties provided by the generateTokenAndSalt so its clear which values are being returned and used. For example, newSessionToken contains the generated session token. All I did was set it to a property so I can use 
         const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();

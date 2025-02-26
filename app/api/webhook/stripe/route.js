@@ -100,7 +100,7 @@ async function handleCheckoutSessionExpired(paymentIntent) {
     }
     
      // Determine TTL based on rememberMe flag:
-     const ttl = sessionData.rememberMe ? 604800 : 3600;
+     const ttl = sessionData.rememberMe ? 200 : 120;
   
     // Update the checkoutStatus property on the retrieved session data
     sessionData.checkoutStatus = 'cancelled';
@@ -124,7 +124,7 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     //updating the sessionData JSON object. Grab its checkoutStatus property and change it to 'completed'
     sessionData.checkoutStatus = 'completed';
     sessionData.message = 'Your checkout session has processed successfully. ';
-    const ttl = sessionData.rememberMe ? 604800 : 3600;
+    const ttl = sessionData.rememberMe ? 200 : 120;
 // Directly update the checkout status. This line of code is what middleware.js is checking for the checoutStatus property we just set/updated. Now we store that updated status back in redis. 
 console.log(sessionData, "hi I am in stripe webhook");
 

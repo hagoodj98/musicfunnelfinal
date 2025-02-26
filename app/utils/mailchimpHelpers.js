@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { mailchimpClient } from './mailchimp';
 import { HttpError } from './sessionHelpers';
 import transporter from './mailer';
-
+import { checkRateLimit } from './rateLimiter';
 
 /**
  * Updates a Mailchimp subscriber's mailing address.
@@ -71,6 +71,10 @@ export async function updateMailchimpTag(email, tagName, status = 'active' ) {
 }
 
 export async function sendPaymentLinkEmailViaMailchimp(userEmail, paymentLinkUrl) {
+   // Build a key specific for email rate limiting. You might use the email itself.
+  const rateLimitKey = `emailLimit:${userEmail}`;
+   // Set a limit (e.g., 3 email sends per 24 hours) and an expiration (86400 seconds = 24 hours).
+  
   const mailOptions = {
     from: `"JAPP" ${process.env.GMAIL_USER}`,
     to: userEmail,

@@ -54,8 +54,6 @@ When you go to the club gate (which is like the middleware), the guard asks you 
             return NextResponse.redirect(new URL('/',req.url));
         }
 // Also ensure checkoutStatus is completed//Ensure users are redirected correctly after checkout. If a user ever try to include /landing/thankyou in the url and the sessionData, coming from the sessionToken i just verified; AND the checkoutStatus is not set to completed, then redirect the user back to /landing. The checkoutStatus property is updated after user completes the stripe form. I have a stripe webhook that lets me know if user completed-checkout-session. If so, then update the checkoutStatus to completed using redis.
-console.log(sessionData.checkoutStatus, 'middleware sees');
-
         if (sessionData.checkoutStatus !== 'completed') {
             console.log("Redirecting because checkout was not completed or canceled properly.");
 //When something goes wrong (like the checkout was cancelled), the middleware adds a little note (message) to the URL. It’s like attaching a sticky note to a package saying, “Oops, something went wrong!”

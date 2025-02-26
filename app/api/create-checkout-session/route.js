@@ -24,7 +24,7 @@ export async function POST(req) {
 //This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
 ///////The CSRF token protects the following process
-        const ttl = sessionData.rememberMe ? 604800 : 3600;
+        const ttl = sessionData.rememberMe ? 200 : 120;
           
 //Validate CSRF token. If this passes,then the user can continue. This prevents CSRF attacks
         if (csrfToken !== sessionData.csrfToken) {
@@ -33,29 +33,28 @@ export async function POST(req) {
          // Limit checkout session attempts.
         // It builds a key called checkoutAttempts:<sessionToken> using the user’s session token. This key uniquely tracks how many times this user (or session) has tried to start a checkout session.
         const attemptsKey = `checkoutAttempts:${sessionToken}`;
-        //It uses redis.incr(attemptsKey) to increase the counter by 1 each time the user makes an attempt.Think of it like a counter that goes up by one every time the user clicks “Buy Now.”
         const attempts = await redis.incr(attemptsKey);
-        //When the counter hits 2 (i.e. on the second attempt), it sets the counter to automatically expire after 3600 seconds (1 hour) using redis.expire(attemptsKey, 3600). This means that if the user doesn’t try again within an hour, the counter resets, and they get a fresh start.
-        if (attempts === 2) {
-            // Set an expiration for the counter (for example, 1 hour)
-            await redis.expire(attemptsKey, ttl);
+        if (attempts === 1) {
+          await redis.expire(attemptsKey, 86400); // 24 hours in seconds
         }
-        // In simple terms, if the user tries more than 5 times within an hour, the system stops them and tells them to check their email (or try again later).
-        if (attempts > 3) {
-            const paymentLink = await stripe.paymentLinks.create({
-                line_items: [{
-                    price: process.env.STRIPE_PRICE_ID,
-                    quantity: 1
-                }],
-                after_completion: {
-                    type: 'redirect',
-                    redirect: {url: 'http://localhost:3000/landing/thankyou'}
-                }
-            });
-            const userEmail= sessionData.email;
-            await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
-            throw new HttpError("🛑Too many checkout attempts. If you want to make another purchaser, I just sent you an email, please open it and proceed that way🙂.", 429);
+        if (attempts > 1) {
+          await redis.expire(attemptsKey, 86400); // lock out for 24 hours
+          // Instead of creating a new checkout session, send a payment link email
+          const paymentLink = await stripe.paymentLinks.create({
+            line_items: [{
+              price: process.env.STRIPE_PRICE_ID,
+              quantity: 1,
+            }],
+            after_completion: {
+              type: 'redirect',
+              redirect: { url: 'http://localhost:3000/landing/thankyou' }
+            }
+          });
+          const userEmail = sessionData.email;
+          await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
+          throw new HttpError("Too many checkout attempts. Please check your email for a payment link.", 429);
         }
+      
 
 //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;
@@ -96,8 +95,6 @@ const newCsrfToken = crypto.randomBytes(24).toString('hex');
             stripeSessionId: session.id, 
             checkoutStatus: 'initiated',
             csrfToken: newCsrfToken,
-            // Clear out any old success message
-            message: '',
         };
 // Save the updated session data back to Redis. Ensures data consistency when handling session updates. This also ensures that the session in Redis will now expire after the appropriate duration based on whether the user selected “Remember Me” which also requires updating the cookie. Which means we can create a new set of cookies because the ttl that we got if the users selected the rememberMe means no only do we update the session with the new ttl, but also set the cookies with the same ttl. Because we do not want the cookie to expire before the session data. That is why we are generating new cookies. We want the session data and the cookies in sync
         await updateSessionData(sessionToken, updatedSessionData, ttl);
