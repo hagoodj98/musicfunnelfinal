@@ -21,13 +21,19 @@ export async function POST(req) {
         const attempts = await redis.incr(rateLimitKey);
         // On the first attempt, set a TTL for 30 seconds (30 seconds)
         if (attempts === 1) {
-        await redis.expire(rateLimitKey, 30);
+            await redis.expire(rateLimitKey, 30);
         }
         // If attempts > 2, user has exceeded the limit.
         if (attempts > 2) {
-        // Ensure that the key is locked out for 24 hours.
-        await redis.expire(rateLimitKey, 86400);
-        throw new HttpError("You have reached your limit for checking your subscription status today. Please try again in 24 hours.", 429);
+// Ensure that the key is locked out for 24 hours.
+            await redis.expire(rateLimitKey, 86400);
+            throw new HttpError("You have reached your limit for checking your subscription status today. Please try again in 24 hours.", 429);
+        }
+        // Check if we already flagged this email as not found
+        const notFoundKey = `notFound:${email}`;
+        const notFoundFlag = await redis.get(notFoundKey);
+        if (notFoundFlag) {
+            throw new HttpError("Couldn't find that email. So please subscribe first!", 404);
         }
         const paymentLink = await stripe.paymentLinks.create({
             line_items: [{
@@ -53,6 +59,7 @@ export async function POST(req) {
     } catch (error) {
 // If Mailchimp returns a 404 error (member not found), throw an HttpError with 404 status.
         if (error.status === 404) {
+            await redis.set(notFoundKey, "true", "EX", 86400);
             throw new HttpError("Mhm we couldn't find that email. You should subscribe!🙃", 404);
         }
 // For any other error, throw a 500 error.
