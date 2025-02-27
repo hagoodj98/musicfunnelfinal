@@ -2,8 +2,8 @@ import { mailchimpClient } from "../../utils/mailchimp";
 import crypto from 'crypto';
 import { HttpError } from '../../utils/sessionHelpers';
 import Stripe from "stripe";
-import { sendPaymentLinkEmailViaMailchimp } from "@/app/utils/mailchimpHelpers";
-import redis from "@/app/utils/redis";
+import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
+import redis from "../../utils/redis";
 const listID = process.env.MAILCHIMP_LIST_ID;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -33,7 +33,7 @@ export async function POST(req) {
         const notFoundKey = `notFound:${email}`;
         const notFoundFlag = await redis.get(notFoundKey);
         if (notFoundFlag) {
-            throw new HttpError("Couldn't find that email. So please subscribe first!", 404);
+            throw new HttpError("We couldn't find that email. So please subscribe first!", 404);
         }
         const paymentLink = await stripe.paymentLinks.create({
             line_items: [{
