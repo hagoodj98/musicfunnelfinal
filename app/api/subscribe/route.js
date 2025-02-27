@@ -14,17 +14,19 @@ const listID = process.env.MAILCHIMP_LIST_ID;
 
 //adding the subscriber
 export async function POST(req) {
-  const { email, name, rememberMe } = await req.json();
-
+ 
   // Validate email is provided and in proper format
-  if (!email) {
-    throw new HttpError('Email is required', 400);
-  }
-
-  if (!validateEmail(email)) {
-    throw new HttpError('Invalid email format for email', 400);
-  }
+ 
   try {
+    const { email, name, rememberMe } = await req.json();
+
+    if (!email) {
+      throw new HttpError('Email is required', 400);
+    }
+  
+    if (!validateEmail(email)) {
+      throw new HttpError('Invalid email format for email', 400);
+    }
     console.log(`Received data: Email: ${email}, Name: ${name}`);
   
     const addSubscriber = limiter.wrap(async (email, name) => {
