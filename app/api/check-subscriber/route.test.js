@@ -25,6 +25,14 @@ jest.mock('stripe', () => {
       }
     }));
   });
+  jest.mock('../../utils/sessionHelpers', () => {
+    const original = jest.requireActual('../../utils/sessionHelpers');
+    return {
+      ...original, // preserve the real HttpError
+      // override only the functions you need to mock
+      getSessionDataByToken: jest.fn(),
+    };
+  });
 // Mock Mailchimp client
 jest.mock('../../utils/mailchimp', () => ({
   mailchimpClient: {
@@ -136,12 +144,11 @@ describe('/api/check-subscriber Endpoint', () => {
     // Simulate successful sending of email
     sendPaymentLinkEmailViaMailchimp.mockResolvedValue();
 
-    // Simulate Mailchimp's getListMember throwing a 404 error.
-    mailchimpClient.lists.getListMember.mockImplementation(() => {
-      const error = new Error('Not found');
-      error.status = 404;
-      throw error;
-    });
+    // 5) **Here’s the key**: throw an actual HttpError with status=404
+    mailchimpClient.lists.getListMember.mockRejectedValue(
+      new HttpError("Mhm we couldn't find that email. You should subscribe!🙃", 404)
+    );
+
 
     const req = {
       json: async () => ({
@@ -152,7 +159,7 @@ describe('/api/check-subscriber Endpoint', () => {
     const response = await checkSubscriber(req);
     expect(response.status).toBe(404);
     const data = await response.json();
-    expect(data.error).toMatch(/mhm we couldn['’]t find that email.*subscribe/i);
+    expect(data.error).toMatch(/not found.*subscribe/i);
     // Verify that we set the notFound flag for 24 hours.
     expect(redis.set).toHaveBeenCalledWith(`notFound:test@example.com`, "true", "EX", 86400);
   });

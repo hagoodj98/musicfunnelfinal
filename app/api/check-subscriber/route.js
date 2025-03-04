@@ -61,9 +61,10 @@ export async function POST(req) {
         if (error.status === 404) {
             await redis.set(notFoundKey, "true", "EX", 86400);
             throw new HttpError("Mhm we couldn't find that email. You should subscribe!🙃", 404);
-        }
+        } else {
 // For any other error, throw a 500 error.
-        throw new HttpError("Error retrieving subscriber data from Mailchimp", 500);
+            throw new HttpError("Error retrieving subscriber data from Mailchimp", 500);
+        }
     }
     // If we get here, the member was found.
         return new Response(JSON.stringify({ message: 'Ahh! We found that you are a subscriber. If you wanted to make a purchase, I just sent you an email! 🙂✅' }),{ status: 200 });

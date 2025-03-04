@@ -4,14 +4,15 @@ import redis from "../../utils/redis";
 import { HttpError } from "../../utils/sessionHelpers";
 
 export async function GET(req) {
-    //Retrieve cookies from the request
-    const cookieStore = cookies();
-    const sessionToken = (await cookieStore).get('sessionToken')?.value;
-
-    if (!sessionToken) {
-        throw new HttpError('Session token not found' , 404);
-    }
+ 
     try {
+           //Retrieve cookies from the request
+        const cookieStore = cookies();
+        const sessionToken = (await cookieStore).get('sessionToken')?.value;
+
+        if (!sessionToken) {
+            throw new HttpError('Session token not found' , 404);
+        }
         //Get the remaining TTL for the session from Redis that we updated in /check-status using the key redis.set(`session:${sessionToken}`
         const ttl = await redis.ttl(`session:${sessionToken}`);
 
