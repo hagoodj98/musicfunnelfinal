@@ -10,14 +10,14 @@ import Link from 'next/link';
 const Footer = () => {
 
 
-
-
+  const date = new Date();
+  const year = date.getFullYear();
   
   return (
     <div className='container lg:tw-flex tw-py-5 lg:tw-justify-between tw-bg-lighterblue'>
       <div className='lg:tw-w-1/3'>
-        <p className='tw-text-white'>@JH Studios</p>
-        <p className='tw-text-white'> Copyright&copy; . Al Rights Reversed</p>
+        <Link className='tw-no-underline tw-text-xl tw-text-white hover:tw-text-primary' href='/' >@JH Studios</Link>
+        <p className='tw-text-white'> Copyright &copy; {year}. All Rights Reversed</p>
       </div>
      
       <div className='lg:tw-w-1/3 tw-flex tw-flex-col'>
@@ -27,7 +27,7 @@ const Footer = () => {
           <InstagramIcon className='hover:tw-text-primary' fontSize='large' />
           <TwitterIcon className='hover:tw-text-primary'  fontSize='large' />
         </div>
-        <p className='tw-text-white'>For Questions or Support, email at west00brook@gmail.com</p>
+        <p className='tw-text-white'>For Questions or Support, email at jaiquezmanage98@gmail.com</p>
 
       </div>
      

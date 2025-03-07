@@ -7,7 +7,11 @@ import Modal from 'react-bootstrap/Modal';
 import Fab from '@mui/material/Fab';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-
+import Button from '@mui/material/Button';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import InputAdornment from '@mui/material/InputAdornment';
+import EmailIcon from '@mui/icons-material/Email';
+import { TextField } from "@mui/material";
 
 const FindMe = () => {
     const [email, setEmail] = useState('');
@@ -52,7 +56,7 @@ const FindMe = () => {
 
   return (
     <div>
-        <Fab size="large" className='tw-bg-secondary tw-fixed tw-bottom-4 tw-me-2 
+        <Fab size="large" className='tw-bg-secondary tw-fixed tw-bottom-24 tw-me-2 
     tw-right-10  ' color="secondary" aria-label="add" onClick={() => setSmShow(true)}>
             <div className="tw-text-xs tw-p-4">
                 Find Me!
@@ -61,20 +65,34 @@ const FindMe = () => {
         <MessageNotify notify={message} type={messageType} />
         <Modal
         size="sm"
-        contentClassName="bg-blue-600"
         show={smShow}
         onHide={() => setSmShow(false)}
+        
         aria-labelledby="example-modal-sizes-title-sm"
       >
-        <Modal.Header closeButton>
-          <Modal.Title id="example-modal-sizes-title-sm">
-            Find if you are subscribed
+        <Modal.Header className="tw-bg-primary" closeButton>
+          <Modal.Title  id="example-modal-sizes-title-sm">
+            <h4 className="tw-text-white">Find if you are subscribed</h4>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-            <form onSubmit={handleFindMe}>
-                <input type="email" placeholder="Enter your email" required value={email} onChange={e => setEmail(e.target.value)}/>
-                <button className="tw-text-white" type="submit">{loading ? "Checking!" : "Find Me!"}</button>
+        <Modal.Body className="tw-bg-primary" >
+            <form className="tw-flex tw-flex-col" onSubmit={handleFindMe}>
+              
+               
+
+                <TextField variant='standard'  fullWidth required id="outlined-required" slotProps={{
+                input: {
+                endAdornment: (
+                    <InputAdornment position="start">
+                        <EmailIcon className='tw-text-lighterblue' fontSize='large' />
+                    </InputAdornment>
+                        ),
+                    },
+                }} 
+                label="Your Name" name='name' value={email} onChange={e => setEmail(e.target.value)}/>
+
+
+                <Button className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? "Checking!" : "Find Me!"}</Button>
             </form>
         </Modal.Body>
       </Modal>

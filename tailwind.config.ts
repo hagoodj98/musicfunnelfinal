@@ -15,7 +15,8 @@ export default {
         foreground: "var(--foreground)",
         'primary': '#167888',
         'secondary': '#EF4C12',
-        'lighterblue': 'rgb(1, 10, 38, 0.8)'
+        'lighterblue': 'rgb(1, 10, 38, 0.8)',
+        'yellow': "#FDEAB6"
       },
       backgroundImage : {
         "me": "url('/public/IMG_1856(1).jpg)"

@@ -5,6 +5,9 @@ import Script from "next/script";
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'react-toastify/dist/ReactToastify.css';
+import { ThemeProvider } from "@mui/material/styles";
+import Providers from "./providers";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +35,9 @@ export default function RootLayout({
        {/* This loads the reCAPTCHA script once the page is interactive. The src="https://www.google.com/recaptcha/api.js" loads the reCAPTCHA script and this ensures the reCAPTCHA API is loaded on your pages, and then the <div className="g-recaptcha" ...> in the FindMe component will work correctly.. The strategy="afterInteractive" ensures the script is fetched and executed after the page is interactive (which is typically what you want for non-critical scripts). */}
         <Script src="https://www.google.com/recaptcha/api.js"
           strategy="afterInteractive"/>
-          {children}
+          <Providers>
+            {children}
+          </Providers>
           <Footer />
       </body>
     </html>

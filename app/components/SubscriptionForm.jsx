@@ -3,6 +3,7 @@
 import { useContext, useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import Modal from 'react-bootstrap/Modal';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -11,6 +12,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
 import EmailChecker from './EmailConfirmationChecker';
 import { EmailContext } from '../context/EmailContext';
+
 
 const SubscriptionForm = () => {
 //The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
@@ -73,19 +75,22 @@ const SubscriptionForm = () => {
 
   return (
     <div className='tw-flex '>
-        <Button onClick={() => setLgShow(true)} className=' tw-bg-secondary tw-p-2 tw-text-white tw-w-2/5 tw-mx-auto tw-text-xl'>Join The Family!</Button>
+        <Button onClick={() => setLgShow(true)} className=' tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white tw-w-2/5 tw-mx-auto '>Join The Family!</Button>
         <Modal
         size="lg"
         show={lgShow}
+        
         onHide={() => setLgShow(false)}
+         contentClassName="tw-bg-primary tw-border-0"
         aria-labelledby="example-modal-sizes-title-lg">
-        <Modal.Header closeButton>
-          <Modal.Title id="example-modal-sizes-title-lg">
-          <GroupIcon fontSize='large'/>Enter Your Name and Email Below To
-          Join The Family!
+        <Modal.Header className='tw-bg-primary  ' closeButton>
+          <Modal.Title className=' tw-border-none tw-flex tw-items-center' id="example-modal-sizes-title-lg">
+          <GroupIcon className='tw-text-white' fontSize='large'/>
+          <h4 className='tw-text-white tw-p-3' >Enter Your Name and Email Below To
+          <span className='tw-text-yellow'> Join The Family!</span></h4>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body >
+        <Modal.Body  className='tw-bg-primary'>
             {/*This is initial. We want to render a pending message letting the user know what they should do next */}
             {status === 'pending' && (
                 <div>
@@ -99,34 +104,39 @@ const SubscriptionForm = () => {
             {(status === 'idle' || status === 'error' || status === 'pending') && 
             (
             <Form onSubmit={handleSubmit}>
-                 <div>
-            
-        </div>
-                <TextField fullWidth required id="outlined-required" slotProps={{
+                
+                <TextField variant='standard' className='tw-text-white' fullWidth required id="outlined-required" slotProps={{
                 input: {
                 endAdornment: (
-                    <InputAdornment position="start">
-                        <AccountCircle  fontSize='large'/>
+                    <InputAdornment  position="start">
+                        <AccountCircle className='tw-text-lighterblue'  fontSize='large'/>
                     </InputAdornment>
                         ),
                     },
                 }} 
                 label="Your Name" name='name' value={name} onChange={handleChange}/>
-                <TextField fullWidth required id="outlined-required"
+                <br />
+                
+                <TextField fullWidth   variant='standard' className='tw-text-white' required id="outlined-required"
                 slotProps={{
                     input: {
                     endAdornment: (
                         <InputAdornment position="start">
-                            <EmailIcon fontSize='large' />
+                            <EmailIcon className='tw-text-lighterblue' fontSize='large' />
                         </InputAdornment>
                             ),
                         },
                 }} 
                 type='email' name='email' label="Email" value={email} onChange={handleChange}/>
-                <label>
-                    <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/>Remember Me
-                </label>
-                <Button variant="outlined" type='submit'>Subscribe</Button>
+                <div className='tw-flex tw-flex-col'>
+                    <br />
+                    <label className='tw-text-lighterblue tw-w-40'>
+                        <Checkbox defaultChecked onChange={e => setRememberMe(e.target.checked)}/>Remember Me
+                    </label>
+                    <br />
+                    <Button variant="outlined" className='tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-bg-secondary tw-text-white tw-w-1/2 tw-mx-auto' type='submit'>Join The Fam</Button>
+                </div>
+               
             </Form>
             )}
             {status === 'success' && (
