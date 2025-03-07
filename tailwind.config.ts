@@ -17,6 +17,9 @@ export default {
         'secondary': '#EF4C12',
         'lighterblue': 'rgb(1, 10, 38, 0.8)'
       },
+      backgroundImage : {
+        "me": "url('/public/IMG_1856(1).jpg)"
+      }
     },
   },
   plugins: [],

@@ -17,7 +17,7 @@ export default function Home () {
       
       <FindMe />
       <div className='tw-container tw-mx-auto'>
-        <div className='tw-py-20'>
+        <div >
           <h1 className='tw-text-center  tw-my-7 tw-text-white'>I'M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST 50 FANS, <span className='tw-text-secondary'>ABSOLUTELY FREE!</span></h1>
           <h3 className='tw-text-center tw-text-primary'>Plus Get Early Access To <span className='tw-text-secondary'>New Music</span>, Livestreams, And Exclusive Merch Giveaways</h3>
           <h3 className='tw-text-center tw-text-white'>(100% Totally Free)</h3>
@@ -27,14 +27,12 @@ export default function Home () {
             <source src="../public/video/Take This Journey With Me.mp4" type="video/mp4" />
           </video>
         </div>
-        <div className='tw-mx-auto tw-w-1/4 tw-my-14'>
-          <Button variant="contained" className='tw-flex tw-bg-secondary tw-p-5'> <ArrowForwardIosRoundedIcon fontSize='medium' /><h4>Yes! I like Free Stuff</h4><ArrowBackIosRoundedIcon fontSize='medium'  /></Button>
-        </div>
-        <div className='tw-flex tw-items-center tw-py-32 tw-bg-[rgba(22,121,136,0.74)]  '>
-          <div className='tw-w-1/2 tw-relative '>
+       
+        <div className='tw-flex tw-flex-col lg:tw-flex-row tw-items-center tw-md-py-32 tw-bg-[rgba(22,121,136,0.74)]  '>
+          <div className='tw-w-1/2 tw-relative tw-hidden lg:tw-block '>
             <Image src={Me} className='tw-w-2/3 tw-absolute tw-inset-0 tw-m-auto' alt='picture of me'/>
           </div>
-          <div className='tw-w-1/2 tw-p-14'>
+          <div className='lg:tw-w-1/2 tw-p-14'>
             <div className='tw-my-7'>
               <h1 className='tw-text-white tw-text-center'>Jaiquez</h1>
               <h3 className='tw-text-white tw-text-center'>Singer-Songwriter</h3>
@@ -54,15 +52,17 @@ export default function Home () {
             </EmailProvider>
           </div>
         </div>
-        <div className=' tw-bg-[rgba(239,77,18,0.34)] tw-flex '>
-          <div className='tw-w-1/2 tw-relative'>
-            <div className='tw-absolute tw-w-1/2 tw-h-1/6 tw-inset-0 tw-flex tw-flex-col tw- tw-m-auto'>
+        <div className=' tw-bg-[rgba(239,77,18,0.54)]  lg:tw-flex '>
+          <div className='tw-flex tw-items-center tw-justify-center lg:tw-w-1/2 tw-py-6'>
+            <div className=' tw-flex tw-flex-col tw-items-center '>
               <h3 className='tw-text-center tw-my-7 tw-text-white'>Check Out my Latest Release</h3>
               <Button variant="outlined" className='tw-w-1/2 tw-mx-auto tw-bg-lighterblue tw-text-white tw-border-none' size="large">hearnow</Button>    
             </div>
           </div>
-          <div className='tw-w-1/2'>
-            <Image alt='Latest Music Cover' src={MusicCover}  />
+          <div className='lg:tw-w-1/2'>
+            <div className=''>
+              <Image alt='Latest Music Cover' src={MusicCover}  />
+            </div>
           </div>
       </div>
       </div>
