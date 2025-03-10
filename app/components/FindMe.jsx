@@ -12,6 +12,8 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import InputAdornment from '@mui/material/InputAdornment';
 import EmailIcon from '@mui/icons-material/Email';
 import { TextField } from "@mui/material";
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 
 const FindMe = () => {
     const [email, setEmail] = useState('');
@@ -51,12 +53,11 @@ const FindMe = () => {
         }
         finally {
             setLoading(false);
-        }
+      }
     }
-
-  return (
+      return (
     <div>
-        <Fab size="large" className='tw-bg-secondary tw-fixed tw-bottom-24 tw-me-2 
+        <Fab size="large" className='tw-bg-primary hover:tw-bg-yellow hover:tw-text-lighterblue tw-fixed tw-bottom-24 tw-me-2 
     tw-right-10  ' color="secondary" aria-label="add" onClick={() => setSmShow(true)}>
             <div className="tw-text-xs tw-p-4">
                 Find Me!
@@ -77,8 +78,6 @@ const FindMe = () => {
         </Modal.Header>
         <Modal.Body className="tw-bg-primary" >
             <form className="tw-flex tw-flex-col" onSubmit={handleFindMe}>
-              
-               
 
                 <TextField variant='standard'  fullWidth required id="outlined-required" slotProps={{
                 input: {
@@ -89,10 +88,17 @@ const FindMe = () => {
                         ),
                     },
                 }} 
-                label="Your Name" name='name' value={email} onChange={e => setEmail(e.target.value)}/>
+                label="Your Email" name='email' value={email} onChange={e => setEmail(e.target.value)}/>
 
 
-                <Button className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? "Checking!" : "Find Me!"}</Button>
+                <Button disabled={loading} className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
+                  <>
+                    <Box sx={{ display: 'flex' }}>
+                      <CircularProgress size="30px" color='inherit' />
+                    </Box>
+                    <span>Checking.</span>
+                  </>
+                ) : ('Find Me!')} </Button>
             </form>
         </Modal.Body>
       </Modal>

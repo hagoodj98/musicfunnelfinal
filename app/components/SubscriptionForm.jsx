@@ -6,13 +6,14 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import Modal from 'react-bootstrap/Modal';
+import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
 import EmailChecker from './EmailConfirmationChecker';
 import { EmailContext } from '../context/EmailContext';
-
+import Box from '@mui/material/Box';
 
 const SubscriptionForm = () => {
 //The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
@@ -99,7 +100,7 @@ const SubscriptionForm = () => {
                 </div>
            
             )} 
-            {status === 'error' && <p style={{ color: 'red' }}>{errorMessage}</p>}
+            
             {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
             {(status === 'idle' || status === 'error' || status === 'pending') && 
             (
@@ -134,9 +135,23 @@ const SubscriptionForm = () => {
                         <Checkbox defaultChecked onChange={e => setRememberMe(e.target.checked)}/>Remember Me
                     </label>
                     <br />
-                    <Button variant="outlined" className='tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-bg-secondary tw-text-white tw-w-1/2 tw-mx-auto' type='submit'>Join The Fam</Button>
+                    <Button disabled={status === 'pending'} variant="outlined" className='tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-bg-secondary tw-text-white tw-w-1/2 tw-mx-auto' type='submit'>{status === 'pending' ? (
+                        <>   
+                            <Box sx={{ display: 'flex' }}>
+                                <CircularProgress size="30px" color='inherit' />
+                            </Box>
+                            <span className='tw-ml-2'> Pending Subscription..</span>
+                        </>
+
+                    ) : ( 'Join The Fam')}</Button>
                 </div>
-               
+                {status === 'error' && 
+                <TextField
+                    error
+                    id="outlined-error-helper-text"
+                    label="Error"
+                    helperText="Incorrect entry."
+        />}
             </Form>
             )}
             {status === 'success' && (

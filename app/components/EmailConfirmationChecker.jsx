@@ -46,8 +46,12 @@ const EmailConfirmationChecker = ({ email, rememberMe }) => {
 
   return (
     <div>
-      {status === "waiting" && <p>Subscription pending... Please check your email to confirm. Don't see it? Check Spam!</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {status === "waiting" && 
+      <div className="tw-flex">
+        <p className="tw-text-white">Please check your email and confirm subscription. Don't see it? Check Spam!</p> 
+      </div>
+      
+      }
     </div>
   );
 };

@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import MessageNotify from "./MessageNotify";
+import Button from '@mui/material/Button';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -47,9 +48,9 @@ const CheckoutInitiator = () => {
   return (
     <div>
       <MessageNotify notify={message} type={messageType} />
-      <button onClick={handleCheckout} disabled={loading}>
+      <Button onClick={handleCheckout} className=' tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white' disabled={loading}>
         {loading ? "Redirecting..." : "Buy Fan Pack"}
-      </button>
+      </Button>
     </div>
   );
 };

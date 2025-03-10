@@ -8,6 +8,7 @@ import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRound
 import FindMe from './components/FindMe';
 import EmailPollingManager from './components/EmailPollingManager';
 import { EmailProvider } from './context/EmailContext';
+import CustomVideo from './components/CustomVideo';
 
 export default function Home () {
   return (
@@ -24,9 +25,7 @@ export default function Home () {
             <h3 className='tw-text-center tw-text-white'>(100% Totally Free)</h3>
           </div>
           <div>
-            <video width='1020' className='tw-mx-auto' height='340' controls preload="none"> 
-              <source src="../public/video/Take This Journey With Me.mp4" type="video/mp4" />
-            </video>
+           <CustomVideo vidAddress="/video/welcome-to-me.mp4" />
           </div>
         </div>
         <div className='tw-bg-[rgba(22,121,136,0.74)] '>
@@ -56,7 +55,7 @@ export default function Home () {
           </div>
         </div>
         <div className=' tw-bg-[rgba(239,77,18,1)]'>
-          <div className='container tw-p-3 tw-mx-auto  md:tw-flex '>
+          <div className='container tw-p-12 tw-mx-auto  md:tw-flex '>
             <div className='tw-flex tw-items-center tw-justify-center md:tw-w-1/2 tw-py-6'>
               <div className=' tw-flex tw-flex-col tw-items-center '>
                 <h3 className='tw-text-center tw-my-7 tw-text-white'>Check Out my Latest Release</h3>
