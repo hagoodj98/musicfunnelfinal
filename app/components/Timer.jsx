@@ -57,7 +57,7 @@ const Timer = ({initialTime, onTimeUpdate, onWarning, onExpire }) => {
     return (
         <div>
             {/* The .padStart(2,"0") ensures that this string is at least 2 characters long by adding a “0” at the beginning if necessary. For example, if seconds is 5, it turns “5” into “05”. This is a format of time everyone is used to seeing  */}
-            <p>Time remaining:{minutes}:{seconds.toString().padStart(2, "0")}</p>
+            <p className="tw-hidden">Time remaining:{minutes}:{seconds.toString().padStart(2, "0")}</p>
         </div>
   )
 }

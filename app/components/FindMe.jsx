@@ -56,30 +56,28 @@ const FindMe = () => {
       }
     }
       return (
-    <div>
-        <Fab size="large" className='tw-bg-primary hover:tw-bg-yellow hover:tw-text-lighterblue tw-fixed tw-bottom-24 tw-me-2 
-    tw-right-10  ' color="secondary" aria-label="add" onClick={() => setSmShow(true)}>
-            <div className="tw-text-xs tw-p-4">
-                Find Me!
-            </div>
-        </Fab>
+    <div className=" tw-mx-auto">
+        <Button onClick={() => setSmShow(true)}>
+            
+            <span className=" tw-text-lighterblue " >Already Subscribed?</span>
+            
+        </Button>
         <MessageNotify notify={message} type={messageType} />
         <Modal
         size="sm"
         show={smShow}
         onHide={() => setSmShow(false)}
-        
+        className="tw-bg-lighterblue"
         aria-labelledby="example-modal-sizes-title-sm"
       >
-        <Modal.Header className="tw-bg-primary" closeButton>
+        <Modal.Header className="tw-bg-primary" closeVariant="white" closeButton>
           <Modal.Title  id="example-modal-sizes-title-sm">
             <h4 className="tw-text-white">Find if you are subscribed</h4>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="tw-bg-primary" >
+        <Modal.Body >
             <form className="tw-flex tw-flex-col" onSubmit={handleFindMe}>
-
-                <TextField variant='standard'  fullWidth required id="outlined-required" slotProps={{
+                <TextField variant='standard' type="email" fullWidth required id="outlined-required" slotProps={{
                 input: {
                 endAdornment: (
                     <InputAdornment position="start">
@@ -89,14 +87,32 @@ const FindMe = () => {
                     },
                 }} 
                 label="Your Email" name='email' value={email} onChange={e => setEmail(e.target.value)}/>
+                <Button disabled={loading} sx={{
+                        // Normal (enabled) styles:
+                        backgroundColor: "secondary.main",
+                        color: "white",
+                        borderColor: "secondary.main",
+                        "&:hover": {
+                        backgroundColor: "#FDEAB6",
+                        borderColor: "#FDEAB6",
+                        color: "rgb(1, 10, 38, 0.8)",
+                        },
 
-
-                <Button disabled={loading} className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
+                        // Disabled styles:
+                        "&.Mui-disabled": {
+                        // For example, a semi-transparent version of your secondary color
+                        backgroundColor: "rgba(239, 76, 18, 0.6)",
+                        color: "white",
+                        borderColor: "rgba(239, 76, 18, 0.6)",
+                        cursor: "not-allowed",
+                        opacity: 1, // override default MUI disabled opacity if desired
+                        },
+                    }} className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
                   <>
                     <Box sx={{ display: 'flex' }}>
                       <CircularProgress size="30px" color='inherit' />
                     </Box>
-                    <span>Checking.</span>
+                    <span> Checking...</span>
                   </>
                 ) : ('Find Me!')} </Button>
             </form>

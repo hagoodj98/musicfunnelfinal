@@ -24,7 +24,7 @@ export async function POST(req) {
 //This redis key was generated after check-status verifed the subscription status
         const sessionData = await getSessionDataByToken(sessionToken);//now sessionData is a parsed JSON Object
 ///////The CSRF token protects the following process
-        const ttl = sessionData.rememberMe ? 200 : 120;
+        const ttl = sessionData.rememberMe ? 3600 : 3600;
           
 //Validate CSRF token. If this passes,then the user can continue. This prevents CSRF attacks
         if (csrfToken !== sessionData.csrfToken) {
@@ -37,7 +37,8 @@ export async function POST(req) {
         if (attempts === 1) {
           await redis.expire(attemptsKey, 86400); // 24 hours in seconds
         }
-        if (attempts > 1) {
+       // If this is an extra checkout attempt (attempt 2 or 3), send a payment link via email.
+        if (attempts === 2 || attempts === 3) {
           await redis.expire(attemptsKey, 86400); // lock out for 24 hours
           // Instead of creating a new checkout session, send a payment link email
           const paymentLink = await stripe.paymentLinks.create({
@@ -50,11 +51,18 @@ export async function POST(req) {
               redirect: { url: 'http://localhost:3000/landing/thankyou' }
             }
           });
+          // Send the payment link via email.
           const userEmail = sessionData.email;
           await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
           throw new HttpError("Too many checkout attempts. Please check your email for a payment link.", 429);
         }
-      
+        // If attempts are 4 or more, do not send any new payment link.
+        if (attempts >= 4) {
+            throw new HttpError("No more payment links can be generated. Please check your email again for the link. If you need assistance, you can find my email shown below. Sorry for inconvience. ⬇️", 429);
+        }
+     
+      // If none of the above branches are taken (which would be attempt 1),
+    // continue to create a normal Stripe checkout session.
 
 //If the price ID ever changes in Stripe, my checkout will fail.
         const priceId = process.env.STRIPE_PRICE_ID;

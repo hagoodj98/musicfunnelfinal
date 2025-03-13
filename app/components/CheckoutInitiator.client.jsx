@@ -48,8 +48,28 @@ const CheckoutInitiator = () => {
   return (
     <div>
       <MessageNotify notify={message} type={messageType} />
-      <Button onClick={handleCheckout} className=' tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white' disabled={loading}>
-        {loading ? "Redirecting..." : "Buy Fan Pack"}
+      <Button onClick={handleCheckout} sx={{
+                        // Normal (enabled) styles:
+                        backgroundColor: "secondary.main",
+                        color: "white",
+                        borderColor: "secondary.main",
+                        "&:hover": {
+                        backgroundColor: "#FDEAB6",
+                        borderColor: "#FDEAB6",
+                        color: "rgb(1, 10, 38, 0.8)",
+                        },
+
+                        // Disabled styles:
+                        "&.Mui-disabled": {
+                        // For example, a semi-transparent version of your secondary color
+                        backgroundColor: "rgba(239, 76, 18, 0.6)",
+                        color: "white",
+                        borderColor: "rgba(239, 76, 18, 0.6)",
+                        cursor: "not-allowed",
+                        opacity: 1, // override default MUI disabled opacity if desired
+                        },
+                    }} disabled={loading}>
+        {loading ? "Redirecting to Stripe..." : "I Want One!"}
       </Button>
     </div>
   );

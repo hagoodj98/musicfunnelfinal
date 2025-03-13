@@ -100,7 +100,7 @@ async function handleCheckoutSessionExpired(paymentIntent) {
     }
     
      // Determine TTL based on rememberMe flag:
-     const ttl = sessionData.rememberMe ? 200 : 120;
+     const ttl = sessionData.rememberMe ? 3600 : 3600;
   
     // Update the checkoutStatus property on the retrieved session data
     sessionData.checkoutStatus = 'cancelled';

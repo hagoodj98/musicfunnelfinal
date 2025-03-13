@@ -14,6 +14,8 @@ import GroupIcon from '@mui/icons-material/Group';
 import EmailChecker from './EmailConfirmationChecker';
 import { EmailContext } from '../context/EmailContext';
 import Box from '@mui/material/Box';
+import FindMe from './FindMe';
+
 
 const SubscriptionForm = () => {
 //The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
@@ -80,32 +82,28 @@ const SubscriptionForm = () => {
         <Modal
         size="lg"
         show={lgShow}
-        
         onHide={() => setLgShow(false)}
          contentClassName="tw-bg-primary tw-border-0"
         aria-labelledby="example-modal-sizes-title-lg">
-        <Modal.Header className='tw-bg-primary  ' closeButton>
+        <Modal.Header className='tw-bg-primary' closeVariant='white' closeButton>
           <Modal.Title className=' tw-border-none tw-flex tw-items-center' id="example-modal-sizes-title-lg">
           <GroupIcon className='tw-text-white' fontSize='large'/>
           <h4 className='tw-text-white tw-p-3' >Enter Your Name and Email Below To
           <span className='tw-text-yellow'> Join The Family!</span></h4>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body  className='tw-bg-primary'>
+        <Modal.Body>
             {/*This is initial. We want to render a pending message letting the user know what they should do next */}
             {status === 'pending' && (
                 <div>
                      {/* Render the EmailChecker component and pass the email because once the user hits the subscribe button we want to start checking for an updated status. This EmailChecker handles the polling that runs every 10 seconds watching for updates to the user subsscription status */}
                      <EmailChecker email={email} rememberMe={rememberMe} />
                 </div>
-           
             )} 
-            
             {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
             {(status === 'idle' || status === 'error' || status === 'pending') && 
             (
             <Form onSubmit={handleSubmit}>
-                
                 <TextField variant='standard' className='tw-text-white' fullWidth required id="outlined-required" slotProps={{
                 input: {
                 endAdornment: (
@@ -117,7 +115,6 @@ const SubscriptionForm = () => {
                 }} 
                 label="Your Name" name='name' value={name} onChange={handleChange}/>
                 <br />
-                
                 <TextField fullWidth   variant='standard' className='tw-text-white' required id="outlined-required"
                 slotProps={{
                     input: {
@@ -135,23 +132,35 @@ const SubscriptionForm = () => {
                         <Checkbox defaultChecked onChange={e => setRememberMe(e.target.checked)}/>Remember Me
                     </label>
                     <br />
-                    <Button disabled={status === 'pending'} variant="outlined" className='tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-bg-secondary tw-text-white tw-w-1/2 tw-mx-auto' type='submit'>{status === 'pending' ? (
+                    <Button disabled={status === 'pending'} sx={{
+                        // Normal (enabled) styles:
+                        backgroundColor: "secondary.main",
+                        color: "white",
+                        borderColor: "secondary.main",
+                        "&:hover": {
+                        backgroundColor: "#FDEAB6",
+                        borderColor: "#FDEAB6",
+                        color: "rgb(1, 10, 38, 0.8)",
+                        },
+                        // Disabled styles:
+                        "&.Mui-disabled": {
+                        // For example, a semi-transparent version of your secondary color
+                        backgroundColor: "rgba(239, 76, 18, 0.6)",
+                        color: "white",
+                        borderColor: "rgba(239, 76, 18, 0.6)",
+                        cursor: "not-allowed",
+                        opacity: 1, // override default MUI disabled opacity if desired
+                        },
+                    }} variant="outlined" className='  tw-mx-auto' type='submit'>{status === 'pending' ? (
                         <>   
                             <Box sx={{ display: 'flex' }}>
-                                <CircularProgress size="30px" color='inherit' />
+                                <CircularProgress size="20px" color='inherit' />
                             </Box>
-                            <span className='tw-ml-2'> Pending Subscription..</span>
+                            <span className=' tw-ml-2'> Pending Subscription..</span>
                         </>
-
                     ) : ( 'Join The Fam')}</Button>
+                    <FindMe />
                 </div>
-                {status === 'error' && 
-                <TextField
-                    error
-                    id="outlined-error-helper-text"
-                    label="Error"
-                    helperText="Incorrect entry."
-        />}
             </Form>
             )}
             {status === 'success' && (

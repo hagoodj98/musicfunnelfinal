@@ -5,18 +5,16 @@ import Button from '@mui/material/Button';
 import Me from '../public/IMG_1856(1).jpg';
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
-import FindMe from './components/FindMe';
 import EmailPollingManager from './components/EmailPollingManager';
 import { EmailProvider } from './context/EmailContext';
 import CustomVideo from './components/CustomVideo';
+import HearNow from './components/HearNow';
 
 export default function Home () {
   return (
    
     <div className="tw-bg-center ">
         {/* EmailPollingManager remains mounted continuously */}
-      
-      <FindMe />
       <div className=' tw-mx-auto'>
         <div className='container'>
           <div className='tw-pb-8'>
@@ -58,8 +56,8 @@ export default function Home () {
           <div className='container tw-p-12 tw-mx-auto  md:tw-flex '>
             <div className='tw-flex tw-items-center tw-justify-center md:tw-w-1/2 tw-py-6'>
               <div className=' tw-flex tw-flex-col tw-items-center '>
-                <h3 className='tw-text-center tw-my-7 tw-text-white'>Check Out my Latest Release</h3>
-                <Button href='https://jaiquez.hearnow.com/good' variant="outlined" className='tw-w-1/2 tw-mx-auto tw-bg-lighterblue tw-text-white tw-border-none hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue' size="large">hearnow</Button>    
+                <h3 className='tw-text-center tw-text-white'>Check Out my Latest Release</h3>
+                <HearNow />
               </div>
             </div>
             <div className='md:tw-w-1/2 '>
