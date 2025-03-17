@@ -58,10 +58,9 @@ When you go to the club gate (which is like the middleware), the guard asks you 
             console.log("Redirecting because checkout was not completed or canceled properly.");
 //When something goes wrong (like the checkout was cancelled), the middleware adds a little note (message) to the URL. It’s like attaching a sticky note to a package saying, “Oops, something went wrong!”
             const redirectUrl = new URL('/landing', req.url);
-            if (sessionData.message) {
+           
 //This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
-                redirectUrl.searchParams.append('msg', encodeURIComponent(sessionData.message));
-            }
+            redirectUrl.searchParams.append('msg', encodeURIComponent('Redirecting back to fan page because checkout was not completed or canceled properly.'));
             return NextResponse.redirect(redirectUrl);
         }
     }

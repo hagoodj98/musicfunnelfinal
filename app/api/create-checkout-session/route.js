@@ -54,7 +54,7 @@ export async function POST(req) {
           // Send the payment link via email.
           const userEmail = sessionData.email;
           await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
-          throw new HttpError("Too many checkout attempts. Please check your email for a payment link.", 429);
+          throw new HttpError("Too many checkout attempts. Check your email! We sent a payment link to your email if you wanted to make a purchase.", 429);
         }
         // If attempts are 4 or more, do not send any new payment link.
         if (attempts >= 4) {

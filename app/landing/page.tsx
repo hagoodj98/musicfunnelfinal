@@ -5,14 +5,18 @@ import CustomVideo from '../components/CustomVideo';
 import Image from 'next/image';
 import FanPack from '../../public/fanpack.jpg';
 import CheckIcon from '@mui/icons-material/Check';
-
+import LandingToastNotifier from '../components/LandingToastNotifier';
 
 const LandingPage = () => {
   
   return (
     <div>
+    
       {/* This client component will fetch the TTL and then render the SessionManager. This strictly relates to the vality of the session using cookies. In terms of how long this cookie is valid for and what should happen as time decreases */}
       <SessionManagerProvider />
+      {/* Include the client component for toast notifications */}
+      <LandingToastNotifier />
+      
       <div className='container'>
           <div className='tw-pb-8'>
             <h1 className='tw-text-center  tw-my-7 tw-text-white'>🏆 Your Ultimate Fan Starter Pack Includes: </h1>

@@ -60,7 +60,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
           {/*The onHide is a prop expected by the React-Bootstrap Modal. It is a callback that is triggered when the user tries to close the modal (for example, by clicking the close button in the header). In my code, we pass our onClose function to onHide, so that whether the user clicks the close icon or the “Nope!” button, the same function (onClose) is called to hide the popup. */}
           {/*backdrop="static" prevents closing the modal by clicking outside, ensuring the user makes an explicit choice. */}
           <Modal show={true}  onHide={onClose} backdrop="static" keyboard={false}>
-            <Modal.Header className='tw-bg-primary' closeButton>
+            <Modal.Header className='tw-bg-primary' closeVariant='white' closeButton>
               <Modal.Title>
                 <h4 className='tw-text-white tw-p-4'>Session will expire soon</h4>
               </Modal.Title>

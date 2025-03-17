@@ -26,7 +26,7 @@ export async function POST() {
         }
       
 //This line considers if a user clicked the rememberMe button, if so, then we would not want to refresh the session for only an hour simply becasue the user wanted the application to remmeber them. So we would set the ttl for about a week instead. If their is no  rememberMe flag, then yes, the session refreshes for another hour.
-        const ttl = currentSessionData.rememberMe ? 3600 : 3600;
+        const ttl = currentSessionData.rememberMe ? 90 : 100;
 
 //Generate new tokens (both session and CSRF). I assigned values to the existing properties provided by the generateTokenAndSalt so its clear which values are being returned and used. For example, newSessionToken contains the generated session token. All I did was set it to a property so I can use 
         const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();

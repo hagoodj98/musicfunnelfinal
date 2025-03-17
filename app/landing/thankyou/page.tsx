@@ -9,13 +9,10 @@ const ThankYouPage = () => {
       <SessionManagerProvider />
       <div className='container'>
           <div className='tw-pb-8'>
-            <h1 className='tw-text-center  tw-my-7 tw-text-white'>JOIN MY PATREON <span className="tw-text-primary">AND GET EXCLUSIVE ACCESS TO NEW MUSIC MUSIC VIDEOS,</span> BEHIND THE SCENE <span className="tw-text-primary">FOOTAGE, AND SO MUCH</span> more!</h1>
+            <h1 className='tw-text-center  tw-my-7 tw-text-white'>JOIN MY PATREON - <span className="tw-text-primary">YOUR SUPPORT HELPS FUND</span> FUTURE MUSIC VIDEOS, <span className="tw-text-primary">MUSIC</span>, AND AN ONLINE STORE</h1>
           </div>
           <div>
             <CustomVideo vidAddress="/video/take-this-journey-with-me.mp4"/>
-          </div>
-          <div>
-            <Patreon />
           </div>
         </div>
         <div className='tw-bg-[rgba(22,121,136,0.74)] '>
@@ -31,7 +28,9 @@ const ThankYouPage = () => {
                <p>We cannot move forward shipping you your products until address is confirmed.</p>
                <p>If you have any questions or concerns, feel free to contact me via email.</p>
                <p>Thanks for being a <span className="tw-text-yellow">TRUE FAN!!</span></p>
-                
+                <div>
+                  <Patreon />
+                </div>
             </div>
           </div>
         </div>
@@ -40,4 +39,4 @@ const ThankYouPage = () => {
   )
 }
 
-export default ThankYouPage
+export default ThankYouPage;

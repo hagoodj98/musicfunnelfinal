@@ -42,7 +42,7 @@ useEffect(() => {
 
 //this block of code is running in between pages
 if (loading) {
-  return <p>Loading Session time...</p>
+  return <p className='tw-text-white'>Loading Session time...</p>
 }
  // Pass the fetched TTL value to the SessionManager.
   return (

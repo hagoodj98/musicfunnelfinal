@@ -44,21 +44,20 @@ const CheckoutInitiator = () => {
       setLoading(false);
     }
   };
-
   return (
-    <div>
+    <div className="tw-w-full  tw-flex tw-justify-center">
       <MessageNotify notify={message} type={messageType} />
       <Button onClick={handleCheckout} sx={{
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",
+                        width: "50%",
                         borderColor: "secondary.main",
                         "&:hover": {
                         backgroundColor: "#FDEAB6",
                         borderColor: "#FDEAB6",
                         color: "rgb(1, 10, 38, 0.8)",
                         },
-
                         // Disabled styles:
                         "&.Mui-disabled": {
                         // For example, a semi-transparent version of your secondary color

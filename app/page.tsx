@@ -9,11 +9,13 @@ import EmailPollingManager from './components/EmailPollingManager';
 import { EmailProvider } from './context/EmailContext';
 import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
+import MessageNotify from './components/MessageNotify'
 
 export default function Home () {
   return (
    
     <div className="tw-bg-center ">
+      <MessageNotify  />
         {/* EmailPollingManager remains mounted continuously */}
       <div className=' tw-mx-auto'>
         <div className='container'>

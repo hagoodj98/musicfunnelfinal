@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -13,9 +13,10 @@ import EmailIcon from '@mui/icons-material/Email';
 import GroupIcon from '@mui/icons-material/Group';
 import EmailChecker from './EmailConfirmationChecker';
 import { EmailContext } from '../context/EmailContext';
-import Box from '@mui/material/Box';
 import FindMe from './FindMe';
-
+import CheckIcon from '@mui/icons-material/Check';
+import { green } from '@mui/material/colors';
+import { toast } from 'react-toastify';
 
 const SubscriptionForm = () => {
 //The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
@@ -23,7 +24,6 @@ const SubscriptionForm = () => {
 
 //// Since the name is only used within SubscriptionForm, it remains local.
     const [name, setName] = useState('');
-
     const [errorMessage, setErrorMessage] = useState('');
     //When user clicks the subscribe button, it triggers the handleSubmit function, assuming their is an email, we want to set the status to pending. If status equals 'pending' then show a pending message.
     const [status, setStatus] = useState('idle')
@@ -59,13 +59,12 @@ const SubscriptionForm = () => {
             }
             // If subscription is initiated successfully, allow polling:
             setShouldPoll(true);
-            
         } catch (error) {
             console.error('Subscription error:', error);
             setStatus('error');
             setErrorMessage(error.message || 'Failed to process subscription request!');
         }
-    }
+    };
 // Unified change handler for both name and email
     function handleChange(event) {
         const {name, value}= event.target;
@@ -75,9 +74,15 @@ const SubscriptionForm = () => {
             setEmail(value);
         }
     }
+// When status becomes 'confirmed', trigger a toast
+    useEffect(() => {
+        if (status === 'confirmed') {
+          toast.success('Thank you for subscribing! Redirecting you the landing page..');
+        }
+    }, [status]);
 
   return (
-    <div className='tw-flex '>
+    <div className='tw-flex'>
         <Button onClick={() => setLgShow(true)} className=' tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white tw-w-2/5 tw-mx-auto '>Join The Family!</Button>
         <Modal
         size="lg"
@@ -97,11 +102,11 @@ const SubscriptionForm = () => {
             {status === 'pending' && (
                 <div>
                      {/* Render the EmailChecker component and pass the email because once the user hits the subscribe button we want to start checking for an updated status. This EmailChecker handles the polling that runs every 10 seconds watching for updates to the user subsscription status */}
-                     <EmailChecker email={email} rememberMe={rememberMe} />
+                     <EmailChecker email={email} rememberMe={rememberMe} onConfirmed={() => setStatus('confirmed')} />
                 </div>
             )} 
             {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
-            {(status === 'idle' || status === 'error' || status === 'pending') && 
+            {(status === 'idle' || status === 'error' || status === 'pending' || status === 'confirmed') && 
             (
             <Form onSubmit={handleSubmit}>
                 <TextField variant='standard' className='tw-text-white' fullWidth required id="outlined-required" slotProps={{
@@ -134,36 +139,42 @@ const SubscriptionForm = () => {
                     <br />
                     <Button disabled={status === 'pending'} sx={{
                         // Normal (enabled) styles:
-                        backgroundColor: "secondary.main",
+                        backgroundColor: status === 'confirmed' ? green[500] : "secondary.main",
                         color: "white",
-                        borderColor: "secondary.main",
+                        borderColor: status === 'confirmed' ? green[500] : "secondary.main",
                         "&:hover": {
-                        backgroundColor: "#FDEAB6",
-                        borderColor: "#FDEAB6",
-                        color: "rgb(1, 10, 38, 0.8)",
+                          backgroundColor: status === 'confirmed' ? green[700] : "#FDEAB6",
+                          borderColor: status === 'confirmed' ? green[700] : "#FDEAB6",
+                          color: status === 'confirmed' ? "white" : "rgb(1, 10, 38, 0.8)",
                         },
-                        // Disabled styles:
                         "&.Mui-disabled": {
-                        // For example, a semi-transparent version of your secondary color
-                        backgroundColor: "rgba(239, 76, 18, 0.6)",
-                        color: "white",
-                        borderColor: "rgba(239, 76, 18, 0.6)",
-                        cursor: "not-allowed",
-                        opacity: 1, // override default MUI disabled opacity if desired
+                          backgroundColor: "rgba(239, 76, 18, 0.6)",
+                          color: "white",
+                          borderColor: "rgba(239, 76, 18, 0.6)",
+                          cursor: "not-allowed",
+                          opacity: 1,
                         },
-                    }} variant="outlined" className='  tw-mx-auto' type='submit'>{status === 'pending' ? (
-                        <>   
-                            <Box sx={{ display: 'flex' }}>
-                                <CircularProgress size="20px" color='inherit' />
-                            </Box>
-                            <span className=' tw-ml-2'> Pending Subscription..</span>
-                        </>
-                    ) : ( 'Join The Fam')}</Button>
+                    }} 
+                    variant="outlined" 
+                    className='tw-mx-auto' 
+                    type='submit'
+                    >
+                        {status === 'pending' ? (
+                            <>   
+                                <CircularProgress size="20px" style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
+                                <span className=' tw-ml-2'> Pending Subscription.</span>
+                            </>
+                    ) : status === 'confirmed' ? ( 
+                        <CheckIcon />
+                    ) : (
+                        'Join The Fam'
+                    )}
+                    </Button>
                     <FindMe />
                 </div>
             </Form>
             )}
-            {status === 'success' && (
+            {status === 'confirmed' && (
             <p>Subscription confirmed! Redirecting to the landing page...</p>
           )}
         </Modal.Body>

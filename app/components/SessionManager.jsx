@@ -1,9 +1,11 @@
 'use client';
 
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Timer from './Timer';
 import RefreshPopup from './RefreshPopup';
+import { toast } from 'react-toastify';
+
 
 //This is a parent that watches the timer (child component) telling it to do something in order for the parent to decides when to show the popup.
 
@@ -20,46 +22,26 @@ const SessionManager = ({ initialTime }) => { //the time is set by SessionManage
 //In order for it to listen to when to show the popup, it needs to know the current time. This is the responsibly that the parent gave to the child so that the parent can do what they were designed to do.
     const [timeLeft, setTimeLeft] = useState(initialTime);
 
-    useEffect(() => {
-// On mount, check sessionStorage to see if the popup was open and restore the timeLeft
-//When the component mounts, it checks sessionStorage for the key 'popupOpen'. If it finds 'true', it means the popup was open before the refresh. It then reads the stored 'timeLeft' (if available) to restore the timer state.
-        const storedPopupOpen = sessionStorage.getItem('popupOpen');
-        const storedTimeLeft = sessionStorage.getItem('timeLeft');
-        if (storedPopupOpen === 'true') {
-            setShowPopup(true);
-            if (storedTimeLeft) {
-                setTimeLeft(parseInt(storedTimeLeft, 10));
-            }
-        }
-    }, []);
-
     // This callback gets called every second by Timer. Some parents have to keep an eye on their children to make sure, the children do the work they were asked. This updateTimeLeft does the same thing. Its an eye.
     
     const updateTimeLeft = (timeLeft) => {
         //It get the current time from Timer using the timeLeft parameter, which is the timeLeft variable over at Timer is set by setTimeLeft, which transfers the current time from over at Timer to over here at SessionManager.
         setTimeLeft(timeLeft);
-         // Every time the Timer updates the time left (using the onTimeUpdate callback), we store the current time in sessionStorage so it’s available after a refresh.
-        sessionStorage.setItem('timeLeft', timeLeft.toString())
     };
     // This callback is called when Timer reaches 60 seconds left. This is what the child is responsible for. To let their parent know when they are done. These timeLeft parameters you see in handleWarning and updateTimeLeft comes from the child(Timer). And the setTimeLeft is how the parent keeps an eye on the child. Everything parent child relationship is a bit different, so the interaction may vary depending on the project.
     const handleWarning = (timeLeft) => {
-        
         setShowPopup(true);
         setTimeLeft(timeLeft); // Update state with current time
-//When the Timer warns (at 60 seconds), we set showPopup to true and store 'popupOpen' as 'true' along with the current time left.
-        sessionStorage.setItem('popupOpen', 'true');
-        sessionStorage.setItem('timeLeft', timeLeft.toString());
     };
 // When the Timer expires, take appropriate action (e.g., redirect). We just call this function over at the Timer component since the Timer is keeping track anyway. We send this function as a prop to Timer. 
     const handleExpire = () => {
         // For example, redirect the user or take other actions
-        alert("Redirecting to squeeze page");
+        alert("Redirecting back to squeeze page.");
         window.location.href = '/';
     }
 //When the user closes the popup (by clicking “Nope!” or after a successful refresh), we remove the 'popupOpen' flag from sessionStorage. This ensures the popup doesn’t automatically reappear on the next refresh if the user has dismissed it.
     const handleClosePopup = () => {
         setShowPopup(false);
-        sessionStorage.removeItem('popupOpen');
     };
 
     return (

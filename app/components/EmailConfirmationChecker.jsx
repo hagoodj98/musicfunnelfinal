@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const EmailConfirmationChecker = ({ email, rememberMe }) => {
+
+const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
   const [status, setStatus] = useState("waiting");
   const [error, setError] = useState("");
 
@@ -24,12 +25,15 @@ const EmailConfirmationChecker = ({ email, rememberMe }) => {
           // Assume data includes sessionToken, csrfToken etc.
           if (data.sessionToken) {
             console.log("Check status response", data);
-            
             // Stop polling and redirect or update UI accordingly
-            setStatus("confirmed");
+            if (onConfirmed) {
+              onConfirmed();
+            }
             clearInterval(intervalId);
             // Redirect to /landing page or update application state
-            window.location.href = "/landing";
+            setTimeout(() => {
+              window.location.href = "/landing";
+            }, 10500);
           }
         } else {
           console.error("Check status not ready yet.");

@@ -46,7 +46,7 @@ export async function POST(req) {
     }
     //Parse the session data into a sessionData JSON object to get the stored salt and update the status to subscribed
     const sessionData = JSON.parse(sessionDataString); 
-    const ttl = sessionData.rememberMe ? 3600 : 3600; 
+    const ttl = sessionData.rememberMe ? 90 : 100; 
     // Update the session data with the new status
     sessionData.status = 'subscribed';
     // Store the updated session data back in Redis with the new status. All that is left is for route check-status to check the status before issuing tokens

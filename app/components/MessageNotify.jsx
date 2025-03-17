@@ -15,7 +15,7 @@ const MessageNotify = ({notify, type}) => {
         if (type === 'error') {
             toast.error(displayText);
         } 
-      } else{
+      } else {
             //When the landing page loads, it reads the URL for that sticky note (query parameter msg). If it finds one, it uses React Toastify to pop up a friendly little notification that shows the message. Then, it cleans up the URL so the message doesn’t show up again if the page is reloaded
             const params = new URLSearchParams(window.location.search);
             const message = params.get('msg');
@@ -29,7 +29,6 @@ const MessageNotify = ({notify, type}) => {
 
     return (
         <div>
-            <ToastContainer />
            
         </div>
     )
