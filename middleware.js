@@ -9,7 +9,7 @@ export async function middleware(req) {
     if (!sessionToken) {
         console.log("No session token found, redirecting...");
         const redirectUrl = new URL('/', req.url);
-        const message = 'You cannot proceed like that!!'; 
+        const message = 'You cannot proceed without an active session!!'; 
             
                 //This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
         redirectUrl.searchParams.append('msg', encodeURIComponent(message));

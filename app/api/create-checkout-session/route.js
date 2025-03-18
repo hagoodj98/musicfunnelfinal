@@ -58,7 +58,7 @@ export async function POST(req) {
         }
         // If attempts are 4 or more, do not send any new payment link.
         if (attempts >= 4) {
-            throw new HttpError("No more payment links can be generated. Please check your email again for the link. If you need assistance, you can find my email shown below. Sorry for inconvience. ⬇️", 429);
+            throw new HttpError("No more payment links can be generated in a 24 hour span. Please check your email again for the link. If you need assistance, you can find my email shown below  ⬇️. Sorry for the inconvience.", 429);
         }
      
       // If none of the above branches are taken (which would be attempt 1),
