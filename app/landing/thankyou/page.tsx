@@ -2,6 +2,10 @@ import SessionManagerProvider from "@/app/components/SessionManagerProvider"
 import CustomVideo from "@/app/components/CustomVideo"
 import Patreon from '../../components/JoinPatreon';
 
+export const metadata = {
+  title: "Thank You - Your Support Matters",
+  description: "Thank you for your support! Your contribution helps fund future projects like music videos and online merch."
+};
 
 const ThankYouPage = () => {
   return (

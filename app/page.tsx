@@ -11,9 +11,14 @@ import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
 import MessageNotify from './components/MessageNotify'
 
+export const metadata = {
+  title: "Home",
+  description: "Welcome to your ultimate fan community. Enjoy exclusive content, updates, and more."
+};
+
 export default function Home () {
+
   return (
-   
     <div className="tw-bg-center ">
       <MessageNotify  />
         {/* EmailPollingManager remains mounted continuously */}

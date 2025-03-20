@@ -7,6 +7,13 @@ import FanPack from '../../public/fanpack.jpg';
 import CheckIcon from '@mui/icons-material/Check';
 import LandingToastNotifier from '../components/LandingToastNotifier';
 
+
+export const metadata = {
+  title: "Fan Pack",
+  description: "Join now to get insider updates and your free Ultimate Fan Starter Pack."
+};
+
+
 const LandingPage = () => {
   
   return (
