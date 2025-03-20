@@ -1,7 +1,6 @@
-
-import { cookies } from "next/headers";
-import redis from "../../utils/redis";
-import { HttpError } from "../../utils/sessionHelpers";
+import { cookies } from './headersWrapper.js';
+import redis from "../../utils/redis.js";
+import { HttpError } from "../../utils/sessionHelpers.js";
 
 export async function GET(req) {
  

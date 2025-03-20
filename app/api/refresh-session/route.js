@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
-import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, createCookie } from '../../utils/sessionHelpers';
+//import { cookies } from "next/headers";
+import { cookies } from './headersWrapper.js';
+import { generateTokenAndSalt, getSessionDataByToken, HttpError, updateSessionData, createCookie } from '../../utils/sessionHelpers.js';
 
 
 export async function POST() {

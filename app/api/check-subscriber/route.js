@@ -1,10 +1,10 @@
-import { mailchimpClient } from "../../utils/mailchimp";
+import { mailchimpClient } from "../../utils/mailchimp.js";
 import crypto from 'crypto';
-import { HttpError } from '../../utils/sessionHelpers';
+import { HttpError } from '../../utils/sessionHelpers.js';
 import Stripe from "stripe";
-import { validateEmail } from '../../utils/validateEmail';
-import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
-import redis from "../../utils/redis";
+import { validateEmail } from '../../utils/validateEmail.js';
+import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers.js";
+import redis from "../../utils/redis.js";
 const listID = process.env.MAILCHIMP_LIST_ID;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 

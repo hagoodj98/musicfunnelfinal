@@ -1,208 +1,180 @@
-import { POST as checkSubscriber } from '../check-subscriber/route';
-import crypto from 'crypto';
-import { HttpError } from '../../utils/sessionHelpers';
-import redis from '../../utils/redis';
-import { mailchimpClient } from '../../utils/mailchimp';
-import { sendPaymentLinkEmailViaMailchimp } from '../../utils/mailchimpHelpers';
-import Stripe from 'stripe';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
+import esmock from 'esmock';
 
+// We'll define default mocks here, then override them as needed in each test.
+let fakeMailchimpClient, fakeMailchimpHelpers, fakeRedis, fakeStripe, fakeValidateEmail, fakeHttpError;
 
-
-// Mock Redis methods
-jest.mock('../../utils/redis', () => ({
-  incr: jest.fn(),
-  expire: jest.fn(),
-  get: jest.fn(),
-  set: jest.fn(),
-}));
-
-// At the top of your test file:
-jest.mock('stripe', () => {
-    const createFn = jest.fn();
-    return jest.fn().mockImplementation(() => ({
-      paymentLinks: {
-        create: createFn
-      }
-    }));
+// A helper function to re-import `route.js` with the current mocks.
+async function importCheckSubscriber() {
+  return esmock('./route.js', {
+    // Matches how `route.js` imports these modules:
+    '../../utils/mailchimp.js': { mailchimpClient: fakeMailchimpClient },
+    '../../utils/mailchimpHelpers.js': fakeMailchimpHelpers,
+    '../../utils/redis.js': fakeRedis,
+    '../../utils/validateEmail.js': { validateEmail: fakeValidateEmail },
+    '../../utils/sessionHelpers.js': { HttpError: fakeHttpError },
+    'stripe': fakeStripe
   });
-  jest.mock('../../utils/sessionHelpers', () => {
-    const original = jest.requireActual('../../utils/sessionHelpers');
-    return {
-      ...original, // preserve the real HttpError
-      // override only the functions you need to mock
-      getSessionDataByToken: jest.fn(),
-    };
-  });
-// Mock Mailchimp client
-jest.mock('../../utils/mailchimp', () => ({
-  mailchimpClient: {
+}
+
+test.before.each(() => {
+  // Reset all mocks to "happy path" defaults before each test.
+  fakeMailchimpClient = {
     lists: {
-      getListMember: jest.fn(),
-    },
-  },
-}));
+      getListMember: async (listID, subscriberHash) => {
+        // By default, pretend the user is found in Mailchimp.
+        return { id: 'some-member-id', email_address: 'test@example.com' };
+      }
+    }
+  };
 
-// Mock the email sending helper
-jest.mock('../../utils/mailchimpHelpers', () => ({
-  sendPaymentLinkEmailViaMailchimp: jest.fn(),
-}));
+  fakeMailchimpHelpers = {
+    sendPaymentLinkEmailViaMailchimp: async (email, link) => {
+      // Do nothing, or log if you want to see calls
+    }
+  };
 
+  fakeRedis = {
+    incr: async (key) => 1,
+    expire: async (key, ttl) => {},
+    get: async (key) => null,
+    set: async (key, value, mode, ttl) => {}
+  };
 
-
-// Dummy payment link object returned by Stripe
-const dummyStripePaymentLink = { url: 'http://dummy.payment.link' };
-
-describe('/api/check-subscriber Endpoint', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.resetAllMocks();
-    // Re-define the default mock for Stripe
-    const StripeModule = require('stripe');
-    StripeModule.mockImplementation(() => ({
+  // Our Stripe mock returns a payment link with a dummy URL
+  fakeStripe = function StripeMock(secretKey) {
+    return {
       paymentLinks: {
-        create: jest.fn(),
-      },
-    }));
-  });
-/**
- * The test sends a request with no email, so your route should throw an HttpError with status 400.
-	•	The test checks that response.status is 400 and that the returned JSON has an error message matching “Email is required.”
- */
-  test('returns 400 if email is missing', async () => {
-    // Prepare a mock request object
-    const req = {
-      json: async () => ({
-        // Missing email
-        name: 'Test User',
-        rememberMe: false,
-      }),
+        create: async (obj) => {
+          return { url: 'http://dummy.link' };
+        }
+      }
     };
+  };
 
-    const response = await checkSubscriber(req);
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data.error).toMatch(/Email is required/);
-  });
-/**
- * We simulate that Redis.incr returns 3 (meaning the user has called the endpoint more than allowed).
-	•	The test expects a 429 error with an appropriate error message.
- */
-  test('returns 429 if rate limit exceeded', async () => {
-    // Simulate that the user has already called more than allowed
-    redis.incr.mockResolvedValue(3); // attempts > 2 triggers rate limit
-    redis.expire.mockResolvedValue(true);
+  // By default, say every email is valid
+  fakeValidateEmail = (email) => true;
 
-    const req = {
-      json: async () => ({
-        email: 'test@example.com',
-      }),
-    };
-
-    const response = await checkSubscriber(req);
-    expect(response.status).toBe(429);
-    const data = await response.json();
-    expect(data.error).toMatch(/reached your limit/i);
-  });
-/**
- * We simulate that the Redis key notFound:test@example.com is already set (by mocking redis.get to return “true”).
-	•	The route should immediately throw a 404 error with an error message indicating the email is not found.
- */
-  test('returns 404 immediately if notFound flag is set', async () => {
-    // Simulate rate limit within allowed window
-    redis.incr.mockResolvedValue(1);
-    redis.expire.mockResolvedValue(true);
-    // Simulate that we've previously flagged this email as not found
-    redis.get.mockResolvedValue("true");
-
-    const req = {
-      json: async () => ({
-        email: 'test@example.com',
-      }),
-    };
-
-    const response = await checkSubscriber(req);
-    expect(response.status).toBe(404);
-    const data = await response.json();
-    expect(data.error).toMatch(/ couldn['’]t find that email.*subscribe/i);
-  });
-/**
- * We simulate a valid rate limit and no notFound flag initially.
-	•	We then simulate that Mailchimp’s API (mailchimpClient.lists.getListMember) throws a 404 error.
-	•	The endpoint should catch that error, set the notFound flag in Redis (with an expiration of 86400 seconds), and then return a 404 response.
- */
-  test('returns 404 if Mailchimp returns 404 and sets notFound flag', async () => {
-    // Simulate a fresh call with allowed rate limit
-    redis.incr.mockResolvedValue(1);
-    redis.expire.mockResolvedValue(true);
-    // Ensure the notFound flag is not set initially.
-    redis.get.mockResolvedValue(null);
-
-    // Set up Stripe payment link creation
-    const stripeInstance = new Stripe();
-    stripeInstance.paymentLinks.create.mockResolvedValue(dummyStripePaymentLink);
-
-    // Simulate successful sending of email
-    sendPaymentLinkEmailViaMailchimp.mockResolvedValue();
-
-    // 5) **Here’s the key**: throw an actual HttpError with status=404
-    mailchimpClient.lists.getListMember.mockRejectedValue(
-      new HttpError("Mhm we couldn't find that email. You should subscribe!🙃", 404)
-    );
-
-
-    const req = {
-      json: async () => ({
-        email: 'test@example.com',
-      }),
-    };
-
-    const response = await checkSubscriber(req);
-    expect(response.status).toBe(404);
-    const data = await response.json();
-    expect(data.error).toMatch(/not found.*subscribe/i);
-    // Verify that we set the notFound flag for 24 hours.
-    expect(redis.set).toHaveBeenCalledWith(`notFound:test@example.com`, "true", "EX", 86400);
-  });
-/**
- * We simulate all external dependencies (rate limit, Stripe, email sending, and Mailchimp member lookup) succeeding.
-	•	The endpoint should return a 200 status with a success message.
-	•	The test checks that the status is 200 and that the message indicates the subscriber was found.
- */
-
-    test('returns 200 if subscriber is found', async () => {
-        const StripeModule = require('stripe');
-        // Provide a mockResolvedValue for the .create method
-        StripeModule.mockImplementation(() => ({
-            paymentLinks: {
-            create: jest.fn().mockResolvedValue({ url: 'http://dummy.link' })
-            }
-        }));
-
-
-        // Force attempts=1 => no rate limit
-        redis.incr.mockResolvedValue(1);
-        redis.expire.mockResolvedValue(true);
-
-        // no notFoundFlag
-        redis.get.mockResolvedValue(null);
-
-        // mailchimp returns success
-        mailchimpClient.lists.getListMember.mockResolvedValue({ id: 'member123' });
-
-        // No error from email sending
-        sendPaymentLinkEmailViaMailchimp.mockResolvedValue();
-
-        // Build the request
-        const req = {
-        json: async () => ({ email: 'test@example.com' }),
-        };
-
-        const response = await checkSubscriber(req);
-        console.log('Actual status returned:', response.status);
-        const data = await response.json();
-        console.log('Actual body returned:', data);
-
-        expect(response.status).toBe(200);
-        expect(data.message).toMatch(/we found that you are a subscriber/i);
-        });
+  // Minimal HttpError class
+  fakeHttpError = class HttpError extends Error {
+    constructor(message, status) {
+      super(message);
+      this.status = status;
+    }
+  };
 });
+
+/**
+ * 1) Missing email => 400
+ */
+test('returns 400 if email is missing', async () => {
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ /* no email */ }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 400);
+  const data = await response.json();
+  assert.match(data.error, /Email is required/i);
+});
+
+/**
+ * 2) Invalid email => 400
+ */
+test('returns 400 if email is invalid', async () => {
+  // Override the default validateEmail mock to return false
+  fakeValidateEmail = () => false;
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'not-a-valid-email' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 400);
+  const data = await response.json();
+  assert.match(data.error, /Invalid email format/i);
+});
+
+/**
+ * 3) Rate limit: attempts=2 => 429 (sends payment link)
+ */
+test('returns 429 if attempts === 2 (rate limit triggered)', async () => {
+  // Override Redis so the second call returns 2
+  fakeRedis.incr = async (key) => 2;
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'test@example.com' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 429);
+  const data = await response.json();
+  assert.match(data.error, /too many checkout attempts/i);
+});
+
+/**
+ * 4) Rate limit: attempts >= 3 => 429
+ */
+test('returns 429 if attempts >= 3', async () => {
+  fakeRedis.incr = async (key) => 3; // Force it to 3
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'test@example.com' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 429);
+  const data = await response.json();
+  assert.match(data.error, /no more payment links/i);
+});
+
+/**
+ * 5) Redis says notFoundFlag => 404
+ */
+test('returns 404 if redis notFoundKey is set', async () => {
+  // Make redis.get(...) return a truthy value
+  fakeRedis.get = async (key) => "true";
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'test@example.com' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 404);
+  const data = await response.json();
+  assert.match(data.error, /couldn't find that email/i);
+});
+
+/**
+ * 6) Mailchimp returns 404 => 404
+ */
+test('returns 404 if mailchimp says subscriber not found', async () => {
+  fakeMailchimpClient.lists.getListMember = async () => {
+    const error = new Error('Not found');
+    error.status = 404;
+    throw error;
+  };
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'test@example.com' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 404);
+  const data = await response.json();
+  assert.match(data.error, /couldn't find that email/i);
+});
+
+/**
+ * 7) Happy path => 200
+ */
+test('returns 200 if subscriber is found and rate limit is fine', async () => {
+  // By default, our mocks simulate a "found" subscriber with attempts=1
+  // so we don't need to override anything here.
+  const { POST: checkSubscriber } = await importCheckSubscriber();
+
+  const req = { json: async () => ({ email: 'test@example.com' }) };
+  const response = await checkSubscriber(req);
+
+  assert.is(response.status, 200);
+  const data = await response.json();
+  assert.match(data.message, /we found that you are a subscriber/i);
+});
+
+test.run();

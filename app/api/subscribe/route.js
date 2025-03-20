@@ -1,9 +1,9 @@
 import crypto from 'crypto';
-import { mailchimpClient } from '../../utils/mailchimp';
+import { mailchimpClient } from '../../utils/mailchimp.js';
 import Bottleneck from 'bottleneck';
-import redis from '../../utils/redis';
-import { validateEmail } from '../../utils/validateEmail';
-import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers';
+import redis from '../../utils/redis.js';
+import { validateEmail } from '../../utils/validateEmail.js';
+import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers.js';
 // Bottleneck limiter configuration
 const limiter = new Bottleneck({
   maxConcurrent: 1, // Only one function runs at a time. Only one call to the wrapped function will execute at any given moment.

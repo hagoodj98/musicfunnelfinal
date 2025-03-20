@@ -1,136 +1,156 @@
-// Mock next/headers so that our route can get cookies.
-jest.mock('next/headers', () => ({
-    cookies: jest.fn(),
-  }));
-  
-  // Mock Redis (used in sessionHelpers)
-  jest.mock('../../utils/redis', () => ({
-    incr: jest.fn(),
-    expire: jest.fn(),
-  }));
-  
-  // Mock sessionHelpers so we can control getSessionDataByToken, updateSessionData, etc.
-  jest.mock('../../utils/sessionHelpers', () => {
-    const originalModule = jest.requireActual('../../utils/sessionHelpers');
+// File: app/api/refresh-session/route.test.js
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
+import esmock from 'esmock';
+
+// --- Fake sessionHelpers ---
+const fakeSessionHelpers = {
+  getSessionDataByToken: async (token) => {
+    // Default: returns session data with matching CSRF token.
     return {
-      ...originalModule,
-      getSessionDataByToken: jest.fn(),
-      updateSessionData: jest.fn(),
-      createCookie: jest.fn((name, value, options) => `${name}=${value}; Max-Age=${options.maxAge}; SameSite=${options.sameSite || ''}`),
-      // We can leave generateTokenAndSalt as the original or mock it.
-      generateTokenAndSalt: jest.fn(() => ({
-        sessionToken: 'newToken123',
-        csrfToken: 'newCsrf123'
-      })),
-      HttpError: originalModule.HttpError,
+      csrfToken: 'validCsrf',
+      email: 'test@example.com',
+      rememberMe: false // This will yield ttl = 100
     };
+  },
+  updateSessionData: async (newToken, data, ttl) => {
+    // Simply resolve; in real life it writes to Redis.
+    return;
+  },
+  generateTokenAndSalt: () => {
+    // Return new tokens.
+    return { sessionToken: 'newSessionToken', csrfToken: 'newCsrfToken' };
+  },
+  createCookie: (name, value, options) => {
+    // Return a simple cookie string.
+    return `${name}=${value}; Max-Age=${options.maxAge}; SameSite=${options.sameSite || 'Lax'}`;
+  },
+  HttpError: class HttpError extends Error {
+    constructor(message, status) {
+      super(message);
+      this.status = status;
+    }
+  }
+};
+
+// --- Fake redis (if needed by sessionHelpers) ---
+// (Not used in refresh-session route, so a minimal stub is enough.)
+const fakeRedis = {};
+
+// --- Helper to import the refresh-session route with our overrides ---
+async function importRefreshSession(overrides = {}) {
+  return esmock('./route.js', {
+    '../../utils/sessionHelpers.js': {
+      ...fakeSessionHelpers,
+      ...overrides.sessionHelpers
+    },
+    // Override next/headers by overriding our local headersWrapper.js file.
+    './headersWrapper.js': {
+      __esModule: true,
+      cookies: overrides.cookies
+        ? overrides.cookies
+        : async function defaultFakeCookies() {
+            return {
+              get: (name) => {
+                if (name === 'sessionToken') return { value: 'validSessionToken' };
+                if (name === 'csrfToken')    return { value: 'validCsrf' };
+                return undefined;
+              }
+            };
+          }
+    },
+    '../../utils/redis.js': { ...fakeRedis, ...overrides.redis }
   });
-  
-  // Import our route handler and dependencies.
-  import { POST as refreshSession } from '../refresh-session/route';
-  import { cookies } from 'next/headers';
-  import * as sessionHelpers from '../../utils/sessionHelpers';
-  import redis from '../../utils/redis';
-  
-  describe('/api/refresh-session Endpoint', () => {
-    beforeEach(() => {
-      // Reset all mocks before each test.
-      jest.resetAllMocks();
-    });
-  
-    it('returns 400 if session token is missing', async () => {
-      // Simulate cookies() returning undefined for sessionToken.
-      cookies.mockReturnValue({
-        get: (name) => {
-          if (name === 'sessionToken') return undefined;
-          if (name === 'csrfToken') return { value: 'someCsrf' };
-          return undefined;
-        },
-      });
-  
-      const req = {}; // The endpoint doesn't use req.json() in this case.
-      const response = await refreshSession(req);
-      expect(response.status).toBe(400);
-      const data = await response.json();
-      expect(data.error).toMatch(/session token is required/i);
-    });
-  
-    it('returns 400 if CSRF token is missing', async () => {
-      // Session token exists but csrfToken is missing.
-      cookies.mockReturnValue({
-        get: (name) => {
-          if (name === 'sessionToken') return { value: 'validSessionToken' };
-          if (name === 'csrfToken') return undefined;
-          return undefined;
-        },
-      });
-  
-      const req = {};
-      const response = await refreshSession(req);
-      expect(response.status).toBe(400);
-      const data = await response.json();
-      expect(data.error).toMatch(/csrf token is required/i);
-    });
-  
-    it('returns 403 if CSRF token does not match', async () => {
-      // Valid cookies but the token in session data is different.
-      cookies.mockReturnValue({
-        get: (name) => {
-          if (name === 'sessionToken') return { value: 'validSessionToken' };
-          if (name === 'csrfToken') return { value: 'badCsrf' };
-          return undefined;
-        },
-      });
-      // Mock sessionHelpers.getSessionDataByToken to return session data with a valid CSRF that does not match.
-      sessionHelpers.getSessionDataByToken.mockResolvedValue({
-        csrfToken: 'goodCsrf',
-        email: 'test@example.com',
-        rememberMe: false,
-      });
-      // Rate-limit mocks (even though they might not be reached)
-      redis.incr.mockResolvedValue(1);
-      redis.expire.mockResolvedValue(true);
-  
-      const req = { json: async () => ({ email: 'test@example.com' }) };
-      const response = await refreshSession(req);
-      expect(response.status).toBe(403);
-      const data = await response.json();
-      expect(data.error).toMatch(/invalid csrf token\. unauthorized!/i);
-    });
-  
-    it('returns 200 if session is refreshed successfully', async () => {
-      // Provide valid cookies.
-      cookies.mockReturnValue({
-        get: (name) => {
-          if (name === 'sessionToken') return { value: 'validSessionToken' };
-          if (name === 'csrfToken') return { value: 'validCsrf' };
-          return undefined;
-        },
-      });
-      // Simulate session data in Redis with matching csrf.
-      sessionHelpers.getSessionDataByToken.mockResolvedValue({
-        csrfToken: 'validCsrf',
-        email: 'test@example.com',
-        rememberMe: false,
-      });
-      // For rate limit, simulate first attempt.
-      redis.incr.mockResolvedValue(1);
-      redis.expire.mockResolvedValue(true);
-  
-      // generateTokenAndSalt is already mocked to return new tokens: newToken123 and newCsrf123.
-      // updateSessionData resolves successfully.
-      sessionHelpers.updateSessionData.mockResolvedValue();
-  
-      const req = { json: async () => ({ email: 'test@example.com' }) };
-      const response = await refreshSession(req);
-      expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.message).toMatch(/session refreshed/i);
-  
-      // Also check that the Set-Cookie header is present.
-      const setCookieHeader = response.headers.get('Set-Cookie');
-      expect(setCookieHeader).toBeDefined();
-      expect(setCookieHeader).toContain('sessionToken=newToken123');
-      expect(setCookieHeader).toContain('csrfToken=newCsrf123');
-    });
+}
+
+/* =======================
+   TESTS
+======================= */
+
+/** 1) Missing session token => should return 400 with "Session token is required" */
+test('returns 400 if session token is missing', async () => {
+  // Override cookies to omit the sessionToken.
+  const missingSessionCookies = async () => ({
+    get: (name) => {
+      if (name === 'csrfToken') return { value: 'validCsrf' };
+      return undefined; // no session token
+    }
   });
+
+  const moduleUnderTest = await importRefreshSession({
+    cookies: missingSessionCookies
+  });
+  const refreshSession = moduleUnderTest.POST;
+
+  const req = { json: async () => ({}) };
+  const response = await refreshSession(req);
+  assert.is(response.status, 400);
+  const data = await response.json();
+  assert.match(data.error, /Session token is required/i);
+});
+
+/** 2) Missing CSRF token => should return 400 with "CSRF token is required" */
+test('returns 400 if CSRF token is missing', async () => {
+  // Override cookies to omit the CSRF token.
+  const missingCsrfCookies = async () => ({
+    get: (name) => {
+      if (name === 'sessionToken') return { value: 'validSessionToken' };
+      return undefined; // no CSRF token
+    }
+  });
+
+  const moduleUnderTest = await importRefreshSession({
+    cookies: missingCsrfCookies
+  });
+  const refreshSession = moduleUnderTest.POST;
+
+  const req = { json: async () => ({}) };
+  const response = await refreshSession(req);
+  assert.is(response.status, 400);
+  const data = await response.json();
+  assert.match(data.error, /CSRF token is required/i);
+});
+
+/** 3) Invalid CSRF token => should return 403 with "Invalid CSRF token. Unauthorized!" */
+test('returns 403 if CSRF token does not match session data', async () => {
+  // Override getSessionDataByToken so it returns a different CSRF token.
+  const sessionHelpersOverride = {
+    getSessionDataByToken: async () => ({
+      csrfToken: 'differentCsrf', // does not match cookie's 'validCsrf'
+      email: 'test@example.com',
+      rememberMe: false
+    })
+  };
+
+  const moduleUnderTest = await importRefreshSession({
+    sessionHelpers: sessionHelpersOverride
+  });
+  const refreshSession = moduleUnderTest.POST;
+
+  const req = { json: async () => ({}) };
+  const response = await refreshSession(req);
+  assert.is(response.status, 403);
+  const data = await response.json();
+  assert.match(data.error, /Invalid CSRF token. Unauthorized!/i);
+});
+
+/** 4) Successful refresh => returns 200 with refreshed session cookies */
+test('returns 200 and refreshed session on success', async () => {
+  // Use default fake cookies (valid sessionToken and CSRF token) and default sessionHelpers.
+  const moduleUnderTest = await importRefreshSession();
+  const refreshSession = moduleUnderTest.POST;
+
+  const req = { json: async () => ({}) };
+  const response = await refreshSession(req);
+  assert.is(response.status, 200);
+  const data = await response.json();
+  assert.match(data.message, /Session refreshed/i);
+
+  // Check that the Set-Cookie header exists and contains the new tokens.
+  const setCookieHeader = response.headers.get('Set-Cookie');
+  assert.ok(setCookieHeader, 'Set-Cookie header is set');
+  assert.ok(setCookieHeader.includes('sessionToken=newSessionToken'), 'sessionToken cookie is updated');
+  assert.ok(setCookieHeader.includes('csrfToken=newCsrfToken'), 'csrfToken cookie is updated');
+});
+
+test.run();

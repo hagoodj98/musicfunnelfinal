@@ -1,8 +1,7 @@
 import crypto from 'crypto';
-import { mailchimpClient } from './mailchimp';
-import { HttpError } from './sessionHelpers';
-import transporter from './mailer';
-import { checkRateLimit } from './rateLimiter';
+import { mailchimpClient } from './mailchimp.js';
+import { HttpError } from './sessionHelpers.js';
+import transporter from './mailer.js';
 
 /**
  * Updates a Mailchimp subscriber's mailing address.

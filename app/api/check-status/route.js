@@ -1,4 +1,4 @@
-import { getEmailMapping, getSessionDataByHash, generateTokenAndSalt, createCookie, updateSessionData, HttpError } from '../../utils/sessionHelpers';
+import { getEmailMapping, getSessionDataByHash, generateTokenAndSalt, createCookie, updateSessionData, HttpError } from '../../utils/sessionHelpers.js';
 
 
 export async function POST(req) {

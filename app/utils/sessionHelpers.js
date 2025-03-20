@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import redis from './redis';
+import redis from './redis.js';
 import { serialize as serializeCookie } from 'cookie';
 /**
  * Custom error class that includes an HTTP status code.

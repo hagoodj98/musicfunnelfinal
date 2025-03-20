@@ -1,9 +1,9 @@
 import Stripe from "stripe";
-import { cookies } from "next/headers";// This brings in all cookies from the browser, making them avaiable for use in application
-import { getSessionDataByToken, updateSessionData, HttpError, createCookie } from '../../utils/sessionHelpers';
+import { cookies } from './headersWrapper.js';
+import { getSessionDataByToken, updateSessionData, HttpError, createCookie } from '../../utils/sessionHelpers.js';
 import crypto from 'crypto';
-import redis from '../../utils/redis';
-import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
+import redis from '../../utils/redis.js';
+import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 

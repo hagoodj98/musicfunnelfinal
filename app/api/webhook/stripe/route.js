@@ -1,7 +1,6 @@
 import Stripe from "stripe";
-import { updateMailchimpTag, updateMailchimpAddress } from '../../../utils/mailchimpHelpers';
-import { getSessionDataByToken, updateSessionData } from "../../../utils/sessionHelpers";
-import { HttpError } from "../../../utils/sessionHelpers";
+import { updateMailchimpTag, updateMailchimpAddress } from '../../../utils/mailchimpHelpers.js';
+import { getSessionDataByToken, updateSessionData, HttpError } from "../../../utils/sessionHelpers.js";
 //Purpose: Next.js automatically parses incoming request bodies and converts them into JSON or a query object. For Stripe webhooks, I need to access the raw request body as a buffer to verify the webhook signature correctly. Disabling the default body parser lets you manually handle the incoming request data as raw bytes.
 export const config = {
     api: {

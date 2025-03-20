@@ -1,5 +1,5 @@
-import redis from "../../utils/redis";
-import { HttpError } from "../../utils/sessionHelpers";
+import redis from "../../utils/redis.js";
+import { HttpError } from "../../utils/sessionHelpers.js";
 
 export async function POST(req) {
     const { action, key } = await req.json();

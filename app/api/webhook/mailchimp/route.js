@@ -7,8 +7,8 @@
 	•	Saves this updated session data back in Redis.
 */
 import crypto from 'crypto';
-import redis from '../../../utils/redis';
-import { getEmailMapping, HttpError, updateSessionData } from '../../../utils/sessionHelpers';
+import redis from '../../../utils/redis.js';
+import { getEmailMapping, HttpError, updateSessionData } from '../../../utils/sessionHelpers.js';
 
 
 export async function POST(req) {

@@ -1,113 +1,120 @@
-/**
- * Mock the helper functions (e.g. getEmailMapping, getSessionDataByHash, generateTokenAndSalt, createCookie, and updateSessionData) so that we can isolate the endpoint logic.
-	2.	Test a missing email scenario.
-	3.	Test a case where the subscription status isn’t “subscribed” (thus returning 401).
-	4.	Test the successful case where the endpoint returns a 200 response, with a JSON body and proper cookie headers.
- */
+// route.test.js
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
+import esmock from 'esmock';
 
-    import { POST as checkStatus } from './route'; // Adjust path if needed
-    import { 
-      getEmailMapping, 
-      getSessionDataByHash, 
-      generateTokenAndSalt, 
-      createCookie, 
-      updateSessionData, 
-      HttpError 
-    } from '../../utils/sessionHelpers';
-    
-    // Mock the helper functions
-    jest.mock('../../utils/sessionHelpers', () => ({
-      getEmailMapping: jest.fn(),
-      getSessionDataByHash: jest.fn(),
-      generateTokenAndSalt: jest.fn(),
-      createCookie: jest.fn(),
-      updateSessionData: jest.fn(),
-      // For HttpError, we can use a simple class:
-      HttpError: class extends Error {
-        constructor(message, status) {
-          super(message);
-          this.status = status;
-        }
-      }
-    }));
-    
-    describe('/api/check-status Endpoint', () => {
-      beforeEach(() => {
-        jest.clearAllMocks();
-      });
-    /**
-     * The test calls checkStatus(req) with a request that does not contain an email. The route should throw an HttpError that is caught and returns a Response with status 400. The test then parses the response JSON and checks that the error message includes “Email parameter is required.”
-     */
-      test('returns 400 if email is missing', async () => {
-        const req = {
-          json: async () => ({
-            // No email provided; rememberMe can be any value.
-            rememberMe: false,
-          }),
-        };
-    
-        const response = await checkStatus(req);
-        // Check HTTP status on the returned Response object.
-        expect(response.status).toBe(400);
-        const data = await response.json();
-        expect(data.error).toMatch(/Email parameter is required/);
-      });
-    /**
-     * The mocks are set so that getSessionDataByHash returns a session with a status other than "subscribed". The route should then return a Response with status 401, and the test confirms the error message.
-     */
-      test('returns 401 if subscription status is not "subscribed"', async () => {
-        // Set up the mocks:
-        getEmailMapping.mockResolvedValue({ emailHash: 'abc123' });
-        // Return a session data object with status other than 'subscribed'
-        getSessionDataByHash.mockResolvedValue({ status: 'pending', email: 'test@example.com' });
-    
-        const req = {
-          json: async () => ({
-            email: 'test@example.com',
-            rememberMe: false,
-          }),
-        };
-    
-        const response = await checkStatus(req);
-        expect(response.status).toBe(401);
-        const data = await response.json();
-        expect(data.error).toMatch(/Unauthorized access/);
-      });
-    
-      /**
-       * 	•	Successful Scenario Test:
-Mocks are configured so that the email maps to an emailHash and the session data indicates the user is subscribed. Then generateTokenAndSalt returns a new session token and CSRF token. The route updates the session data, creates cookies (mocked by createCookie), and returns a Response with status 200 and a JSON body containing the new session token. The test then checks that the response status is 200, that the body includes the message "Session active", and that the Set-Cookie header includes the expected cookies.
+let checkStatus;
 
-       */
-      test('returns 200 and sets cookies when subscription is valid', async () => {
-        // Set up mocks:
-        getEmailMapping.mockResolvedValue({ emailHash: 'abc123' });
-        getSessionDataByHash.mockResolvedValue({ status: 'subscribed', email: 'test@example.com' });
-        // Simulate generating new tokens
-        generateTokenAndSalt.mockReturnValue({ sessionToken: 'newToken', csrfToken: 'newCsrf' });
-        // CreateCookie returns a string representing a cookie.
-        createCookie.mockImplementation((name, value, options) => `${name}=${value}; Max-Age=${options.maxAge}`);
-        updateSessionData.mockResolvedValue();
-    
-        const req = {
-          json: async () => ({
-            email: 'test@example.com',
-            rememberMe: false,
-          }),
-        };
-    
-        const response = await checkStatus(req);
-        expect(response.status).toBe(200);
-    
-        // Parse the JSON body
-        const data = await response.json();
-        expect(data.message).toMatch(/Session active/);
-        expect(data.sessionToken).toBe('newToken');
-    
-        // Check that the 'Set-Cookie' header is present and contains expected cookie values.
-        const setCookieHeader = response.headers.get('Set-Cookie');
-        expect(setCookieHeader).toBeDefined();
-        expect(setCookieHeader).toContain('sessionToken=newToken');
-        expect(setCookieHeader).toContain('csrfToken=newCsrf');
-      });
-    });
+// Create a mutable fakeSessionHelpers object that will be used by esmock.
+// We'll override individual functions in each test as needed.
+const fakeSessionHelpers = {
+  getEmailMapping: async (email) => ({ emailHash: 'dummyHash' }),
+  getSessionDataByHash: async (hash) => ({ status: 'subscribed', email: 'test@example.com' }),
+  generateTokenAndSalt: () => ({ sessionToken: 'dummyToken', csrfToken: 'dummyCsrf' }),
+  createCookie: (name, value, options) =>
+    `${name}=${value}; Max-Age=${options.maxAge}`,
+  updateSessionData: async (sessionToken, data, ttl) => {},
+  HttpError: class HttpError extends Error {
+    constructor(message, status) {
+      super(message);
+      this.status = status;
+    }
+  }
+};
+
+// Before each test, use esmock to re-import the route module with the current fakeSessionHelpers.
+test.before.each(async () => {
+  // Adjust the relative path if needed.
+  const moduleUnderTest = await esmock('./route.js', {
+    '../../utils/sessionHelpers.js': fakeSessionHelpers
+  });
+  checkStatus = moduleUnderTest.POST;
+});
+
+test('returns 400 if email is missing', async () => {
+  // 1) We don’t need to override anything for “missing email”.
+  // 2) Now re-import with the current state of fakeSessionHelpers:
+  const moduleUnderTest = await esmock('./route.js', {
+    '../../utils/sessionHelpers.js': fakeSessionHelpers
+  });
+  const checkStatus = moduleUnderTest.POST;
+
+  
+  
+  const req = {
+    json: async () => ({
+      // No email provided.
+      rememberMe: false
+    })
+  };
+
+  const response = await checkStatus(req);
+  assert.is(response.status, 400, 'Response status should be 400');
+  const data = await response.json();
+  assert.match(data.error, /Email parameter is required/, 'Error message should mention missing email');
+});
+test('returns 401 if subscription status is not "subscribed"', async () => {
+  // Override the mock to simulate a “pending” or any status other than "subscribed".
+  fakeSessionHelpers.getSessionDataByHash = async (hash) => ({
+    status: 'pending',
+    email: 'test@example.com'
+  });
+
+  // 2) Re-import route.js after we override
+  const moduleUnderTest = await esmock('./route.js', {
+    '../../utils/sessionHelpers.js': fakeSessionHelpers
+  });
+  const checkStatus = moduleUnderTest.POST;
+  
+  const req = {
+    json: async () => ({
+      email: 'test@example.com',
+      rememberMe: false
+    })
+  };
+
+  const response = await checkStatus(req);
+  assert.is(response.status, 401, 'Response status should be 401');
+  const data = await response.json();
+  assert.match(
+    data.error,
+    /Unauthorized access/,
+    'Should return an unauthorized access message'
+  );
+});
+test('returns 200 and sets cookies when subscription is valid', async () => {
+  // Use the default “subscribed” or override if needed
+  fakeSessionHelpers.getSessionDataByHash = async (hash) => ({
+    status: 'subscribed',
+    email: 'test@example.com'
+  });
+  // Also override generateTokenAndSalt if you want specific values:
+  fakeSessionHelpers.generateTokenAndSalt = () => ({
+    sessionToken: 'newToken',
+    csrfToken: 'newCsrf'
+  });
+  // 2) Now re-import with esmock
+  const moduleUnderTest = await esmock('./route.js', {
+    '../../utils/sessionHelpers.js': fakeSessionHelpers
+  });
+  const checkStatus = moduleUnderTest.POST;
+
+  const req = {
+    json: async () => ({
+      email: 'test@example.com',
+      rememberMe: false
+    })
+  };
+
+  const response = await checkStatus(req);
+  assert.is(response.status, 200, 'Response status should be 200');
+  const data = await response.json();
+  assert.is(data.sessionToken, 'newToken', 'Session token should match mocked value');
+
+  // Check headers for Set-Cookie
+  const setCookieHeader = response.headers.get('Set-Cookie');
+  assert.ok(setCookieHeader, 'Should have a Set-Cookie header');
+  assert.ok(setCookieHeader.includes('sessionToken=newToken'), 'Should include sessionToken');
+  assert.ok(setCookieHeader.includes('csrfToken=newCsrf'), 'Should include csrfToken');
+});
+test.run();
