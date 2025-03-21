@@ -83,7 +83,7 @@ const SubscriptionForm = () => {
 
   return (
     <div className='tw-flex'>
-        <Button onClick={() => setLgShow(true)} className=' tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white tw-w-2/5 tw-mx-auto '>Join The Family!</Button>
+        <Button onClick={() => setLgShow(true)} className='tw-font-header tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white tw-w-2/5 tw-mx-auto '>Join The Family!</Button>
         <Modal
         size="lg"
         show={lgShow}
@@ -93,7 +93,7 @@ const SubscriptionForm = () => {
         <Modal.Header className='tw-bg-primary' closeVariant='white' closeButton>
           <Modal.Title className=' tw-border-none tw-flex tw-items-center' id="example-modal-sizes-title-lg">
           <GroupIcon className='tw-text-white' fontSize='large'/>
-          <h4 className='tw-text-white tw-p-3' >Enter Your Name and Email Below To
+          <h4 className='tw-text-white tw-p-3 tw-font-header' >Enter Your Name and Email Below To
           <span className='tw-text-yellow'> Join The Family!</span></h4>
           </Modal.Title>
         </Modal.Header>
@@ -133,7 +133,7 @@ const SubscriptionForm = () => {
                 type='email' name='email' label="Email" value={email} onChange={handleChange}/>
                 <div className='tw-flex tw-flex-col'>
                     <br />
-                    <label className='tw-text-lighterblue tw-w-40'>
+                    <label className='tw-font-header tw-text-lighterblue tw-w-40'>
                         <Checkbox defaultChecked onChange={e => setRememberMe(e.target.checked)}/>Remember Me
                     </label>
                     <br />
@@ -156,13 +156,13 @@ const SubscriptionForm = () => {
                         },
                     }} 
                     variant="outlined" 
-                    className='tw-mx-auto' 
+                    className='tw-mx-auto tw-font-header' 
                     type='submit'
                     >
                         {status === 'pending' ? (
                             <>   
-                                <CircularProgress size="20px" style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
-                                <span className=' tw-ml-2'> Pending Subscription.</span>
+                                <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
+                                <span className='tw-font-header tw-ml-2'> Pending Subscription.</span>
                             </>
                     ) : status === 'confirmed' ? ( 
                         <CheckIcon />
@@ -175,7 +175,7 @@ const SubscriptionForm = () => {
             </Form>
             )}
             {status === 'confirmed' && (
-            <p>Subscription confirmed! Redirecting to the landing page...</p>
+            <p className=''>Subscription confirmed! Redirecting to the landing page...</p>
           )}
         </Modal.Body>
       </Modal>

@@ -12,18 +12,20 @@ const ThankYouPage = () => {
     <div>
       <SessionManagerProvider />
       <div className='container'>
+        <div className='lg:tw-w-10/12 lg:tw-mx-auto'>
           <div className='tw-pb-8'>
-            <h1 className='tw-text-center  tw-my-7 tw-text-white'>JOIN MY PATREON - <span className="tw-text-primary">YOUR SUPPORT HELPS FUND</span> FUTURE MUSIC VIDEOS, <span className="tw-text-primary">MUSIC</span>, AND AN ONLINE STORE</h1>
+            <h1 className='tw-text-center tw-font-header tw-my-7 tw-text-white'>JOIN MY PATREON - <span className="tw-text-primary">YOUR SUPPORT HELPS FUND</span> FUTURE MUSIC VIDEOS, <span className="tw-text-primary">MUSIC</span>, AND AN ONLINE STORE</h1>
           </div>
           <div>
             <CustomVideo vidAddress="/video/take-this-journey-with-me.mp4"/>
           </div>
         </div>
+      </div>
         <div className='tw-bg-[rgba(22,121,136,0.74)] '>
           <div className='container tw-mx-auto tw-p-5 '>
             <div className=' tw-p-8'>
               <div>
-                <h1 className='tw-text-white tw-text-center'>Thank You For Your Support</h1>
+                <h1 className='tw-font-header tw-text-white tw-text-center'>Thank You For Your Support</h1>
               </div>
             </div>
             <div className="tw-text-white">
@@ -31,7 +33,7 @@ const ThankYouPage = () => {
                <p>Look out for an email from me in the next few days confirming your shipping address.</p>
                <p>We cannot move forward shipping you your products until address is confirmed.</p>
                <p>If you have any questions or concerns, feel free to contact me via email.</p>
-               <p>Thanks for being a <span className="tw-text-yellow">TRUE FAN!!</span></p>
+               <p>Thanks for being a <span className="tw-font-body tw-text-yellow">TRUE FAN!!</span></p>
                 <div>
                   <Patreon />
                 </div>

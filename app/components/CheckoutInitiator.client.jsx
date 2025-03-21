@@ -47,7 +47,7 @@ const CheckoutInitiator = () => {
   return (
     <div className="tw-w-full  tw-flex tw-justify-center">
       <MessageNotify notify={message} type={messageType} />
-      <Button onClick={handleCheckout} sx={{
+      <Button onClick={handleCheckout} className="tw-font-header" sx={{
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",

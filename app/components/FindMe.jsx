@@ -59,7 +59,7 @@ const FindMe = () => {
     <div className=" tw-mx-auto">
         <Button onClick={() => setSmShow(true)}>
             
-            <span className=" tw-text-lighterblue " >Already Subscribed?</span>
+            <span className=" tw-text-lighterblue tw-font-header" >Already Subscribed?</span>
             
         </Button>
         <MessageNotify notify={message} type={messageType} />
@@ -72,7 +72,7 @@ const FindMe = () => {
       >
         <Modal.Header className="tw-bg-primary" closeVariant="white" closeButton>
           <Modal.Title  id="example-modal-sizes-title-sm">
-            <h4 className="tw-text-white">Find if you are subscribed</h4>
+            <h4 className="tw-font-header tw-text-white">Find if you are subscribed</h4>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body >
@@ -107,7 +107,7 @@ const FindMe = () => {
                         cursor: "not-allowed",
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
-                    }} className="tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
+                    }} className="tw-font-header tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
                   <>
                     <Box sx={{ display: 'flex' }}>
                       <CircularProgress size="30px" color='inherit' />

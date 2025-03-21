@@ -9,7 +9,6 @@ export default {
    prefix: "tw-",
   theme: {
     extend: {
-      
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -20,7 +19,11 @@ export default {
       },
       backgroundImage : {
         "me": "url('/public/IMG_1856(1).jpg)"
-      }
+      },
+      fontFamily: {
+        header: ['Oswald', 'Helvetica', 'Arial', 'sans-serif'],
+        body: ['Caveat', 'cursive'],
+      },
     },
   },
   plugins: [],

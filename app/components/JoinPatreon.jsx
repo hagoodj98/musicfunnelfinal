@@ -27,7 +27,7 @@ const JoinPatreon = () => {
                         cursor: "not-allowed",
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
-                    }} variant="contained" type="submit"> <ForwardIcon />Yes! I want to join your patreon.</Button>
+                    }} variant="contained" className='tw-font-header' type="submit"> <ForwardIcon />Yes! I want to join your patreon.</Button>
                     
     </div>
   )

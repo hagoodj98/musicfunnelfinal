@@ -62,19 +62,19 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
           <Modal show={true}  onHide={onClose} backdrop="static" keyboard={false}>
             <Modal.Header className='tw-bg-primary' closeVariant='white' closeButton>
               <Modal.Title>
-                <h4 className='tw-text-white tw-p-4'>Session will expire soon</h4>
+                <h4 className='tw-font-header tw-text-white tw-p-4'>Session will expire soon</h4>
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p>Your session will expire {timeLeft} seconds.</p>
-                <p>Would you like to refresh your session?</p>
+                <p className='tw-font-header'>Your session will expire {timeLeft} seconds.</p>
+                <p className='tw-font-body tw-text-xl'>Would you like to refresh your session?</p>
                 {/* This error condition comes from the API  request to /refresh-session. If something wrong happens in the endpoint, then this error shows */}
                 {error && <p style={{ color: "red" }}>Error: {error}</p>}
                 {success && <p style={{ color: "green" }}>{success}</p>}
             </Modal.Body>
             <Modal.Footer>
-              <Button onClick={onClose} className='tw-bg-lighterblue tw-border-lighterblue hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue'  disabled={loading} variant="contained">Nope!</Button>
-              <Button onClick={handleRefresh} variant="contained" disabled={loading} className='tw-bg-secondary tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue' >{loading ? "Refreshing..." : "Refresh me!"}</Button>
+              <Button onClick={onClose} className='tw-bg-lighterblue tw-border-lighterblue hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-font-header'  disabled={loading} variant="contained">Nope!</Button>
+              <Button onClick={handleRefresh} variant="contained" disabled={loading} className='tw-bg-secondary tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow tw-font-header hover:tw-text-lighterblue' >{loading ? "Refreshing..." : "Refresh me!"}</Button>
             </Modal.Footer>
           </Modal>
         </div>
