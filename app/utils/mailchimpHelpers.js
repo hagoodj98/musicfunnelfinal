@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { mailchimpClient } from './mailchimp.js';
 import { HttpError } from './sessionHelpers.js';
 import transporter from './mailer.js';
+//import jwt from 'jsonwebtoken';
 
 /**
  * Updates a Mailchimp subscriber's mailing address.
@@ -81,10 +82,41 @@ export async function sendPaymentLinkEmailViaMailchimp(userEmail, paymentLinkUrl
     text: `Hi, \n\nPlease use the following link to complete your purchase:\n${paymentLinkUrl}\n\nThank you!`,
     html:  `<p>Hi</p>
             <p>Please use the following link to complete your purchase:</p>
-            <p><a href="${paymentLinkUrl}">${paymentLinkUrl}</a></p>
+            <p><a href="${paymentLinkUrl}">Buy Fan Pack</a></p>
             <p>Thank you!</p>`
   };
   const info = await transporter.sendMail(mailOptions);
   console.log("Payment link email sent, Message ID:", info.messageId);
   return info;
 }
+
+/*export async function sendAddressConfirmationEmail(userEmail) {
+  // Create a signed token that includes the user’s email.
+  const token = jwt.sign({ email: userEmail }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  // Construct the confirmation URL using your SITE_URL environment variable.
+  const confirmationUrl = `${process.env.SITE_URL}/landing/thankyou/confirm-address?token=${token}`;
+
+  const mailOptions = {
+    from: `"JAPP" <${process.env.GMAIL_USER}>`,
+    to: userEmail,
+    subject: 'Please Confirm Your Shipping Address',
+    text: `Hi,
+
+      Please confirm your shipping address by clicking the link below:
+      ${confirmationUrl}
+
+  Thank you!`,
+    html: `<p>Hi,</p>
+           <p>Please confirm your shipping address by clicking the link below:</p>
+           <p>
+             <a href="${confirmationUrl}" >
+                Confirm Shipping Address
+             </a>
+           </p>
+           <p>Thank you!</p>`
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log("Address confirmation email sent, Message ID:", info.messageId);
+  return info;
+} */

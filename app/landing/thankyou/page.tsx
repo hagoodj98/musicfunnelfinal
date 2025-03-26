@@ -14,7 +14,7 @@ const ThankYouPage = () => {
       <div className='container'>
         <div className='lg:tw-w-10/12 lg:tw-mx-auto'>
           <div className='tw-pb-8'>
-            <h1 className='tw-text-center tw-font-header tw-my-7 tw-text-white'>JOIN MY PATREON - <span className="tw-text-primary">YOUR SUPPORT HELPS FUND</span> FUTURE MUSIC VIDEOS, <span className="tw-text-primary">MUSIC</span>, AND AN ONLINE STORE</h1>
+            <h1 className='tw-text-center tw-font-header tw-my-7 tw-text-white'>JOIN MY PATREON FOR ONLY <span className="tw-text-primary">$5 A MONTH</span>; YOUR SUPPORT HELPS FUND <span className="tw-text-primary"> MUSIC VIDEOS</span> AND AN <span className="tw-text-primary">ONLINE STORE.</span></h1>
           </div>
           <div>
             <CustomVideo vidAddress="/video/take-this-journey-with-me.mp4"/>

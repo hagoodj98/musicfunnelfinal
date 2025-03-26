@@ -145,7 +145,9 @@ console.log(sessionData, "hi I am in stripe webhook");
     // /NEW: Update the subscriber's tag to "Fan Purchaser" *****
     if (sessionData.email) {
         await updateMailchimpTag(sessionData.email, 'Fan Purchaser', 'active');
+
     }
+    
 }
 /////////////////////////
 

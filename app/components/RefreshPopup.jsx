@@ -68,6 +68,7 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
             <Modal.Body>
                 <p className='tw-font-header'>Your session will expire {timeLeft} seconds.</p>
                 <p className='tw-font-body tw-text-xl'>Would you like to refresh your session?</p>
+                <p className='tw-font-body tw-text-xl tw-text-secondary'>(note) You will be redirected back to the home page if you don't refresh the session.</p>
                 {/* This error condition comes from the API  request to /refresh-session. If something wrong happens in the endpoint, then this error shows */}
                 {error && <p style={{ color: "red" }}>Error: {error}</p>}
                 {success && <p style={{ color: "green" }}>{success}</p>}

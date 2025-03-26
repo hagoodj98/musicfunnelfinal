@@ -34,11 +34,11 @@ export async function POST(req) {
         // It builds a key called checkoutAttempts:<sessionToken> using the user’s session token. This key uniquely tracks how many times this user (or session) has tried to start a checkout session.
         const attemptsKey = `checkoutAttempts:${sessionToken}`;
         const attempts = await redis.incr(attemptsKey);
-        if (attempts === 1) {
+        if (attempts === 2) {
           await redis.expire(attemptsKey, 86400); // 24 hours in seconds
         }
        // If this is an extra checkout attempt (attempt 2 or 3), send a payment link via email.
-        if (attempts === 2 || attempts === 3) {
+        if (attempts === 3 || attempts === 4) {
           await redis.expire(attemptsKey, 86400); // lock out for 24 hours
           // Instead of creating a new checkout session, send a payment link email
           const paymentLink = await stripe.paymentLinks.create({
@@ -48,7 +48,14 @@ export async function POST(req) {
             }],
             after_completion: {
               type: 'redirect',
-              redirect: { url: 'http://localhost:3000/landing/thankyou' }
+              redirect: { url: 'http://localhost:3000/landing/thankyou'}
+            },
+            billing_address_collection: 'required', //Set to 'required' to collect billing address
+            shipping_address_collection: {
+                allowed_countries: ['US'], // Specify the countries to which I am willing to ship
+            },
+            metadata: {
+                sessionToken: sessionToken
             }
           });
           // Send the payment link via email.

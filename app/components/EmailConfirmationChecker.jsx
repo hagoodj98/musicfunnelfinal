@@ -51,7 +51,7 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
   return (
     <div>
       {status === "waiting" && 
-      <div className="tw-flex">
+      <div className="">
         <p className="tw-text-lighterblue tw-font-header">Please check your email and confirm subscription. Don't see it? Check Spam folder!</p> 
         <p className="tw-text-lighterblue tw-font-header">Once confirmed, please return to this page!</p> 
       </div>

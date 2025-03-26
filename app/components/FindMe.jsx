@@ -41,15 +41,17 @@ const FindMe = () => {
                  //toast.error(data.message || 'Something went wrong. Please try again.');
                 return;
             }
-           // Set the message state to the success message and show toast
-           setMessage(`${data.message}#${Date.now()}`);
-           setMessageType('success');
-           setLoading(false);
+            // Set the message state to the success message and show toast
+            setMessage(`${data.message}#${Date.now()}`);
+            setMessageType('success');
+            setLoading(false);
+              // If the user is found (status 200), then the API should have issued the CSRF and session tokens
+    // (for example, via cookies). Now, simply redirect the user to /landing.
+            window.location.href = '/landing';
         } catch (error) {
             console.error('Error checking subscription:', error);
             setMessage('Internal error. Please try again later. 🛑');
             setMessageType('error');
-            setLoading(false);
         }
         finally {
             setLoading(false);
