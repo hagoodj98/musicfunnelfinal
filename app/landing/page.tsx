@@ -1,4 +1,4 @@
-
+import { Suspense } from 'react';
 import CheckoutInitiator from '../components/CheckoutInitiator.client';
 import SessionManagerProvider from '../components/SessionManagerProvider';
 import CustomVideo from '../components/CustomVideo';
@@ -7,22 +7,20 @@ import FanPack from '../../public/fanpack.jpg';
 import CheckIcon from '@mui/icons-material/Check';
 import LandingToastNotifier from '../components/LandingToastNotifier';
 
-
 export const metadata = {
   title: "Fan Pack",
   description: "Join now to get insider updates and your free Ultimate Fan Starter Pack."
 };
-
-
 const LandingPage = () => {
-  
   return (
     <div>
     
       {/* This client component will fetch the TTL and then render the SessionManager. This strictly relates to the vality of the session using cookies. In terms of how long this cookie is valid for and what should happen as time decreases */}
       <SessionManagerProvider />
       {/* Include the client component for toast notifications */}
-      <LandingToastNotifier />
+      <Suspense fallback={null}>
+        <LandingToastNotifier />
+      </Suspense>
       
       <div className='container'>
         <div className='lg:tw-w-10/12 lg:tw-mx-auto'>
@@ -42,7 +40,7 @@ const LandingPage = () => {
           <div className=' tw-p-8'>
             <div className='tw-my-7'>
               <h1 className='tw-text-white tw-text-center tw-font-header'>Ultimate Fan Starter Pack</h1>
-              <h3 className='tw-text-white tw-text-center tw-font-body'>Here's What Your're Going To Get...</h3>
+              <h3 className='tw-text-white tw-text-center tw-font-body'>Here&#39;s What Your&#39;re Going To Get...</h3>
             </div>
             <div className='tw-w-2/3 tw-mx-auto tw-pt-3'>
               <Image src={FanPack} className=' ' alt='picture of me'/>

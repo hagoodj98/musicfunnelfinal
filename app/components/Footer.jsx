@@ -1,7 +1,4 @@
-import Logo from '../../public/logo.svg';
-import Image from 'next/image';
 
-import Button from '@mui/material/Button';
 import Link from 'next/link';
 import Privacy from './PrivacyOffCanvas';
 import Terms from './TermsOffCanvas';

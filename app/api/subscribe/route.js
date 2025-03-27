@@ -27,39 +27,34 @@ export async function POST(req) {
     if (!validateEmail(email)) {
       throw new HttpError('Invalid email format for email', 400);
     }
-    console.log(`Received data: Email: ${email}, Name: ${name}`);
   
     const addSubscriber = limiter.wrap(async (email, name) => {
-      console.log(`Attempting to add subscriber to Mailchimp: ${email}`);
+      
       const response = await mailchimpClient.lists.addListMember(listID, {
         email_address: email,
         status: "pending",
         merge_fields: { FNAME: name }
       });
-      console.log(`Subscriber added to Mailchimp audience with status: ${response.status}`);
+     
       return response;
     });
 
     // Call the rate-limited function
     await addSubscriber(email, name);
-    console.log('Adding subscriber to Mailchimp:', email);
-    
-//Using cryptographic methods (e.g., crypto.randomBytes and HMAC) ensures that the identifiers are secure.
-//Generate a salt for more security
+  
     const { salt } = generateTokenAndSalt(); 
 // Create an email hash
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
 // Decide on TTL based on rememberMe (for preliminary session storage)
-    const ttl = rememberMe ? 90 : 100; // 1 week vs 1 hour
+    const ttl = rememberMe ? 604800 : 900; // 1 week vs 15 minutes
 
-//Create session data including user details. This is the piece of data I want mailchimp webhook to update because it has the status property in it. And I am using redis key emailToHashMapping to associate them together
     const preliminarysessionData = {email, name, status: 'pending', salt, rememberMe };
-    console.log(`Storing session data in Redis for Email Hash: ${emailHash}`);
+
 // Store the session data
    
     await redis.set(`prelimSession:${emailHash}`, JSON.stringify(preliminarysessionData), 'EX', ttl);
-// Store the email to hash and salt mapping. This will allow me to get access to the salt in other parts of the application
+
     await redis.set(`emailToHashMapping:${email}`, JSON.stringify({ emailHash, salt }), 'EX', ttl);
 
     return new Response(JSON.stringify({message: "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!", status: 'pending' }), { status: 200 });

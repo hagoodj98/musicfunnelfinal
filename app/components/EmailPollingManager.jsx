@@ -9,8 +9,7 @@ const EmailPollingManager = () => {
     // Use the custom hook to poll the /api/check-status endpoint.
     const { status, error } = useEmailPolling(email, rememberMe, shouldPoll);
 
-    // Optionally show or log the status/error
-    console.log('Polling status:', status);
+   
     if (error) {
     console.log('Polling error:', error);
     }

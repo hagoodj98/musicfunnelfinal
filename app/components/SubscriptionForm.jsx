@@ -19,26 +19,22 @@ import { green } from '@mui/material/colors';
 import { toast } from 'react-toastify';
 
 const SubscriptionForm = () => {
-//The component uses the EmailContext to store and retrieve email and rememberMe so that other components (like EmailPollingManager) can access these values.
+
     const {email, setEmail, rememberMe, setRememberMe, shouldPoll, setShouldPoll } = useContext(EmailContext);
 
 //// Since the name is only used within SubscriptionForm, it remains local.
     const [name, setName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    //When user clicks the subscribe button, it triggers the handleSubmit function, assuming their is an email, we want to set the status to pending. If status equals 'pending' then show a pending message.
     const [status, setStatus] = useState('idle')
     const [lgShow, setLgShow] = useState(false);
-    
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-    
     //Once triggered we want to check if email exist first before proceeding with the remaining functionality of the handleSubmit function
         if (!email) {
             setErrorMessage('Email is required');
             return;
         }
-    
         setStatus('pending');
         setErrorMessage(''); // Clear previous errors
     
@@ -98,14 +94,11 @@ const SubscriptionForm = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-            {/*This is initial. We want to render a pending message letting the user know what they should do next */}
             {status === 'pending' && (
                 <div>
-                     {/* Render the EmailChecker component and pass the email because once the user hits the subscribe button we want to start checking for an updated status. This EmailChecker handles the polling that runs every 10 seconds watching for updates to the user subsscription status */}
                      <EmailChecker email={email} rememberMe={rememberMe} onConfirmed={() => setStatus('confirmed')} />
                 </div>
             )} 
-            {/*regardless of the status i always want to keep the form displayed. We don't want it to disappear randomly */}
             {(status === 'idle' || status === 'error' || status === 'pending' || status === 'confirmed') && 
             (
             <Form onSubmit={handleSubmit}>

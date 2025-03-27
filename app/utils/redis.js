@@ -1,8 +1,6 @@
 import Redis from "ioredis";
 import fs from 'fs';
 
-
-
 // Create a Redis client instance
 const redis = new Redis({
     port: process.env.REDIS_PORT,  // Redis port
@@ -14,19 +12,8 @@ const redis = new Redis({
       } : undefined
 });
 
-export function logEnvVars() {
-console.log({
-    port: process.env.REDIS_PORT,
-    host: process.env.REDIS_HOST,
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
-    certificatePath: process.env.CERT_REDIS
-});
-}
 redis.on('error', (err) => {
     console.error('Redis error:', err);
-    console.log('Failed command details:', err.command);
-    
 }); 
 
 async function checkRedisConnection() {

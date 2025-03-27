@@ -2,13 +2,8 @@
 
 import { useState } from "react"
 import MessageNotify from "./MessageNotify";
-import { toast } from "react-toastify";
 import Modal from 'react-bootstrap/Modal';
-import Fab from '@mui/material/Fab';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
 import Button from '@mui/material/Button';
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import InputAdornment from '@mui/material/InputAdornment';
 import EmailIcon from '@mui/icons-material/Email';
 import { TextField } from "@mui/material";
@@ -35,7 +30,6 @@ const FindMe = () => {
             const data= await res.json();
             if (!res.ok) {
                  // Set the message state to the error message and show toast
-                 console.log('Error from server:', data.error, 'Status:', res.status);
                  setMessage(`${data.error || "Something went wrong."}#${Date.now()}`);
                  setMessageType('error');
                  //toast.error(data.message || 'Something went wrong. Please try again.');
@@ -45,8 +39,7 @@ const FindMe = () => {
             setMessage(`${data.message}#${Date.now()}`);
             setMessageType('success');
             setLoading(false);
-              // If the user is found (status 200), then the API should have issued the CSRF and session tokens
-    // (for example, via cookies). Now, simply redirect the user to /landing.
+             
             window.location.href = '/landing';
         } catch (error) {
             console.error('Error checking subscription:', error);

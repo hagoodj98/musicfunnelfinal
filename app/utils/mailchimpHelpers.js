@@ -71,52 +71,17 @@ export async function updateMailchimpTag(email, tagName, status = 'active' ) {
 }
 
 export async function sendPaymentLinkEmailViaMailchimp(userEmail, paymentLinkUrl) {
-   // Build a key specific for email rate limiting. You might use the email itself.
-  const rateLimitKey = `emailLimit:${userEmail}`;
-   // Set a limit (e.g., 3 email sends per 24 hours) and an expiration (86400 seconds = 24 hours).
-  
   const mailOptions = {
     from: `"JAPP" ${process.env.GMAIL_USER}`,
     to: userEmail,
-    subject: 'Your Payment Link',
+    subject: 'Your Payment Link From JHStudios',
     text: `Hi, \n\nPlease use the following link to complete your purchase:\n${paymentLinkUrl}\n\nThank you!`,
     html:  `<p>Hi</p>
             <p>Please use the following link to complete your purchase:</p>
-            <p><a href="${paymentLinkUrl}">Buy Fan Pack</a></p>
+            <p ><a  href="${paymentLinkUrl}">Buy Fan Pack</a></p>
             <p>Thank you!</p>`
   };
   const info = await transporter.sendMail(mailOptions);
   console.log("Payment link email sent, Message ID:", info.messageId);
   return info;
 }
-
-/*export async function sendAddressConfirmationEmail(userEmail) {
-  // Create a signed token that includes the user’s email.
-  const token = jwt.sign({ email: userEmail }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  // Construct the confirmation URL using your SITE_URL environment variable.
-  const confirmationUrl = `${process.env.SITE_URL}/landing/thankyou/confirm-address?token=${token}`;
-
-  const mailOptions = {
-    from: `"JAPP" <${process.env.GMAIL_USER}>`,
-    to: userEmail,
-    subject: 'Please Confirm Your Shipping Address',
-    text: `Hi,
-
-      Please confirm your shipping address by clicking the link below:
-      ${confirmationUrl}
-
-  Thank you!`,
-    html: `<p>Hi,</p>
-           <p>Please confirm your shipping address by clicking the link below:</p>
-           <p>
-             <a href="${confirmationUrl}" >
-                Confirm Shipping Address
-             </a>
-           </p>
-           <p>Thank you!</p>`
-  };
-
-  const info = await transporter.sendMail(mailOptions);
-  console.log("Address confirmation email sent, Message ID:", info.messageId);
-  return info;
-} */

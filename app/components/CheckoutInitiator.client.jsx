@@ -1,4 +1,3 @@
-// app/components/CheckoutInitiator.client.jsx
 "use client";
 
 import { useState } from "react";

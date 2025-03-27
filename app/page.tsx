@@ -1,19 +1,13 @@
 import Image from 'next/image';
 import SubscriptionForm from './components/SubscriptionForm';
 import MusicCover from '../public/GOOD (1).jpg';
-import Button from '@mui/material/Button';
 import Me from '../public/IMG_1856(1).jpg';
-import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
-import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import EmailPollingManager from './components/EmailPollingManager';
 import { EmailProvider } from './context/EmailContext';
 import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
 import MessageNotify from './components/MessageNotify'
-import { Oswald } from 'next/font/google';
 
-
-const oswald = Oswald({ subsets: ['latin'] });
 
 export const metadata = {
   title: "Home",
@@ -24,13 +18,13 @@ export default function Home () {
 
   return (
     <div className="tw-bg-center ">
-      <MessageNotify  />
+      <MessageNotify type={null} notify={null}  />
         {/* EmailPollingManager remains mounted continuously */}
       <div className=' tw-mx-auto'>
         <div className='container'>
           <div className='lg:tw-w-10/12 lg:tw-mx-auto'>
             <div className='tw-pb-8 '>
-              <h1 className= 'tw-font-header tw-text-center tw-mt-7 tw-text-white'>I'M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST 50 FANS, <span className='tw-text-secondary'>ABSOLUTELY FREE!</span></h1>
+              <h1 className= 'tw-font-header tw-text-center tw-mt-7 tw-text-white'>I&#39;M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST 50 FANS, <span className='tw-text-secondary'>ABSOLUTELY FREE!</span></h1>
               <h3 className='tw-font-body lg:tw-text-3xl tw-text-center tw-text-primary'>Plus, receive occasional previews of <span className='tw-text-secondary'>upcoming music</span>, live streams, and special merch offers</h3>
               <h3 className='tw-font-body tw-text-center tw-text-white'>(100% Totally Free)</h3>
             </div>
@@ -42,7 +36,7 @@ export default function Home () {
         <div className='tw-bg-[rgba(22,121,136,0.74)] '>
           <div className='container tw-flex tw-flex-col lg:tw-flex-row tw-items-center tw-p-5 '>
             <div className='tw-w-1/2  tw-pt-10'>
-              <Image src={Me} className=' ' alt='picture of me'/>
+              <Image src={Me} alt='picture of me'/>
             </div>
             <div className='lg:tw-w-1/2 tw-p-8'>
               <div className='tw-my-7'>

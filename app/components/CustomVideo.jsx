@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from "react";
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 
 export function CustomVideo({ vidAddress }) {
   const videoRef = useRef(null);

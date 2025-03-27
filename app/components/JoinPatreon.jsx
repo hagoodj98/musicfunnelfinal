@@ -2,7 +2,6 @@
 
 import Button from '@mui/material/Button';
 import ForwardIcon from '@mui/icons-material/Forward';
-import Link from 'next/link';
 
 const JoinPatreon = () => {
   return (

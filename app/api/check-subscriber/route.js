@@ -1,12 +1,9 @@
 import { mailchimpClient } from "../../utils/mailchimp.js";
 import crypto from 'crypto';
 import { HttpError, generateTokenAndSalt, updateSessionData, createCookie } from '../../utils/sessionHelpers.js';
-import Stripe from "stripe";
 import { validateEmail } from '../../utils/validateEmail.js';
 import redis from "../../utils/redis.js";
 const listID = process.env.MAILCHIMP_LIST_ID;
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 
 export async function POST(req) {
    try {
@@ -50,8 +47,8 @@ export async function POST(req) {
                 throw new HttpError("Error retrieving subscriber data from Mailchimp", 500);
             }
         }
-      // If the member was found, generate new tokens and update the session.
-    const { sessionToken, csrfToken, salt } = generateTokenAndSalt();
+      
+    const { sessionToken, csrfToken } = generateTokenAndSalt();
     // Prepare session data. You can add additional properties as needed.
     const sessionData = {
       email,
@@ -60,10 +57,9 @@ export async function POST(req) {
       name: member.merge_fields?.FNAME || '',
       // Optionally include salt if you plan to use it later for verifying email mapping.
     };
-    // Update session data in Redis with a TTL (for example, 15 minutes).
+
     await updateSessionData(sessionToken, sessionData, 900);
 
-    // Create cookies for the session token and CSRF token.
     const sessionCookie = createCookie('sessionToken', sessionToken, { maxAge: 900 });
     const csrfCookie = createCookie('csrfToken', csrfToken, { maxAge: 900 });
 

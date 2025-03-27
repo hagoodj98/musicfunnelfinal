@@ -7,7 +7,6 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
 
 
   useEffect(() => {
-    console.log("EmailConfirmationChecker mounted with email:", email);
     // Poll every 10 seconds
     const intervalId = setInterval(async () => {
       try {
@@ -24,7 +23,6 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
           const data = await response.json();
           // Assume data includes sessionToken, csrfToken etc.
           if (data.sessionToken) {
-            console.log("Check status response", data);
             // Stop polling and redirect or update UI accordingly
             if (onConfirmed) {
               onConfirmed();
