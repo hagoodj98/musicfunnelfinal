@@ -79,7 +79,20 @@ const SubscriptionForm = () => {
 
   return (
     <div className='tw-flex'>
-        <Button onClick={() => setLgShow(true)} className='tw-font-header tw-bg-lighterblue tw-p-2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-text-white tw-w-2/5 tw-mx-auto '>Join The Family!</Button>
+        <Button onClick={() => setLgShow(true)} 
+        sx={{
+            color: 'white',          // Force text color to white
+            backgroundColor: 'rgb(1, 10, 38, 0.8)',  // or your 'lighterblue' color
+            border: 'none',
+            width: '40%',
+            marginX: 'auto',
+            '&:hover': {
+            backgroundColor: '#FDEAB6',  // or your 'yellow'
+            borderColor: '#FDEAB6',
+            color: 'rgb(1, 10, 38, 0.8)',           // text color on hover
+            },
+        }}
+  ><span className='tw-font-header'>Join The Family!</span></Button>
         <Modal
         size="lg"
         show={lgShow}
@@ -134,6 +147,8 @@ const SubscriptionForm = () => {
                         // Normal (enabled) styles:
                         backgroundColor: status === 'confirmed' ? green[500] : "secondary.main",
                         color: "white",
+                        width: '50%',
+                        marginX: 'auto',
                         borderColor: status === 'confirmed' ? green[500] : "secondary.main",
                         "&:hover": {
                           backgroundColor: status === 'confirmed' ? green[700] : "#FDEAB6",
@@ -149,19 +164,21 @@ const SubscriptionForm = () => {
                         },
                     }} 
                     variant="outlined" 
-                    className='tw-mx-auto tw-font-header' 
+                    className='tw-mx-auto ' 
                     type='submit'
                     >
-                        {status === 'pending' ? (
-                            <>   
-                                <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
-                                <span className='tw-font-header tw-ml-2'> Pending Subscription.</span>
-                            </>
-                    ) : status === 'confirmed' ? ( 
-                        <CheckIcon />
-                    ) : (
-                        'Join The Fam'
-                    )}
+                        <span className='tw-font-header'>
+                            {status === 'pending' ? (
+                                <>   
+                                    <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
+                                    <span className='tw-font-header tw-ml-2'> Pending Subscription.</span>
+                                </>
+                            ) : status === 'confirmed' ? ( 
+                                <CheckIcon />
+                            ) : (
+                                'Join The Fam'
+                            )}
+                        </span>
                     </Button>
                     <FindMe />
                 </div>

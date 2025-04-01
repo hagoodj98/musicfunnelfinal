@@ -6,7 +6,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 const JoinPatreon = () => {
   return (
     <div className='tw-flex tw-justify-center tw-my-7'>
-      <Button onClick={() => { window.open('patreon.com/Jaiquez')}} sx={{
+      <Button onClick={() => { window.open('https://patreon.com/Jaiquez?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink')}} sx={{
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",
@@ -26,7 +26,7 @@ const JoinPatreon = () => {
                         cursor: "not-allowed",
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
-                    }} variant="contained" className='tw-font-header' type="submit"> <ForwardIcon />Yes! I want to join your patreon.</Button>
+                    }} variant="contained"  type="submit"> <ForwardIcon /> <span className='tw-font-header'>Yes! I want to join your patreon.</span></Button>
                     
     </div>
   )

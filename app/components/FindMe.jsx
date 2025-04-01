@@ -82,6 +82,7 @@ const FindMe = () => {
                     },
                 }} 
                 label="Your Email" name='email' value={email} onChange={e => setEmail(e.target.value)}/>
+                <br />
                 <Button disabled={loading} sx={{
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
@@ -102,14 +103,18 @@ const FindMe = () => {
                         cursor: "not-allowed",
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
-                    }} className="tw-font-header tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">{loading ? (
-                  <>
-                    <Box sx={{ display: 'flex' }}>
-                      <CircularProgress size="30px" color='inherit' />
-                    </Box>
-                    <span> Checking...</span>
-                  </>
-                ) : ('Find Me!')} </Button>
+                    }} className=" tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">
+                    <span className="tw-font-header">
+                          {loading ? (
+                      <>
+                        <Box sx={{ display: 'flex' }}>
+                          <CircularProgress size="30px" color='inherit' />
+                        </Box>
+                        <span> Checking...</span>
+                      </>
+                    ) : ('Find Me!')} 
+                    </span>
+                </Button>
             </form>
         </Modal.Body>
       </Modal>

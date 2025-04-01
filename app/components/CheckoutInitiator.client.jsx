@@ -46,7 +46,7 @@ const CheckoutInitiator = () => {
   return (
     <div className="tw-w-full  tw-flex tw-justify-center">
       <MessageNotify notify={message} type={messageType} />
-      <Button onClick={handleCheckout} className="tw-font-header" sx={{
+      <Button onClick={handleCheckout}  sx={{
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",
@@ -67,7 +67,9 @@ const CheckoutInitiator = () => {
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
                     }} disabled={loading}>
-        {loading ? "Redirecting to Stripe..." : "I Want One!"}
+                      <span className="tw-font-header">
+                        {loading ? "Redirecting to Stripe..." : "I Want One!"}
+                      </span>
       </Button>
     </div>
   );

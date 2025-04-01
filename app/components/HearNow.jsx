@@ -4,7 +4,16 @@ import Button from '@mui/material/Button';
 const HearNow = () => {
   return (
     <div>
-      <Button onClick={() => { window.open('https://jaiquez.hearnow.com/good')}} variant="outlined" className='tw-font-header tw-mx-auto tw-bg-lighterblue tw-text-white tw-border-none hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue' size="large">hearnow</Button>    
+      <Button color="inherit" onClick={() => { window.open('https://jaiquez.hearnow.com/good')}} variant="outlined"  sx={{
+    color: 'white',          // Force text color to white
+    backgroundColor: 'rgb(1, 10, 38, 0.8)',  // or your 'lighterblue' color
+    border: 'none',
+    '&:hover': {
+      backgroundColor: '#FDEAB6',  // or your 'yellow'
+      borderColor: '#FDEAB6',
+      color: 'rgb(1, 10, 38, 0.8)',           // text color on hover
+    },
+  }} size="large"> <span className='tw-font-header'>hearnow</span></Button>    
     </div>
   )
 }

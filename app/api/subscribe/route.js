@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { mailchimpClient } from '../../utils/mailchimp.js';
 import Bottleneck from 'bottleneck';
 import redis from '../../utils/redis.js';
+import { updateMailchimpTag } from '../../utils/mailchimpHelpers.js';
 import { validateEmail } from '../../utils/validateEmail.js';
 import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers.js';
 // Bottleneck limiter configuration
@@ -33,7 +34,7 @@ export async function POST(req) {
       const response = await mailchimpClient.lists.addListMember(listID, {
         email_address: email,
         status: "pending",
-        merge_fields: { FNAME: name }
+        merge_fields: { FNAME: name },
       });
      
       return response;
@@ -41,13 +42,13 @@ export async function POST(req) {
 
     // Call the rate-limited function
     await addSubscriber(email, name);
-  
+
     const { salt } = generateTokenAndSalt(); 
 // Create an email hash
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
 // Decide on TTL based on rememberMe (for preliminary session storage)
-    const ttl = rememberMe ? 604800 : 900; // 1 week vs 15 minutes
+    const ttl = rememberMe ? 604800 : 100; // 1 week vs 15 minutes
 
     const preliminarysessionData = {email, name, status: 'pending', salt, rememberMe };
 

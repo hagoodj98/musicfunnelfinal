@@ -1,12 +1,22 @@
 import Footer from './components/Footer';
 import Script from "next/script";
-import "./globals.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { Oswald, Caveat } from 'next/font/google';
+
 import 'react-toastify/dist/ReactToastify.css';
 import Providers from "./providers";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import "./globals.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+const oswald = Oswald({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['400'],
+});
 
 export default function RootLayout({
   children,
@@ -14,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${oswald.className} ${caveat.className} `}>
       <body className={` antialiased tw-bg-[url('../public/oc-gonzalez-A-11N8ItHZo-unsplash.jpg')] tw-bg-cover tw-bg-no-repeat tw-bg-center`}>
       
         <ToastContainer />
