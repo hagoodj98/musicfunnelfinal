@@ -29,11 +29,10 @@ const ThankYouPage = () => {
               </div>
             </div>
             <div className="tw-text-white">
-               <p>I really appreciate you supporting me and my music by purchasing the fan pack. This really means a lot to me!</p>
-               <p>Look out for an email from me in the next few days confirming your shipping address.</p>
-               <p>We cannot move forward shipping you your products until address is confirmed.</p>
-               <p>If you have any questions or concerns, feel free to contact me via email.</p>
-               <p>Thanks for being a <span className="tw-font-body tw-text-yellow">TRUE FAN!!</span></p>
+              <p>I really appreciate you supporting me and my music by purchasing the fan pack. This really means a lot to me!</p>
+              <p>Look out for an email from me in the next few days confirming your shipping address.</p>
+              <p>If you have any questions or concerns, feel free to contact me via email.</p>
+              <p>Thanks for being a <span className="tw-font-body tw-text-yellow">TRUE FAN!!</span></p>
                 <div>
                   <Patreon />
                 </div>

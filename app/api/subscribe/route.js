@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import { mailchimpClient } from '../../utils/mailchimp.js';
 import Bottleneck from 'bottleneck';
 import redis from '../../utils/redis.js';
-import { updateMailchimpTag } from '../../utils/mailchimpHelpers.js';
 import { validateEmail } from '../../utils/validateEmail.js';
 import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers.js';
 // Bottleneck limiter configuration

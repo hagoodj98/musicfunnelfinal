@@ -58,8 +58,33 @@ const RefreshPopup = ({ timeLeft, onClose }) => {
                 {success && <p style={{ color: "green" }}>{success}</p>}
             </Modal.Body>
             <Modal.Footer>
-              <Button onClick={onClose} className='tw-bg-lighterblue tw-border-lighterblue hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-font-header'  disabled={loading} variant="contained">Nope!</Button>
-              <Button onClick={handleRefresh} variant="contained" disabled={loading} className='tw-bg-secondary tw-border-secondary hover:tw-bg-yellow hover:tw-border-yellow tw-font-header hover:tw-text-lighterblue' >{loading ? "Refreshing..." : "Refresh me!"}</Button>
+              <Button onClick={onClose} 
+                sx={{
+                  marginRight: "5px",
+                  backgroundColor: "rgb(1, 10, 38, 0.8)",
+                  borderColor: "rgb(1, 10, 38, 0.8)",
+                  color: "white",
+                  "&:hover": {
+                        backgroundColor: "#FDEAB6",
+                        borderColor: "#FDEAB6",
+                        color: "rgb(1, 10, 38, 0.8)",
+                        }
+                }}
+                disabled={loading} variant="contained"><span className='tw-font-header'>Nope!</span></Button>
+              <Button onClick={handleRefresh} variant="contained" disabled={loading} 
+                sx={{
+                  // Normal (enabled) styles:
+                  backgroundColor: "secondary.main",
+                  color: "white",
+                  borderColor: "secondary.main",
+                  "&:hover": {
+                  backgroundColor: "#FDEAB6",
+                  borderColor: "#FDEAB6",
+                  color: "rgb(1, 10, 38, 0.8)",
+                  }
+                  }}> 
+                <span className='tw-font-header'>{loading ? "Refreshing..." : "Refresh me!"}</span>
+              </Button>
             </Modal.Footer>
           </Modal>
         </div>
