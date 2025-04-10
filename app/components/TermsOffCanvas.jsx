@@ -23,7 +23,7 @@ function TermsOffCanvas({name, placement}) {
                 <Offcanvas.Body className='tw-bg-lighterblue tw-text-white'>
                     <h3 className='tw-font-header'>Last Updated: 03/25/2025</h3>
                     <h3 className='tw-font-header'>1. Acceptance of Terms</h3>
-                    <p>By accessing or using jaiquezmuzic.com (the “Site”), you agree to these Terms of Service (“Terms”). If you do not agree, please do not use the Site.</p>
+                    <p>By accessing or using jaiquezmusic.com (the “Site”), you agree to these Terms of Service (“Terms”). If you do not agree, please do not use the Site.</p>
                     <h3 className='tw-font-header'>2. Eligibility</h3>
                     <p>You must be at least 18 years old (or the age of majority in your jurisdiction) to use our Services. By using the Site, you represent that you have the legal capacity to agree to these Terms.</p>
                     <h3 className='tw-font-header'>3. Use of the Site</h3>
