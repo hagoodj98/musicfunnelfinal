@@ -19,7 +19,7 @@ export default function Home () {
 
   return (
     <>
-      <div className="tw-bg-center ">
+      <div className="tw-bg-center">
         <MessageNotify type={null} notify={null}  />
           {/* EmailPollingManager remains mounted continuously */}
         <div className=' tw-mx-auto'>

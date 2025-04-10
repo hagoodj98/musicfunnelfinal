@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-
+import Privacy from './PrivacyOffCanvas';
 /**
  * 
  * 	•	useEffect Check: On mount, the component checks localStorage for the “cookieConsent” flag. If it’s not set, the banner is shown.
@@ -30,9 +30,7 @@ const CookieConsentBanner = () => {
 
   return (
     <div className="tw-fixed tw-bottom-0 tw-left-0 tw-right-0 tw-bg-gray-800 tw-text-white tw-p-4 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-between tw-z-50">
-      <span className="text-sm">
-        We use cookies to ensure you get the best experience on our site.{' '}
-        <a href="/privacy-policy" className="tw-underline tw-text-blue-300">Learn more</a>.
+      <span className="text-sm">By continuing to browse this site, you consent to our use of cookies to ensure the functionality of the site and to enhance your user experience. For more information, please see our <span className="tw-inline-block"><Privacy className="tw-underline" name= 'Privacy Policy' placement='start'/></span>
       </span>
       <button 
         onClick={handleConsent} 

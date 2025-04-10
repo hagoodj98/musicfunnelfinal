@@ -13,10 +13,10 @@ function PrivacyOffCanvas({name, placement}) {
     return (
         <div >
             <Button variant='link' 
-                    style={{ 
-                        textDecoration: 'none',
-                        color: 'white',
-             }}  onClick={handleShow} className=" me-2 custom-footer-button">{name}</Button>
+                style={{ 
+                    color: 'white',
+                }}  onClick={handleShow} className=" me-2 custom-footer-button">{name}
+            </Button>
             <Offcanvas show={show} onHide={handleClose}  placement={placement}>
                 <Offcanvas.Header className='tw-bg-lighterblue tw-text-white' closeVariant='white' closeButton>
                 <Offcanvas.Title> <span className='tw-font-header  tw-text-white'>{name}</span></Offcanvas.Title>
