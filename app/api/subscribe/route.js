@@ -58,7 +58,7 @@ export async function POST(req) {
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
 // Decide on TTL based on rememberMe (for preliminary session storage)
-    const ttl = rememberMe ? 604800 : 90; // 1 week vs 15 minutes
+    const ttl = rememberMe ? 604800 : 900; // 1 week vs 15 minutes
 
     const preliminarysessionData = {email, name, status: 'pending', salt, rememberMe };
 

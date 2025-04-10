@@ -79,8 +79,8 @@ export async function POST() {
                 }
             ],
             mode: 'payment',
-            success_url: "http://localhost:3000/landing/thankyou",
-            cancel_url: "http://localhost:3000/landing",
+            success_url: "https://jaiquezmusic.com/landing/thankyou",
+            cancel_url: "https://jaiquezmusic.com/landing",
             billing_address_collection: 'required', //Set to 'required' to collect billing address
             shipping_address_collection: {
                 allowed_countries: ['US'], // Specify the countries to which I am willing to ship
