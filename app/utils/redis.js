@@ -1,5 +1,10 @@
 import Redis from "ioredis";
-import fs from 'fs';
+
+// read the base64 string from ENV
+const base64Cert = process.env.REDIS_CA_BASE64;
+
+// decode to a Buffer
+const redisCaBuffer = Buffer.from(base64Cert, 'base64');
 
 // Create a Redis client instance
 const redis = new Redis({
@@ -7,9 +12,8 @@ const redis = new Redis({
     host: process.env.REDIS_HOST,  // Redis host
     username: process.env.REDIS_USERNAME,
     password: process.env.REDIS_PASSWORD,
-    tls: process.env.REDIS_TLS === 'true' ? {
-        ca: process.env.CERT_REDIS ? fs.readFileSync(process.env.CERT_REDIS) : undefined
-      } : undefined
+    tls: true,
+    ca: [redisCaBuffer],
 });
 
 redis.on('error', (err) => {
