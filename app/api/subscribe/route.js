@@ -4,6 +4,9 @@ import Bottleneck from 'bottleneck';
 import redis from '../../utils/redis.js';
 import { validateEmail } from '../../utils/validateEmail.js';
 import { generateTokenAndSalt, HttpError } from '../../utils/sessionHelpers.js';
+import { validateName } from '../../utils/validateName.js';
+
+
 // Bottleneck limiter configuration
 const limiter = new Bottleneck({
   maxConcurrent: 1, // Only one function runs at a time. Only one call to the wrapped function will execute at any given moment.
@@ -27,7 +30,15 @@ export async function POST(req) {
     if (!validateEmail(email)) {
       throw new HttpError('Invalid email format for email', 400);
     }
-  
+    // New validation for the name field.
+    if (!name) {
+      throw new HttpError('Name is required', 400);
+    }
+    
+    if (!validateName(name)) {
+      throw new HttpError('Name contains invalid characters. Please remove any special symbols or numbers!', 400);
+    }
+
     const addSubscriber = limiter.wrap(async (email, name) => {
       
       const response = await mailchimpClient.lists.addListMember(listID, {
@@ -47,7 +58,7 @@ export async function POST(req) {
     const emailHash = crypto.createHmac('sha256', salt).update(email.toLowerCase()).digest('hex');
 
 // Decide on TTL based on rememberMe (for preliminary session storage)
-    const ttl = rememberMe ? 604800 : 100; // 1 week vs 15 minutes
+    const ttl = rememberMe ? 604800 : 90; // 1 week vs 15 minutes
 
     const preliminarysessionData = {email, name, status: 'pending', salt, rememberMe };
 
@@ -60,12 +71,13 @@ export async function POST(req) {
     return new Response(JSON.stringify({message: "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!", status: 'pending' }), { status: 200 });
   } catch (error) {
       console.error("Error during subscription process:", error);
+      
       // If the error is already an instance of HttpError, use its status and message.
+      
       if (error instanceof HttpError) {
         return new Response(JSON.stringify({ error: error.message }), { status: error.status });
       }
       // Otherwise, return a generic 500 Internal Server Error.
-      return new Response(JSON.stringify({ error: 'Subscription failed due to an internal error' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'Subscription failed due being a member already or an internal error has occured. **Please check your inbox (and spam folder) and make sure you confirmed your subscription first or send an email for support. '}), { status: 500 });
   }
 }
-

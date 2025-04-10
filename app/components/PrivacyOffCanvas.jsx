@@ -17,14 +17,14 @@ function PrivacyOffCanvas({name, placement}) {
                         textDecoration: 'none',
                         color: 'white',
              }}  onClick={handleShow} className=" me-2 custom-footer-button">{name}</Button>
-            <Offcanvas show={show} onHide={handleClose} placement={placement}>
-                <Offcanvas.Header closeButton>
-                <Offcanvas.Title> <span className='tw-font-header'>{name}</span></Offcanvas.Title>
+            <Offcanvas show={show} onHide={handleClose}  placement={placement}>
+                <Offcanvas.Header className='tw-bg-lighterblue tw-text-white' closeVariant='white' closeButton>
+                <Offcanvas.Title> <span className='tw-font-header  tw-text-white'>{name}</span></Offcanvas.Title>
                 </Offcanvas.Header>
-                <Offcanvas.Body>
-                    <h3 className='tw-font-header'>Last Updated: [Insert Date]</h3>
+                <Offcanvas.Body className='tw-bg-lighterblue tw-text-white'>
+                    <h3 className='tw-font-header'>Last Updated: 03/25/2025</h3>
                     <h3 className='tw-font-header'>1. Introduction</h3>
-                    <p>Welcome to [Your Site Name] (referred to as “we,” “our,” or “us”). This Privacy Policy explains how we collect, use, store, and share your personal information when you use our website and services (the “Services”). Our aim is to protect your privacy while providing you with an engaging music fan experience.</p>
+                    <p>Welcome to jaiquezmuzic.com (referred to as “we,” “our,” or “us”). This Privacy Policy explains how we collect, use, store, and share your personal information when you use our website and services (the “Services”). Our aim is to protect your privacy while providing you with an engaging music fan experience.</p>
                     <h3 className='tw-font-header'>2. Information We Collect</h3>
 
                     <h4 className='tw-font-header'>Personal Information:</h4>

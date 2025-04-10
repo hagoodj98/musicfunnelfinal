@@ -28,7 +28,7 @@ const ThankYouPage = () => {
                 <h1 className='tw-font-header tw-text-white tw-text-center'>Thank You For Your Support</h1>
               </div>
             </div>
-            <div className="tw-text-white">
+            <div className="tw-text-center tw-text-white">
               <p>I really appreciate you supporting me and my music by purchasing the fan pack. This really means a lot to me!</p>
               <p>Look out for an email from me in the next few days confirming your shipping address.</p>
               <p>If you have any questions or concerns, feel free to contact me via email.</p>

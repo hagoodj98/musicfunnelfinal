@@ -51,7 +51,11 @@ const SubscriptionForm = () => {
                 })
             });
             if (!subscribeResponse.ok) {
-                throw new Error(`Something went wrong. please try again!`);
+                const errorResponse = await subscribeResponse.json();
+                // Set the error message from the API response
+                setErrorMessage(errorResponse.error || 'Something went wrong, please try again!');
+                setStatus('error');
+                return;
             }
             // If subscription is initiated successfully, allow polling:
             setShouldPoll(true);
@@ -112,6 +116,9 @@ const SubscriptionForm = () => {
                      <EmailChecker email={email} rememberMe={rememberMe} onConfirmed={() => setStatus('confirmed')} />
                 </div>
             )} 
+            { errorMessage && (
+                <p className="tw-text-red-600 tw-text-center tw-font-header tw-mt-4 ">{errorMessage}</p>
+            )}
             {(status === 'idle' || status === 'error' || status === 'pending' || status === 'confirmed') && 
             (
             <Form onSubmit={handleSubmit}>

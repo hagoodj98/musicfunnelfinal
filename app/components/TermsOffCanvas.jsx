@@ -17,13 +17,13 @@ function TermsOffCanvas({name, placement}) {
                         color: 'white',
              }}  onClick={handleShow} className="me-2  custom-footer-button">{name}</Button>
             <Offcanvas show={show} onHide={handleClose} placement={placement}>
-                <Offcanvas.Header closeButton>
+                <Offcanvas.Header className='tw-bg-lighterblue tw-text-white' closeVariant='white' closeButton>
                 <Offcanvas.Title> <span className='tw-text-red tw-font-header'>{name}</span></Offcanvas.Title>
                 </Offcanvas.Header>
-                <Offcanvas.Body>
-                    <h3 className='tw-font-header'>Last Updated: [Insert Date]</h3>
+                <Offcanvas.Body className='tw-bg-lighterblue tw-text-white'>
+                    <h3 className='tw-font-header'>Last Updated: 03/25/2025</h3>
                     <h3 className='tw-font-header'>1. Acceptance of Terms</h3>
-                    <p>By accessing or using [Your Site Name] (the “Site”), you agree to these Terms of Service (“Terms”). If you do not agree, please do not use the Site.</p>
+                    <p>By accessing or using jaiquezmuzic.com (the “Site”), you agree to these Terms of Service (“Terms”). If you do not agree, please do not use the Site.</p>
                     <h3 className='tw-font-header'>2. Eligibility</h3>
                     <p>You must be at least 18 years old (or the age of majority in your jurisdiction) to use our Services. By using the Site, you represent that you have the legal capacity to agree to these Terms.</p>
                     <h3 className='tw-font-header'>3. Use of the Site</h3>
