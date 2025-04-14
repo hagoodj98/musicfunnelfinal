@@ -26,7 +26,6 @@ export async function POST() {
         if (csrfToken !== sessionData.csrfToken) {
             throw new HttpError('Invalid CSRF token. Unauthorized!', 403);
         }
-
         const attemptsKey = `checkoutAttempts:${sessionToken}`;
         const attempts = await redis.incr(attemptsKey);
         if (attempts === 2) {
@@ -43,7 +42,7 @@ export async function POST() {
             }],
             after_completion: {
               type: 'redirect',
-              redirect: { url: 'http://localhost:3000/landing/thankyou'}
+              redirect: { url: 'http://jaiquezmusic/landing/thankyou'}
             },
             billing_address_collection: 'required', //Set to 'required' to collect billing address
             shipping_address_collection: {

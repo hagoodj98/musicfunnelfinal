@@ -16,7 +16,6 @@ const CheckoutInitiator = () => {
   const handleCheckout = async () => {
     setLoading(true);
     setError("");
-
     try {
       // Make the API call on the server (via your API route)
       const response = await fetch("/api/create-checkout-session", {
@@ -26,12 +25,10 @@ const CheckoutInitiator = () => {
         },
       });
       const session = await response.json();
-  
       if (!response.ok) {
         setMessage(`${session.error || "Failed to create checkout session."}#${Date.now()}`);
         setMessageType('error');
       }
-
       const stripe = await stripePromise;
       const result = await stripe.redirectToCheckout({ sessionId: session.id });
       if (result.error) {

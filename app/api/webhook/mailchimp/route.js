@@ -31,7 +31,6 @@ export async function POST(req) {
     if (!sessionDataString) {
       throw new HttpError('Session data not found', 404);
     }
-
     const sessionData = JSON.parse(sessionDataString); 
     const ttl = sessionData.rememberMe ? 604800 : 900; 
     // Update the session data with the new status
