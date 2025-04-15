@@ -36,7 +36,7 @@ const CookieConsentBanner = () => {
         onClick={handleConsent} 
         className="tw-mt-2 sm:tw-mt-0 tw-bg-blue-500 hover:tw-bg-secondary tw-text-white tw-text-sm tw-font-medium tw-px-4 tw-py-2 tw-rounded"
       >
-        I understand
+        Understood
       </button>
     </div>
   );
