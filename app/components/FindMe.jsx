@@ -67,7 +67,7 @@ const FindMe = () => {
       >
         <Modal.Header className="tw-bg-primary" closeVariant="white" closeButton>
           <Modal.Title  id="example-modal-sizes-title-sm">
-            <h4 className="tw-font-header tw-text-white">Find if you are subscribed</h4>
+            <h4 className="tw-font-header tw-text-white">Find If You Are Subscribed</h4>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body >
