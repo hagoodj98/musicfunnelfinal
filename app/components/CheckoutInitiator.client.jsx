@@ -47,7 +47,7 @@ const CheckoutInitiator = () => {
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",
-                        width: "50%",
+                        width: "auto",
                         borderColor: "secondary.main",
                         "&:hover": {
                         backgroundColor: "#FDEAB6",

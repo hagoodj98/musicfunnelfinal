@@ -11,7 +11,7 @@ export async function POST(req) {
     }
     
 
-    const ttl = rememberMe ? 604800 : 100; // 1 week vs 15 minutes
+    const ttl = rememberMe ? 604800 : 900; // 1 week vs 15 minutes
 
     const mapping = await getEmailMapping(email);
 

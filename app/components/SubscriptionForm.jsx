@@ -154,7 +154,7 @@ const SubscriptionForm = () => {
                         // Normal (enabled) styles:
                         backgroundColor: status === 'confirmed' ? green[500] : "secondary.main",
                         color: "white",
-                        width: '50%',
+                        width: 'auto',
                         marginX: 'auto',
                         borderColor: status === 'confirmed' ? green[500] : "secondary.main",
                         "&:hover": {
@@ -178,7 +178,7 @@ const SubscriptionForm = () => {
                             {status === 'pending' ? (
                                 <>   
                                     <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
-                                    <span className='tw-font-header tw-ml-2'> Pending Subscription</span>
+                                    <span className='tw-font-header tw-ml-2'> Pending</span>
                                 </>
                             ) : status === 'confirmed' ? ( 
                                 <CheckIcon />
