@@ -23,7 +23,7 @@ export async function POST() {
             throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
         }
       
-        const ttl = currentSessionData.rememberMe ? 604800 : 900;
+        const ttl = currentSessionData.rememberMe ? 604800 : 100;
 
         const { sessionToken: newSessionToken, csrfToken: newCsrfToken } = generateTokenAndSalt();
 
