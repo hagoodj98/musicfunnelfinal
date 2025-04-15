@@ -87,11 +87,12 @@ const FindMe = () => {
                         // Normal (enabled) styles:
                         backgroundColor: "secondary.main",
                         color: "white",
+                        marginX: 'auto',
                         borderColor: "secondary.main",
                         "&:hover": {
                         backgroundColor: "#FDEAB6",
                         borderColor: "#FDEAB6",
-                        marginX: 'auto',
+                        
                         color: "rgb(1, 10, 38, 0.8)",
                         },
 
