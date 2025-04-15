@@ -65,7 +65,7 @@ export default function Home () {
             <div className='container tw-p-12 tw-mx-auto  md:tw-flex '>
               <div className='tw-flex tw-items-center tw-justify-center md:tw-w-1/2 tw-py-6'>
                 <div className=' tw-flex tw-flex-col tw-items-center '>
-                  <h3 className='tw-text-center tw-text-white tw-font-header'>Check out my latest release</h3>
+                  <h3 className='tw-text-center tw-text-white tw-font-header'>Check Out My Latest Release</h3>
                   <HearNow />
                 </div>
               </div>
