@@ -78,7 +78,6 @@ async function handleCheckoutSessionCompleted(paymentIntent) {
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
         console.error("No sessionToken in payment metadata - possibly Payment Link purchase. Skipping session-based logic.");
         throw new HttpError('Missing sessionToken in payment metadata"', 400);
-        return;
     }
     const sessionToken = paymentIntent.metadata.sessionToken;
 // Retrieve current session data (using your helper)
