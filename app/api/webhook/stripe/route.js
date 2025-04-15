@@ -7,7 +7,6 @@ export const config = {
       bodyParser: false,
     },
   };
-
 export async function POST(req) {
     const  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -51,7 +50,6 @@ export async function POST(req) {
         return new Response(`Webhook Error: ${error.message}`, {status: 500 });
     }
     }
-
 /////////////////////
 async function handleCheckoutSessionExpired(paymentIntent) {
     if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
