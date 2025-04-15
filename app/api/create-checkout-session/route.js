@@ -42,7 +42,7 @@ export async function POST() {
             }],
             after_completion: {
               type: 'redirect',
-              redirect: { url: 'http://jaiquezmusic.com/landing/thankyou'}
+              redirect: { url: 'https://jaiquezmusic.com/landing/thankyou'}
             },
             billing_address_collection: 'required', //Set to 'required' to collect billing address
             shipping_address_collection: {
