@@ -8,7 +8,7 @@ import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
 import MessageNotify from './components/MessageNotify'
 import CookieConsentBanner from './components/CookieConsentBanner'; // Adjust the path if needed
-
+import Redirect from './components/Redirect';
 
 export const metadata = {
   title: "Home",
@@ -78,6 +78,7 @@ export default function Home () {
           </div>
         </div>
       </div>
+    <Redirect />
     <CookieConsentBanner />
     </>
   );

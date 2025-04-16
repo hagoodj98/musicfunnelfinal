@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-
+import useSubscriptionState from "../hooks/useSubscriptionState";
 
 const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
   const [status, setStatus] = useState("waiting");
   const [error, setError] = useState("");
-
+  const { saveSubscription } = useSubscriptionState();
 
   useEffect(() => {
     // Poll every 10 seconds
@@ -27,6 +27,7 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
             if (onConfirmed) {
               onConfirmed();
             }
+            saveSubscription({ status: "subscribed"});
             clearInterval(intervalId);
             // Redirect to /landing page or update application state
             setTimeout(() => {
@@ -44,7 +45,7 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
     }, 10000); // 10-second interval
 
     return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [email]);
+  }, [email, rememberMe, onConfirmed, saveSubscription]);
 
   return (
     <div>

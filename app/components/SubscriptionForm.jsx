@@ -17,11 +17,12 @@ import FindMe from './FindMe';
 import CheckIcon from '@mui/icons-material/Check';
 import { green } from '@mui/material/colors';
 import { toast } from 'react-toastify';
+import useSubscriptionState from '../hooks/useSubscriptionState';
+
 
 const SubscriptionForm = () => {
-
+    const { subscription, saveSubscription } = useSubscriptionState();
     const {email, setEmail, rememberMe, setRememberMe, shouldPoll, setShouldPoll } = useContext(EmailContext);
-
 //// Since the name is only used within SubscriptionForm, it remains local.
     const [name, setName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -57,6 +58,8 @@ const SubscriptionForm = () => {
                 setStatus('error');
                 return;
             }
+            // Save pending subscription status in localStorage:
+            saveSubscription({ email, status: 'pending' });
             // If subscription is initiated successfully, allow polling:
             setShouldPoll(true);
         } catch (error) {
