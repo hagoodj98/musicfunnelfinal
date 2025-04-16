@@ -78,6 +78,6 @@ export async function POST(req) {
         return new Response(JSON.stringify({ error: error.message }), { status: error.status });
       }
       // Otherwise, return a generic 500 Internal Server Error.
-      return new Response(JSON.stringify({ error: 'Subscription failed due being a member already or an internal error has occured. **Please check your inbox (and spam folder) and make sure you confirmed your subscription first or send an email for support. '}), { status: 500 });
+      return new Response(JSON.stringify({ error: 'Subscription failed due to being a member already or an internal error has occured. **Please check your inbox (and spam folder) and make sure you confirmed your subscription first or send an email for support. '}), { status: 500 });
   }
 }

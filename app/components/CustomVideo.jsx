@@ -35,7 +35,7 @@ export function CustomVideo({ vidAddress }) {
           src={vidAddress}
           loop
           playsInline 
-          autoplay
+          autoPlay
           muted={isMuted} // starts muted by default
           className="tw-w-full tw-h-auto"
         />
