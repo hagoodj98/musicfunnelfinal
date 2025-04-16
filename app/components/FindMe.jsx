@@ -88,6 +88,7 @@ const FindMe = () => {
                         backgroundColor: "secondary.main",
                         color: "white",
                         marginX: 'auto',
+                        width:"auto",
                         borderColor: "secondary.main",
                         "&:hover": {
                         backgroundColor: "#FDEAB6",
