@@ -20,31 +20,41 @@ const Redirect = () => {
     const pollEmail = safeSub.email;
     const router = useRouter();
 
-    useEffect(() => {
+   
+        // 1) If we already know they're subscribed, send them straight to /landing
++  useEffect(() => {
+        if (status === 'subscribed') {
+          router.replace('/landing');
+        }
+      }, [status, router]);
+    
+      // 2) Otherwise, if they're still pending, start polling
+      useEffect(() => {
         if (status !== 'pending' || !pollEmail) return;
-
+    
         const interval = setInterval(async () => {
-            try {
-                const res = await fetch('/api/check-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: pollEmail, rememberMe }),
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if(data.sessionToken) {
-                        saveSubscription({status: 'subscribed', email: pollEmail});
-                        clearInterval(interval);
-                        toast.success('Thank you! Your subscription is confirmed. Redirecting…');
-                        router.push('/landing');
-                    }
-                }
-            } catch (e) {
-                console.error('Polling error', e);
+          try {
+            const res = await fetch('/api/check-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: pollEmail, rememberMe }),
+            });
+    
+            if (res.ok) {
+              const data = await res.json();
+              if (data.sessionToken) {
+                saveSubscription({ status: 'subscribed', email: pollEmail });
+                clearInterval(interval);
+                router.replace('/landing');
+              }
             }
+          } catch (err) {
+            console.error('Polling error', err);
+          }
         }, 10000);
+    
         return () => clearInterval(interval);
-    }, [status, pollEmail, rememberMe, saveSubscription, router]);
+      }, [status, pollEmail, rememberMe, saveSubscription, router]);
     
     return null;
 }
