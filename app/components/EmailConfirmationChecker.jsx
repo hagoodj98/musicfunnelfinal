@@ -23,7 +23,6 @@ const EmailConfirmationChecker = ({ email, rememberMe, onConfirmed }) => {
           const data = await response.json();
           // Assume data includes sessionToken, csrfToken etc.
           if (data.sessionToken) {
-            console.log("Session token received, updating subscription status to subscribed.");
             // Stop polling and redirect or update UI accordingly
             if (onConfirmed) {
               onConfirmed();
