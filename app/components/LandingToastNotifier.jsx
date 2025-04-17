@@ -6,8 +6,8 @@ import { useSearchParams } from 'next/navigation';
 
 const LandingToastNotifier = () => {
   const searchParams = useSearchParams();
-  const msg = searchParams.get('msg');
   useEffect(() => {
+    const msg = searchParams.get('msg');
     
     if (msg) {
       toast.info(decodeURIComponent(msg));
