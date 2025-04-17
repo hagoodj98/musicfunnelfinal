@@ -4,7 +4,6 @@ import MusicCover from '../public/GOOD (1).jpg';
 import Me from '../public/IMG_1856(1).jpg';
 import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
-import MessageNotify from './components/MessageNotify'
 import HomeToastNotifier from './components/HomeToastNotifier';
 
 export const metadata = {
