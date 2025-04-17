@@ -180,7 +180,7 @@ const SubscriptionForm = () => {
                             {status === 'pending' ? (
                                 <>   
                                     <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
-                                    <span className='tw-font-header tw-ml-2'> Pending</span>
+                                    <span className='tw-font-header tw-ml-2'> Pending Subscription...</span>
                                 </>
                             ) : status === 'confirmed' ? ( 
                                 <CheckIcon />

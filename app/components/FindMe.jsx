@@ -106,7 +106,7 @@ const FindMe = () => {
                         cursor: "not-allowed",
                         opacity: 1, // override default MUI disabled opacity if desired
                         },
-                    }} className=" tw-bg-secondary tw-border-secondary tw-mt-4 tw-w-1/2 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">
+                    }} className=" tw-bg-secondary tw-border-secondary tw-mt-4 hover:tw-bg-yellow hover:tw-border-yellow hover:tw-text-lighterblue tw-mx-auto tw-text-white" type="submit" variant="outlined">
                     <span className="tw-font-header">
                           {loading ? (
                       <>
