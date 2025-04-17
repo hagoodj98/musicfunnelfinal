@@ -24,7 +24,8 @@ const Redirect = () => {
         // 1) If we already know they're subscribed, send them straight to /landing
 +  useEffect(() => {
         if (status === 'subscribed') {
-          router.replace('/landing');
+            toast.success('Thank you! Your subscription is confirmed. Redirecting…');
+            router.replace('/landing');
         }
       }, [status, router]);
     
@@ -45,6 +46,7 @@ const Redirect = () => {
               if (data.sessionToken) {
                 saveSubscription({ status: 'subscribed', email: pollEmail });
                 clearInterval(interval);
+                toast.success('Thank you! Your subscription is confirmed. Redirecting…');
                 router.replace('/landing');
               }
             }
