@@ -5,6 +5,7 @@ import Me from '../public/IMG_1856(1).jpg';
 import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
 import MessageNotify from './components/MessageNotify'
+import HomeToastNotifier from './components/HomeToastNotifier';
 
 export const metadata = {
   title: "Home",
@@ -16,7 +17,7 @@ export default function Home () {
   return (
     <>
       <div className="tw-bg-center">
-        <MessageNotify type={null} notify={null}  />
+        <HomeToastNotifier />
           {/* EmailPollingManager remains mounted continuously */}
         <div className=' tw-mx-auto'>
           <div className='container'>
