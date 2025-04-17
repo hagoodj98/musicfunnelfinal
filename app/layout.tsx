@@ -2,7 +2,6 @@ import Footer from './components/Footer';
 import Script from "next/script";
 import { Oswald, Caveat } from 'next/font/google';
 import { EmailProvider } from './context/EmailContext';
-import EmailPollingManager from './components/EmailPollingManager';
 import Redirect from './components/Redirect';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import 'react-toastify/dist/ReactToastify.css';

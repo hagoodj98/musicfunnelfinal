@@ -2,13 +2,9 @@ import Image from 'next/image';
 import SubscriptionForm from './components/SubscriptionForm';
 import MusicCover from '../public/GOOD (1).jpg';
 import Me from '../public/IMG_1856(1).jpg';
-import EmailPollingManager from './components/EmailPollingManager';
-import { EmailProvider } from './context/EmailContext';
 import CustomVideo from './components/CustomVideo';
 import HearNow from './components/HearNow';
 import MessageNotify from './components/MessageNotify'
-import CookieConsentBanner from './components/CookieConsentBanner'; // Adjust the path if needed
-import Redirect from './components/Redirect';
 
 export const metadata = {
   title: "Home",
