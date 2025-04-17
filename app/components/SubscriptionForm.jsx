@@ -77,12 +77,6 @@ const SubscriptionForm = () => {
         }
     }
 
-    useEffect(() => {
-        if (status === 'confirmed') {
-          toast.success('Thank you for subscribing! Redirecting you the landing page..');
-        }
-    }, [status]);
-
   return (
     <div className='tw-flex'>
         <Button onClick={() => setLgShow(true)} 
