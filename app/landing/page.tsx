@@ -43,7 +43,7 @@ const LandingPage = () => {
               <h3 className='tw-text-white tw-text-center tw-font-body'>Here&#39;s What Your&#39;re Going To Get...</h3>
             </div>
             <div className='tw-w-2/3 tw-mx-auto tw-pt-3'>
-              <Image src={FanPack} className=' ' alt='picture of me'/>
+              <Image src={FanPack} alt='picture of me'/>
             </div>
           </div>
           <div className='tw-flex tw-flex-col md:tw-flex-row '>
