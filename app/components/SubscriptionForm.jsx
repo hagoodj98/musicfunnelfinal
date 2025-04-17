@@ -19,11 +19,10 @@ import { green } from '@mui/material/colors';
 import { toast } from 'react-toastify';
 import useSubscriptionState from '../hooks/useSubscriptionState';
 
-
 const SubscriptionForm = () => {
-    const { subscription, saveSubscription } = useSubscriptionState();
+    const { subscription = { status: 'idle', email: null }, saveSubscription } = useSubscriptionState();
     const {email, setEmail, rememberMe, setRememberMe, shouldPoll, setShouldPoll } = useContext(EmailContext);
-//// Since the name is only used within SubscriptionForm, it remains local.
+
     const [name, setName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [status, setStatus] = useState('idle')
@@ -31,13 +30,13 @@ const SubscriptionForm = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-    //Once triggered we want to check if email exist first before proceeding with the remaining functionality of the handleSubmit function
+  
         if (!email) {
             setErrorMessage('Email is required');
             return;
         }
         setStatus('pending');
-        setErrorMessage(''); // Clear previous errors
+        setErrorMessage(''); 
     
         try {
             const subscribeResponse = await fetch('/api/subscribe', {
@@ -53,14 +52,14 @@ const SubscriptionForm = () => {
             });
             if (!subscribeResponse.ok) {
                 const errorResponse = await subscribeResponse.json();
-                // Set the error message from the API response
+                
                 setErrorMessage(errorResponse.error || 'Something went wrong, please try again!');
                 setStatus('error');
                 return;
             }
-            // Save pending subscription status in localStorage:
+           
             saveSubscription({ email, status: 'pending' });
-            // If subscription is initiated successfully, allow polling:
+            
             setShouldPoll(true);
         } catch (error) {
             console.error('Subscription error:', error);
@@ -68,7 +67,7 @@ const SubscriptionForm = () => {
             setErrorMessage(error.message || 'Failed to process subscription request!');
         }
     };
-// Unified change handler for both name and email
+
     function handleChange(event) {
         const {name, value}= event.target;
         if (name === "name") {
@@ -77,7 +76,7 @@ const SubscriptionForm = () => {
             setEmail(value);
         }
     }
-// When status becomes 'confirmed', trigger a toast
+
     useEffect(() => {
         if (status === 'confirmed') {
           toast.success('Thank you for subscribing! Redirecting you the landing page..');

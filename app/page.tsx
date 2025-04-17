@@ -51,13 +51,7 @@ export default function Home () {
                 <div className='tw-flex tw-items-center'>
                   <span className=' tw-text-4xl tw-mx-auto tw-my-7'>👇</span>
                 </div>
-    {/* EmailPollingManager and SubscriptionForm now have access to the EmailContext. Wrapping components in EmailProvider means that any component inside can get or update the email and rememberMe values without passing them down manually as props.*/}
-                <EmailProvider>
-    {/*Place this in a separate file (e.g., EmailPollingManager.jsx) and render it on the home page outside the modal, so polling continues even when the modal is closed: */}
-                  <EmailPollingManager />
-    {/* This is where everything starts. Regarding the backend logic. We start by rendering the Subscription Form*/}
-                  <SubscriptionForm />
-                </EmailProvider>
+                <SubscriptionForm />
               </div>
             </div>
           </div>
@@ -78,8 +72,7 @@ export default function Home () {
           </div>
         </div>
       </div>
-    <Redirect />
-    <CookieConsentBanner />
+    
     </>
   );
 }

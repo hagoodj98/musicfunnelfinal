@@ -4,8 +4,11 @@
 import { useState } from 'react';
 import Timer from './Timer';
 import RefreshPopup from './RefreshPopup';
+import useSubscriptionState from '../hooks/useSubscriptionState';
 
 const SessionManager = ({ initialTime }) => { 
+
+    const { clearSubscription }=useSubscriptionState();
 
     const [showPopup, setShowPopup] = useState(false);
     const [timeLeft, setTimeLeft] = useState(initialTime);
@@ -19,6 +22,7 @@ const SessionManager = ({ initialTime }) => {
     const handleExpire = () => {
         // For example, redirect the user or take other actions
         alert("Redirecting back to squeeze page.");
+        clearSubscription();
         window.location.href = '/';
     }
     const handleClosePopup = () => {
