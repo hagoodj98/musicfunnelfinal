@@ -110,9 +110,7 @@ const FindMe = () => {
                     <span className="tw-font-header">
                           {loading ? (
                       <>
-                        <Box sx={{ display: 'flex' }}>
-                          <CircularProgress size="30px" color='inherit' />
-                        </Box>
+                        <CircularProgress size="20px"   style={{ display: 'inline-flex', verticalAlign: 'middle' }} color='inherit' />
                         <span> Checking...</span>
                       </>
                     ) : ('Find Me!')} 
