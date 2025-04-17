@@ -6,9 +6,9 @@ import { useSearchParams } from 'next/navigation';
 
 const LandingToastNotifier = () => {
   const searchParams = useSearchParams();
-
+  const msg = searchParams.get('msg');
   useEffect(() => {
-    const msg = searchParams.get('msg');
+    
     if (msg) {
       toast.info(decodeURIComponent(msg));
       // Optionally, remove the query parameter from the URL so the toast doesn't reappear
