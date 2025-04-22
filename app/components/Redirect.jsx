@@ -21,15 +21,8 @@ const Redirect = () => {
     const router = useRouter();
 
    
-        // 1) If we already know they're subscribed, send them straight to /landing
-+  useEffect(() => {
-        if (status === 'subscribed') {
-            toast.success('Thank you! Your subscription is confirmed. Redirecting…');
-            router.replace('/landing');
-        }
-      }, [status, router]);
+
     
-      // 2) Otherwise, if they're still pending, start polling
       useEffect(() => {
         if (status !== 'pending' || !pollEmail) return;
     
