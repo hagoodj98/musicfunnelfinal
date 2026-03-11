@@ -1,17 +1,20 @@
+@import "tailwindcss";
 
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: #167888;
+  --color-secondary: #ef4c12;
+  --color-lighterblue: rgb(1, 10, 38);
+  --color-yellow: #fdeab6;
+  --font-header: "Oswald", "Helvetica", "Arial", sans-serif;
+  --font-body: "Caveat", cursive;
+}
 
 .custom-footer-button:hover {
-    color: #FDEAB6 !important;
-    
-  }
-  .custom-footer-button {
-    width: 100% !important;
-    padding: 0px !important;
-  }
-
-  
+  color: #fdeab6 !important;
+}
+.custom-footer-button {
+  width: 100% !important;
+  padding: 0px !important;
+}

@@ -1,0 +1,8 @@
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "16848:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]

@@ -17,8 +17,6 @@
     "@mui/icons-material": "^6.3.0",
     "@mui/material": "^6.3.0",
     "@stripe/stripe-js": "^5.4.0",
-    "axios": "^1.7.9",
-    "bootstrap": "^5.3.3",
     "bottleneck": "^2.19.5",
     "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
@@ -30,19 +28,21 @@
     "nodemailer": "^6.10.0",
     "rate-limiter-flexible": "^5.0.5",
     "react": "^19.0.0",
-    "react-bootstrap": "^2.10.7",
     "react-dom": "^19.0.0",
     "react-toastify": "^11.0.3",
     "stripe": "^17.5.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.26.3",
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/jest": "^29.5.14",
+    "@types/mailchimp__mailchimp_marketing": "^3.0.22",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -57,7 +57,7 @@
     "postcss": "^8",
     "redis-mock": "^0.56.3",
     "supertest": "^7.0.0",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.2.1",
     "typescript": "^5",
     "uvu": "^0.5.6"
   }

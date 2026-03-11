@@ -1,0 +1,210 @@
+import crypto from "crypto";
+import redis from "../../lib/redis";
+import { UserSession } from "../types/types";
+import { cookies } from "next/headers";
+
+export class HttpError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message); // Calls the parent Error class constructor with the message.
+    this.status = status; // Sets a custom property 'status' that holds the HTTP status code.
+  }
+}
+/**
+ * Retrieve the email mapping from Redis.
+ * @param {string} email
+ * @returns {Promise<string> | Promise<object>} Parsed mapping object.
+ * @throws {HttpError} 404 if mapping not found, 500 on Redis error.
+ */
+export async function getPrelimSession(email: string): Promise<UserSession> {
+  try {
+    const emailHashStored = (await redis.get(
+      `emailReference:${email.toLowerCase()}`,
+    )) as string | null;
+    const emailHash = emailHashStored;
+    if (!emailHash) {
+      throw new HttpError("Email mapping not found. Unauthorized access", 404);
+    }
+    const pendingSession = await redis.get(`prelimSession:${emailHash}`);
+    if (!pendingSession) {
+      throw new HttpError("Session not found. Unauthorized access", 404);
+    }
+    return JSON.parse(pendingSession) as UserSession;
+  } catch (error: unknown) {
+    // If the error is already an instance of HttpError, rethrow it.
+    if (error instanceof HttpError) {
+      throw error;
+    }
+    throw new HttpError(
+      `Error retrieving email mapping: ${(error as Error).message}`,
+      500,
+    );
+  }
+}
+/**
+ * Retrieve session data using a session token.
+ * @param {string} sessionToken
+ * @returns {Promise<Object>} Parsed session data.
+ * @throws {HttpError} 404 if session not found, 500 on Redis error.
+ */
+export async function getSessionDataByToken(
+  sessionToken: string,
+): Promise<UserSession> {
+  try {
+    const sessionDataString = await redis.get(`session:${sessionToken}`);
+    if (!sessionDataString) {
+      throw new HttpError("Session not found or expired", 404);
+    }
+    return JSON.parse(sessionDataString) as UserSession;
+  } catch (error: unknown) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+    throw new HttpError(
+      `Error retrieving session data: ${(error as Error).message}`,
+      500,
+    );
+  }
+}
+/**
+ * @param {string} emailHash
+ * @returns {Promise<Object>} Parsed session data.
+ * @throws {HttpError} 404 if session not found, 500 on Redis error.
+ */
+
+export async function getSessionDataByHash(
+  emailHash: string,
+): Promise<UserSession> {
+  try {
+    const sessionDataString = await redis.get(
+      `sessionReadyForIssuance:${emailHash}`,
+    );
+    if (!sessionDataString) {
+      throw new HttpError("Session not found", 404);
+    }
+    return JSON.parse(sessionDataString) as UserSession;
+  } catch (error: unknown) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+    throw new HttpError(
+      `Error retrieving session data: ${(error as Error).message}`,
+      500,
+    );
+  }
+}
+
+export async function updateSessionData(
+  sessionToken: string,
+  sessionData: UserSession,
+  ttl: number,
+): Promise<void> {
+  try {
+    await redis.set(
+      `session:${sessionToken}`,
+      JSON.stringify(sessionData),
+      "EX",
+      ttl,
+    );
+  } catch (error: unknown) {
+    throw new HttpError(
+      `Error updating session data: ${(error as Error).message}`,
+      500,
+    );
+  }
+}
+export const setTimeToLive = (rememberMe: boolean | undefined) => {
+  return rememberMe ? 604800 : 900;
+};
+
+/**
+ * Generates a secure token and salt.
+ * @param {number} length - The number of bytes to use (default is 24).
+ * @returns {Object} An object containing the token and salt as hex strings.
+ */
+export function generateToken(length = 24) {
+  const sessionToken = crypto.randomBytes(length).toString("hex");
+  const csrfToken = crypto.randomBytes(length).toString("hex");
+  const secretSaltToken = crypto.randomBytes(length).toString("hex");
+  return { sessionToken, csrfToken, secretSaltToken };
+}
+
+/**
+ * Create a serialized cookie.
+ * @param {string} name - Cookie name.
+ * @param {string} value - Cookie value.
+ * @param {object} options - Additional cookie options.
+ * @returns {Promise<string>} The serialized cookie string.
+ *
+ */
+export async function createCookie(
+  name: string,
+  value: string,
+  options: Record<string, unknown> = {},
+) {
+  const cookieStore = await cookies();
+  cookieStore.set(name, value, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    path: "/",
+    ...options, //other configuration options
+  });
+}
+/**
+ * Create a new session in Redis.
+ * @param {string} sessionToken
+ * @param {Session} sessionData
+ * @param {number} ttl - Time-to-live in seconds.
+ * @throws {HttpError} 500 on Redis error.
+ */
+
+export async function createSession(
+  sessionToken: string,
+  sessionData: UserSession,
+  ttl: number,
+): Promise<void> {
+  try {
+    await redis.set(
+      `session:${sessionToken}`,
+      JSON.stringify(sessionData),
+      "EX",
+      ttl,
+    );
+  } catch (error: unknown) {
+    throw new HttpError(
+      `Error creating session: ${(error as Error).message}`,
+      500,
+    );
+  }
+}
+
+export const createPrelimSession = async (
+  email: string,
+  name: string,
+  rememberMe?: boolean,
+): Promise<void> => {
+  const { secretSaltToken } = generateToken();
+  const emailHash = crypto
+    .createHmac("sha256", secretSaltToken)
+    .update(email.toLowerCase())
+    .digest("hex");
+  const ttl = setTimeToLive(rememberMe || false); // 1 week vs 15 minutes
+  const preliminarysessionData: UserSession = {
+    email,
+    name,
+    status: "pending",
+    rememberMe: rememberMe || false,
+    secretToken: secretSaltToken,
+  };
+
+  await redis
+    .multi()
+    .set(
+      `prelimSession:${emailHash}`,
+      JSON.stringify(preliminarysessionData),
+      "EX",
+      ttl,
+    )
+    .set(`emailReference:${email.toLowerCase()}`, emailHash, "EX", ttl)
+    .exec();
+};

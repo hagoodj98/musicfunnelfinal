@@ -12,27 +12,27 @@ const ThankYouPage = () => {
     <div>
       <SessionManagerProvider />
       <div className='container'>
-        <div className='lg:tw-w-10/12 lg:tw-mx-auto'>
-          <div className='tw-pb-8'>
-            <h1 className='tw-text-center tw-font-header tw-my-7 tw-text-white'>JOIN MY PATREON FOR ONLY <span className="tw-text-primary">$5 A MONTH</span>; YOUR SUPPORT HELPS FUND <span className="tw-text-primary"> MUSIC VIDEOS</span> AND AN <span className="tw-text-primary">ONLINE STORE.</span></h1>
+        <div className='lg:w-10/12 lg:mx-auto'>
+          <div className='pb-8'>
+            <h1 className='text-center font-header my-7 text-white'>JOIN MY PATREON FOR ONLY <span className="text-primary">$5 A MONTH</span>; YOUR SUPPORT HELPS FUND <span className="text-primary"> MUSIC VIDEOS</span> AND AN <span className="text-primary">ONLINE STORE.</span></h1>
           </div>
           <div>
             <CustomVideo vidAddress="/video/take-this-journey-with-me.mp4"/>
           </div>
         </div>
       </div>
-        <div className='tw-bg-[rgba(22,121,136,0.74)] '>
-          <div className='container tw-mx-auto tw-p-5 '>
-            <div className=' tw-p-8'>
+        <div className='bg-[rgba(22,121,136,0.74)] '>
+          <div className='container mx-auto p-5 '>
+            <div className=' p-8'>
               <div>
-                <h1 className='tw-font-header tw-text-white tw-text-center'>Thank You For Your Support</h1>
+                <h1 className='font-header text-white text-center'>Thank You For Your Support</h1>
               </div>
             </div>
-            <div className="tw-text-center tw-text-white">
+            <div className="text-center text-white">
               <p>I really appreciate you supporting me and my music by purchasing the fan pack. This really means a lot to me!</p>
               <p>Look out for your reciept while we get your items shipped to the address you entered in. </p>
               <p>If you have any questions or concerns, feel free to contact me via email.</p>
-              <p>Thanks for being a <span className="tw-font-body tw-text-yellow">REAL FAN!!</span></p>
+              <p>Thanks for being a <span className="font-body text-yellow">REAL FAN!!</span></p>
                 <div>
                   <Patreon />
                 </div>
