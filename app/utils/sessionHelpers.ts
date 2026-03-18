@@ -10,6 +10,15 @@ export class HttpError extends Error {
     this.status = status; // Sets a custom property 'status' that holds the HTTP status code.
   }
 }
+
+export interface TokenBundle {
+  /** Signed cookie & header pairing */
+  sessionToken: string;
+  /** CSRF token sent to the client as a cookie */
+  csrfToken: string;
+  /** Per‑session HMAC key for e‑mail hashing */
+  secretSaltToken: string;
+}
 /**
  * Retrieve the email mapping from Redis.
  * @param {string} email
@@ -18,18 +27,28 @@ export class HttpError extends Error {
  */
 export async function getPrelimSession(email: string): Promise<UserSession> {
   try {
-    const emailHashStored = (await redis.get(
+    const emailHashReference = (await redis.get(
       `emailReference:${email.toLowerCase()}`,
     )) as string | null;
-    const emailHash = emailHashStored;
-    if (!emailHash) {
+    const emailHashStored = emailHashReference;
+    if (!emailHashStored) {
       throw new HttpError("Email mapping not found. Unauthorized access", 404);
     }
-    const pendingSession = await redis.get(`prelimSession:${emailHash}`);
+    const pendingSession = await redis.get(`prelimSession:${emailHashStored}`);
     if (!pendingSession) {
       throw new HttpError("Session not found. Unauthorized access", 404);
     }
-    return JSON.parse(pendingSession) as UserSession;
+    const prelimSession = JSON.parse(pendingSession) as UserSession;
+    const originalSalt = prelimSession.secretToken as string;
+    const mailchimpEmail = crypto
+      .createHmac("sha256", originalSalt)
+      .update(email.toLocaleLowerCase())
+      .digest("hex");
+
+    if (emailHashStored !== mailchimpEmail) {
+      throw new HttpError("Unauthorized access", 401);
+    }
+    return prelimSession;
   } catch (error: unknown) {
     // If the error is already an instance of HttpError, rethrow it.
     if (error instanceof HttpError) {
@@ -82,6 +101,7 @@ export async function getSessionDataByHash(
     if (!sessionDataString) {
       throw new HttpError("Session not found", 404);
     }
+
     return JSON.parse(sessionDataString) as UserSession;
   } catch (error: unknown) {
     if (error instanceof HttpError) {
@@ -118,16 +138,17 @@ export const setTimeToLive = (rememberMe: boolean | undefined) => {
 };
 
 /**
- * Generates a secure token and salt.
+ * Generates a secure token.
  * @param {number} length - The number of bytes to use (default is 24).
- * @returns {Object} An object containing the token and salt as hex strings.
+ * @returns {object} An object containing the token and salt as hex strings.
+ *  * Generates a secure token bundle.
  */
-export function generateToken(length = 24) {
+export const generateToken = (length: number = 24): TokenBundle => {
   const sessionToken = crypto.randomBytes(length).toString("hex");
   const csrfToken = crypto.randomBytes(length).toString("hex");
   const secretSaltToken = crypto.randomBytes(length).toString("hex");
   return { sessionToken, csrfToken, secretSaltToken };
-}
+};
 
 /**
  * Create a serialized cookie.
@@ -141,7 +162,7 @@ export async function createCookie(
   name: string,
   value: string,
   options: Record<string, unknown> = {},
-) {
+): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(name, value, {
     httpOnly: true,
@@ -186,7 +207,7 @@ export const createPrelimSession = async (
   const { secretSaltToken } = generateToken();
   const emailHash = crypto
     .createHmac("sha256", secretSaltToken)
-    .update(email.toLowerCase())
+    .update(email)
     .digest("hex");
   const ttl = setTimeToLive(rememberMe || false); // 1 week vs 15 minutes
   const preliminarysessionData: UserSession = {

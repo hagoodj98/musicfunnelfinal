@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useSubscriptionState from "../hooks/useSubscriptionState";
+import { useRouter } from "next/navigation";
 
 type EmailConfirmationCheckerProps = {
   email: string;
@@ -12,8 +13,11 @@ const EmailConfirmationChecker = ({
   rememberMe,
   onConfirmed,
 }: EmailConfirmationCheckerProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [status, setStatus] = useState("waiting");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState("");
+  const router = useRouter();
   const { saveSubscription } = useSubscriptionState();
 
   useEffect(() => {
@@ -28,8 +32,6 @@ const EmailConfirmationChecker = ({
           body: JSON.stringify({ email, rememberMe }),
         });
         if (response.ok) {
-          console.log("Response went through");
-
           const data = await response.json();
           // Assume data includes sessionToken, csrfToken etc.
           if (data.sessionToken) {
@@ -41,11 +43,9 @@ const EmailConfirmationChecker = ({
             clearInterval(intervalId);
             // Redirect to /landing page or update application state
             setTimeout(() => {
-              window.location.href = "/landing";
+              router.push("/landing");
             }, 10500);
           }
-        } else {
-          console.error("Check status not ready yet.");
         }
       } catch (err) {
         console.error("Polling error:", err);

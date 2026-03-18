@@ -30,9 +30,12 @@ export async function POST(req: NextRequest) {
       event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
     } catch (error) {
       // Signature verification failed
-      console.error("Stripe webhook signature verification failed:", error);
+      console.error(
+        "Stripe webhook signature verification failed:",
+        (error as Error).message,
+      );
       // 401 Unauthorized: The signature is invalid
-      return new NextResponse(`Webhook Error: ${error}`, {
+      return new NextResponse(`Webhook Error: ${(error as Error).message}`, {
         status: 401,
       });
     }
@@ -55,14 +58,16 @@ export async function POST(req: NextRequest) {
       status: 200,
     });
   } catch (error) {
-    console.error(`Webhook Error: ${error}`);
+    console.error(`Webhook Error: ${(error as Error).message}`, error);
 
     if (error instanceof HttpError) {
       return new NextResponse(JSON.stringify({ error: error.message }), {
         status: error.status,
       });
     }
-    return new NextResponse(`Webhook Error: ${error}`, { status: 500 });
+    return new NextResponse(`Webhook Error: ${(error as Error).message}`, {
+      status: 500,
+    });
   }
 }
 

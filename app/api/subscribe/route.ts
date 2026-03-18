@@ -1,9 +1,23 @@
 import { mailchimpClient } from "@/app/utils/mailchimp";
 import Bottleneck from "bottleneck";
-import { HttpError, createPrelimSession } from "../../utils/sessionHelpers";
+import {
+  HttpError,
+  createCookie,
+  createPrelimSession,
+  generateToken,
+  setTimeToLive,
+} from "../../utils/sessionHelpers";
+import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
 import { NextRequest, NextResponse } from "next/server";
 import { validationSchema } from "../../utils/zodValidation";
 import z from "zod/v4";
+import { cookies } from "next/headers";
+import redis from "@/lib/redis";
+import { getClientIp } from "../../utils/iphelpers";
+import ipRateLimiter from "../../../lib/iplimiter";
+type MailchimpWrapped = ErrorResponse & {
+  response?: { body?: { title?: string } };
+};
 
 // Bottleneck limiter configuration
 const limiter = new Bottleneck({
@@ -23,27 +37,74 @@ export async function POST(req: NextRequest) {
     const { email, name, rememberMe } =
       await validationSchema.parseAsync(payload);
 
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("sessionToken")?.value;
+    const csrfToken = cookieStore.get("csrfToken")?.value;
+
+    // layer to prevent users from resubmitting email if there is an active session
+    if (sessionToken || csrfToken) {
+      throw new HttpError(
+        "You already have an active session. Redirecting...",
+        401,
+      );
+    }
     if (!listID) {
       throw new HttpError(
         "Server config error: MAILCHIMP_LIST_ID is missing.",
         500,
       );
     }
+    const clientIp = getClientIp(req);
+    try {
+      await ipRateLimiter.consume(clientIp);
+    } catch (rateLimitError: unknown) {
+      const retryAfterSeconds =
+        typeof rateLimitError === "object" &&
+        rateLimitError !== null &&
+        "msBeforeNext" in rateLimitError
+          ? Math.ceil(Number(rateLimitError.msBeforeNext) / 1000)
+          : 60;
+      throw new HttpError(
+        `Too many attempts from this IP. Try again in ${retryAfterSeconds} seconds.`,
+        429,
+      );
+    }
+
+    const foundKey = `subscribingEmail${email}`;
+    const foundKeyFlag = await redis.get(foundKey);
+    if (foundKeyFlag) {
+      throw new HttpError("Email already subscribed.", 400);
+    }
 
     const addSubscriber = limiter.wrap(async (email: string, name: string) => {
-      const response = await mailchimpClient.lists.addListMember(listID, {
-        email_address: email,
-        status: "pending",
-        merge_fields: { FNAME: name },
-      });
+      try {
+        const response = await mailchimpClient.lists.addListMember(listID, {
+          email_address: email,
+          status: "pending",
+          merge_fields: { FNAME: name },
+        });
 
-      return response;
+        return response;
+      } catch (error: unknown) {
+        if (
+          (error as MailchimpWrapped).response?.body?.title === "Member Exists"
+        ) {
+          await redis.set(foundKey, "true", "EX", 86400);
+          throw new HttpError("User already subscribed", 400);
+        }
+      }
     });
+    const ttl = setTimeToLive(rememberMe); // 1 week vs 15 minutes
 
     // Call the rate-limited function
     await addSubscriber(email, name);
 
     await createPrelimSession(email, name, rememberMe);
+    const pendingToken = generateToken().secretSaltToken;
+    await createCookie("pendingSubscription", pendingToken, {
+      maxAge: ttl,
+      sameSite: "lax",
+    });
 
     return new NextResponse(
       JSON.stringify({

@@ -11,13 +11,10 @@ import {
 } from "../../utils/sessionHelpers";
 import redis from "../../../lib/redis";
 import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
-
-if (!process.env.STRIPE_PRICE_ID || !process.env.STRIPE_SECRET_KEY) {
-  throw new HttpError("Price ID or Secret Key is missing", 404);
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-const priceId = process.env.STRIPE_PRICE_ID;
+import { checkEnvVariables } from "../../../environmentVarAccess";
+import type { UserSession } from "../../types/types";
+const stripe = new Stripe(checkEnvVariables().stripeSecretKey);
+const priceId = checkEnvVariables().stripePriceId;
 
 export async function POST() {
   try {
@@ -64,7 +61,7 @@ export async function POST() {
         ],
         after_completion: {
           type: "redirect",
-          redirect: { url: "https://www.jaiquezmusic.com/landing/thankyou" },
+          redirect: { url: process.env.THANK_YOU_PAGE_URL as string },
         },
         billing_address_collection: "required", //Set to 'required' to collect billing address
         shipping_address_collection: {
@@ -102,8 +99,8 @@ export async function POST() {
         },
       ],
       mode: "payment",
-      success_url: "https://jaiquezmusic.com/landing/thankyou",
-      cancel_url: "https://jaiquezmusic.com/landing",
+      success_url: process.env.THANK_YOU_PAGE_URL as string,
+      cancel_url: process.env.LANDING_PAGE_URL as string,
       billing_address_collection: "required", //Set to 'required' to collect billing address
       shipping_address_collection: {
         allowed_countries: ["US"], // Specify the countries to which I am willing to ship
@@ -116,7 +113,7 @@ export async function POST() {
 
     const newCsrfToken = generateToken().csrfToken;
 
-    const updatedSessionData = {
+    const updatedSessionData: UserSession = {
       ...sessionData,
       stripeSessionId: session.id,
       checkoutStatus: "initiated",

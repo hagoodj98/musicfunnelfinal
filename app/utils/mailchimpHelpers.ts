@@ -41,7 +41,10 @@ export async function updateMailchimpAddress(
     console.log("Mailchimp address updated successfully:", response);
     return response;
   } catch (error) {
-    console.error("Error updating Mailchimp address:", error);
+    console.error(
+      "Error updating Mailchimp address:",
+      (error as Error).message,
+    );
     throw new HttpError("Failed to update Mailchimp address", 500);
   }
 }
@@ -91,7 +94,7 @@ export async function updateMailchimpTag(
     );
     return response;
   } catch (error) {
-    console.error("Error updating Mailchimp tag:", error);
+    console.error("Error updating Mailchimp tag:", (error as Error).message);
     throw new HttpError("Failed to update Mailchimp tag", 500);
   }
 }

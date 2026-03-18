@@ -15,5 +15,17 @@ export type UserSession = {
   ttl?: number;
   secretToken?: string;
   csrfToken?: string;
-  checkoutStatus?: "pending" | "completed" | "cancelled";
+  stripeSessionId?: string;
+  checkoutStatus?:
+    | "pending"
+    | "completed"
+    | "cancelled"
+    | "initiated"
+    | "active";
+};
+export type EmailContextValue = {
+  email: string;
+  setEmail: React.Dispatch<React.SetStateAction<string>>;
+  rememberMe: boolean;
+  setRememberMe: React.Dispatch<React.SetStateAction<boolean>>;
 };

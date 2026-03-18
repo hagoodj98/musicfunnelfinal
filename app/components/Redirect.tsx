@@ -19,6 +19,7 @@ const Redirect = () => {
 
   useEffect(() => {
     if (status !== "pending" || !pollEmail) return;
+    console.log(status);
 
     const interval = setInterval(async () => {
       try {

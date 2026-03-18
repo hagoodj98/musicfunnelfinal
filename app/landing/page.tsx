@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import CheckoutInitiator from "../components/CheckoutInitiator.client";
 import SessionManagerProvider from "../components/SessionManagerProvider";
-import CustomVideo from "../components/CustomVideo";
 import Image from "next/image";
 import FanPack from "../../public/fanpack.jpg";
 import CheckIcon from "@mui/icons-material/Check";
 import LandingToastNotifier from "../components/LandingToastNotifier";
+import IntroSection from "../components/IntroSection";
 
 export const metadata = {
   title: "Fan Pack",
@@ -22,29 +22,24 @@ const LandingPage = () => {
         <LandingToastNotifier />
       </Suspense>
 
-      <div className="container mx-auto">
-        <div className="mx-auto">
-          <div className="pb-8">
-            <h1 className="font-header mx-auto mt-7 max-w-4xl text-center text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
-              🏆 Your Ultimate Fan Starter Pack Includes:{" "}
-            </h1>
-            <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-2xl leading-snug text-primary sm:text-3xl">
-              4 Pieces<span className="text-secondary"> Of Exclusive</span>{" "}
-              Merchandise
-            </h3>
-            <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-white text-2xl leading-snug sm:text-3xl">
-              {" "}
-              <span className="line-through">$10</span> - FREE today
-            </h3>
-            <h6 className="font-header mx-auto mt-2 max-w-3xl text-center text-lg text-white">
-              (just cover shipping and handling)
-            </h6>
-          </div>
-          <div>
-            <CustomVideo vidAddress="/video/thanks-for-subscribing.mp4" />
-          </div>
+      <IntroSection videoAddress="/video/thanks-for-subscribing.mp4">
+        <div className="pb-8">
+          <h1 className="font-header mx-auto mt-7 max-w-4xl text-center text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
+            🏆 Your Ultimate Fan Starter Pack Includes:{" "}
+          </h1>
+          <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-2xl leading-snug text-primary sm:text-3xl">
+            4 Pieces<span className="text-secondary"> Of Exclusive</span>{" "}
+            Merchandise
+          </h3>
+          <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-white text-2xl leading-snug sm:text-3xl">
+            {" "}
+            <span className="line-through">$10</span> - FREE today
+          </h3>
+          <h6 className="font-header mx-auto mt-2 max-w-3xl text-center text-lg text-white">
+            (just cover shipping and handling)
+          </h6>
         </div>
-      </div>
+      </IntroSection>
       <div className="bg-[rgba(22,121,136,0.74)] py-12 sm:py-16">
         <div className="container mx-auto flex flex-col items-center gap-10 px-6 lg:flex-row lg:justify-around lg:px-12">
           <div className="w-full lg:w-1/2">

@@ -7,6 +7,7 @@ import CookieConsentBanner from "./components/CookieConsentBanner";
 import Providers from "./providers";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
+import Redirect from "./components/Redirect";
 const oswald = Oswald({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -22,7 +23,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // <Redirect />
   return (
     <html lang="en" className={`${oswald.className} ${caveat.className} `}>
       <body
@@ -35,6 +35,7 @@ export default function RootLayout({
         />
         <Providers>
           <EmailProvider>
+            <Redirect />
             {children}
 
             <CookieConsentBanner />

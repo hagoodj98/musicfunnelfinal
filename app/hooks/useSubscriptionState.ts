@@ -11,9 +11,9 @@ export default function useSubscriptionState() {
   );
 
   //On mount, load subscription data from localStorage (if any)
-  useEffect(() => {
+  /* useEffect(() => {
     try {
-      const storedSubscription = localStorage.getItem("pendingSubscription");
+    //  const currentSubscriptionStatus = await fetch(`/api/check-status?email=${}`)
       if (storedSubscription) {
         const parsedData = JSON.parse(storedSubscription);
         setSubscription(parsedData);
@@ -25,10 +25,10 @@ export default function useSubscriptionState() {
   // Save only the necessary fields, e.g., status and sessionToken
   const saveSubscription = (data: SubscriptionState) => {
     try {
-      localStorage.setItem("pendingSubscription", JSON.stringify(data));
-      setSubscription(data);
+      const saveSubscription = await fetch("/")
+
     } catch (err) {
-      console.error("Error saving subscription to localStorage:", err);
+      console.error("Error saving subscription:", err);
     }
   };
   // Function to clear subscription data from localStorage
@@ -40,5 +40,6 @@ export default function useSubscriptionState() {
       console.error("Error clearing subscription from localStorage:", err);
     }
   };
-  return { subscription, saveSubscription, clearSubscription };
+      */
+  return { subscription };
 }

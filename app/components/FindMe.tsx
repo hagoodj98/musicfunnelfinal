@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import MessageNotify from "./MessageNotify";
 import Modal from "./ui/modal";
 import BrandButton from "./ui/BrandButton";
-
 import SearchIcon from "@mui/icons-material/Search";
 import TextInput from "./ui/TextInput";
 import CircularProgress from "@mui/material/CircularProgress";
+import { ErrorMessage } from "../types/types";
+import z from "zod/v4";
+import { validationSchema } from "../utils/zodValidation";
 
 const FindMe = () => {
   const [email, setEmail] = useState("");
@@ -15,38 +17,59 @@ const FindMe = () => {
   const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
   const [smShow, setSmShow] = useState(false);
+  const [errors, setErrors] = useState<ErrorMessage[]>([]);
+  const [status, setStatus] = useState("idle");
 
-  const handleFindMe = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/check-subscriber", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        // Set the message state to the error message and show toast
-        setMessage(`${data.error || "Something went wrong."}#${Date.now()}`);
-        setMessageType("error");
-        //toast.error(data.message || 'Something went wrong. Please try again.');
-        return;
+  const handleFindMe = useCallback(
+    async (e: React.FormEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        validationSchema.pick({ email: true }).parse({ email }); // Validate only the email field for this form
+
+        const res = await fetch("/api/check-subscriber", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        if (!res.ok) {
+          const errorResponse = await res.json();
+          setErrors(
+            errorResponse.error || "Something went wrong, please try again!",
+          );
+          setStatus("error");
+          return;
+        }
+        const data = await res.json();
+        // Set the message state to the success message and show toast
+        setMessage(`${data.message}#${Date.now()}`);
+        setMessageType("success");
+        setLoading(false);
+
+        window.location.href = "/landing";
+      } catch (error) {
+        console.error("Error checking subscription:", error);
+
+        if (error instanceof z.ZodError) {
+          console.log("Zod issues:", error.issues);
+          const fieldError: ErrorMessage[] = error.issues.map((issue) => ({
+            field: issue.path[0] as string,
+            message: issue.message,
+          }));
+          setErrors(fieldError);
+          setStatus("error");
+
+          return;
+        }
+      } finally {
+        setLoading(false);
       }
-      // Set the message state to the success message and show toast
-      setMessage(`${data.message}#${Date.now()}`);
-      setMessageType("success");
-      setLoading(false);
+    },
+    [email],
+  );
 
-      window.location.href = "/landing";
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      setMessage("Internal error. Please try again later. 🛑");
-      setMessageType("error");
-    } finally {
-      setLoading(false);
-    }
-  };
   return (
     <div className=" mx-auto">
       <BrandButton
@@ -63,7 +86,17 @@ const FindMe = () => {
         title="Find If You Are Subscribed"
         icon={<SearchIcon fontSize="small" />}
       >
-        <form className="flex flex-col" onSubmit={handleFindMe}>
+        {status === "error" &&
+          Array.isArray(errors) &&
+          errors
+            .filter((error) => error.field && error.message)
+            .map((error, index) => (
+              <p key={index} className="text-red-500 text-sm">
+                {error.message}
+              </p>
+            ))}
+
+        <div className="flex flex-col">
           <TextInput
             label="Your Email"
             value={email}
@@ -77,7 +110,8 @@ const FindMe = () => {
             disabled={loading}
             sx={{ marginX: "auto", width: "auto" }}
             className="mt-4 mx-auto"
-            type="submit"
+            type="button"
+            onClick={handleFindMe}
             variant="outlined"
           >
             <span className="font-header">
@@ -95,7 +129,7 @@ const FindMe = () => {
               )}
             </span>
           </BrandButton>
-        </form>
+        </div>
       </Modal>
     </div>
   );

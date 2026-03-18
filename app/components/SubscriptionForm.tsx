@@ -7,18 +7,17 @@ import BrandButton from "./ui/BrandButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextInput from "./ui/TextInput";
 import GroupIcon from "@mui/icons-material/Group";
-import EmailChecker from "./EmailConfirmationChecker";
 //import { useEmailContext } from "../context/EmailContext";
 import FindMe from "./FindMe";
+import { useRouter } from "next/navigation";
 import CheckIcon from "@mui/icons-material/Check";
 import { toast } from "react-toastify";
-import useSubscriptionState from "../hooks/useSubscriptionState";
 import { validationSchema } from "../utils/zodValidation";
 import z from "zod/v4";
 import { User, ErrorMessage } from "../types/types";
 
 const SubscriptionForm = () => {
-  const { saveSubscription } = useSubscriptionState();
+  const router = useRouter();
   //const { email, setEmail, rememberMe, setRememberMe, setShouldPoll } useEmailContext();
 
   const [user, setUser] = useState<User>({
@@ -26,7 +25,7 @@ const SubscriptionForm = () => {
     email: "",
     rememberMe: undefined,
   });
-  const [errors, setErrors] = useState<ErrorMessage[]>([]);
+  const [errors, setErrors] = useState<ErrorMessage[] | ErrorMessage>([]);
   const [status, setStatus] = useState("idle");
   const [lgShow, setLgShow] = useState(false);
 
@@ -35,6 +34,7 @@ const SubscriptionForm = () => {
 
     try {
       validationSchema.parse(user);
+      console.log(user);
 
       setStatus("pending");
       setErrors([]);
@@ -48,16 +48,32 @@ const SubscriptionForm = () => {
       if (!subscribeResponse.ok) {
         const errorResponse = await subscribeResponse.json();
 
+        if (errorResponse.error.includes("active session")) {
+          toast.info("You already have an active session. Redirecting...");
+          setStatus("idle");
+          setTimeout(() => {
+            router.push("/landing");
+          }, 3000);
+          return;
+        }
+
+        if (errorResponse.error.includes("already subscribed")) {
+          const errorMessage = "Email already subscribed!";
+          const fieldError: ErrorMessage = {
+            field: "email",
+            message: errorMessage,
+          };
+          setErrors(fieldError);
+          setStatus("error");
+          return;
+        }
+
         setErrors(
           errorResponse.error || "Something went wrong, please try again!",
         );
         setStatus("error");
         return;
       }
-
-      saveSubscription({ email: user.email, status: "pending" });
-
-      //    setShouldPoll(true);
     } catch (error) {
       console.error("Subscription error:", error);
 
@@ -115,16 +131,6 @@ const SubscriptionForm = () => {
         maxWidthClass="max-w-xl"
       >
         <div>
-          {status === "pending" && (
-            <div>
-              <EmailChecker
-                email={user.email}
-                rememberMe={user.rememberMe}
-                onConfirmed={() => setStatus("confirmed")}
-              />
-            </div>
-          )}
-
           {(status === "idle" ||
             status === "error" ||
             status === "pending" ||
@@ -157,6 +163,9 @@ const SubscriptionForm = () => {
                       {error.message}
                     </p>
                   ))}
+              {errors && !Array.isArray(errors) && errors.field === "email" && (
+                <p className="text-sm text-red-500">{errors.message}</p>
+              )}
               <TextInput
                 label="Email"
                 value={user.email}
@@ -175,7 +184,6 @@ const SubscriptionForm = () => {
                   ))}
               <label className="w-fit text-base text-yellow/95">
                 <Checkbox
-                  defaultChecked
                   onChange={(e) =>
                     setUser((prevUser) => ({
                       ...prevUser,

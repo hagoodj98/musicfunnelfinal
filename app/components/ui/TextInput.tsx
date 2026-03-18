@@ -38,6 +38,7 @@ const TextInput = ({
       className="text-white"
       fullWidth
       required
+      autoComplete="off"
       id={`outlined-required-${label}`}
       slotProps={{
         input: {

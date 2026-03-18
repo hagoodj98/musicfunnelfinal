@@ -35,7 +35,7 @@ const CustomModal = ({
                   {icon}
                 </div>
               )}
-              <div className="max-w-[34rem]">
+              <div className="max-w-136">
                 <h2
                   id="modal-title"
                   className="font-header text-2xl leading-tight tracking-[0.01em] text-white sm:text-3xl"

@@ -2,10 +2,10 @@ import Image from "next/image";
 import SubscriptionForm from "./components/SubscriptionForm";
 import MusicCover from "../public/GOOD (1).jpg";
 import Me from "../public/IMG_1856(1).jpg";
-import CustomVideo from "./components/CustomVideo";
 import HearNow from "./components/HearNow";
 import HomeToastNotifier from "./components/HomeToastNotifier";
 import { Suspense } from "react";
+import IntroSection from "./components/IntroSection";
 export const metadata = {
   title: "Home",
   description:
@@ -20,29 +20,24 @@ export default function Home() {
           <HomeToastNotifier />
         </Suspense>
         {/* EmailPollingManager remains mounted continuously */}
-        <div className="mx-auto">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto lg:w-10/12">
-              <div className="pb-8">
-                <h1 className="font-header mx-auto mt-7 max-w-4xl text-center text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
-                  I&#39;M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST
-                  50 FANS,{" "}
-                  <span className="text-secondary">ABSOLUTELY FREE!</span>
-                </h1>
-                <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-2xl leading-snug text-primary sm:text-3xl">
-                  Plus, receive occasional previews of{" "}
-                  <span className="text-secondary">upcoming music</span>, live
-                  streams, and special merch offers
-                </h3>
-                <h3 className="font-header mt-3 text-center text-base uppercase tracking-[0.14em] text-yellow sm:text-lg">
-                  (100% Totally Free)
-                </h3>
-              </div>
-              <div>
-                <CustomVideo vidAddress="/video/welcome-to-me.mp4" />
-              </div>
+        <div>
+          <IntroSection videoAddress="/video/welcome-to-me.mp4">
+            <div className="pb-8">
+              <h1 className="font-header mx-auto mt-7 max-w-4xl text-center text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
+                I&#39;M GIVING AWAY 4 OF MY MOST POPULAR PRODUCTS TO THE FIRST
+                50 FANS,{" "}
+                <span className="text-secondary">ABSOLUTELY FREE!</span>
+              </h1>
+              <h3 className="font-body mx-auto mt-4 max-w-3xl text-center text-2xl leading-snug text-primary sm:text-3xl">
+                Plus, receive occasional previews of{" "}
+                <span className="text-secondary">upcoming music</span>, live
+                streams, and special merch offers
+              </h3>
+              <h3 className="font-header mt-3 text-center text-base uppercase tracking-[0.14em] text-yellow sm:text-lg">
+                (100% Totally Free)
+              </h3>
             </div>
-          </div>
+          </IntroSection>
           <div className="bg-[rgba(22,121,136,0.74)] ">
             <div className="container mx-auto flex flex-col items-center p-5 lg:flex-row">
               <div className="w-full pt-10 lg:w-1/2">

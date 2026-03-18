@@ -1,15 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-
-type EmailContextValue = {
-  email: string;
-  setEmail: React.Dispatch<React.SetStateAction<string>>;
-  rememberMe: boolean;
-  setRememberMe: React.Dispatch<React.SetStateAction<boolean>>;
-  shouldPoll: boolean;
-  setShouldPoll: React.Dispatch<React.SetStateAction<boolean>>;
-};
+import { EmailContextValue } from "../types/types";
 
 export const EmailContext = createContext<EmailContextValue | undefined>(
   undefined,
@@ -19,7 +11,6 @@ export const EmailProvider = ({ children }: { children: React.ReactNode }) => {
   // These states hold the subscriber's email and rememberMe flag.
   const [email, setEmail] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [shouldPoll, setShouldPoll] = useState(false);
 
   return (
     <EmailContext.Provider
@@ -28,8 +19,6 @@ export const EmailProvider = ({ children }: { children: React.ReactNode }) => {
         setEmail,
         rememberMe,
         setRememberMe,
-        shouldPoll,
-        setShouldPoll,
       }}
     >
       {children}
