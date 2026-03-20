@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
   console.log("Middleware is running");
+
   //This one-liner uses optional chaining to safely access the .value property of the cookie,
   //We don't have to fetch the cookie cause Nextjs middleware has campitablits to do that for us. So we can just grab it.
   const sessionToken = req.cookies.get("sessionToken")?.value;
@@ -18,7 +19,8 @@ export async function middleware(req: NextRequest) {
   //If the cookie does exist, whatever the next url is ${req.nextUrl.origin}, go ahead and make a request to the redis-handler since this middleware only exists in the edge environment. Meaning, node is very limtied. So we have to make a request to an endpoint that can handle node normally.
   try {
     //Again the reason why I am making a request to redis-handler is because this helps restrict the /landing/thankyou route. We want to get the sessionToken that the middleware just validated. As i would normally use a redis.get(), i set the action to get and the key to session:${sessionToken}.
-    const response = await fetch(`${req.nextUrl.origin}/api/redis-handler`, {
+    const apiURL = new URL("/api/redis-handler", req.nextUrl.origin);
+    const response = await fetch(apiURL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

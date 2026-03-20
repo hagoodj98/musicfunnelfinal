@@ -49,11 +49,11 @@ export async function POST() {
 
     await createCookie("sessionToken", newSessionToken, {
       maxAge: ttl,
-      sameSite: "strict",
+      sameSite: "lax",
     });
     await createCookie("csrfToken", newCsrfToken, {
       maxAge: ttl,
-      sameSite: "strict",
+      sameSite: "lax",
     });
     return new NextResponse(
       JSON.stringify({

@@ -203,7 +203,7 @@ export const createPrelimSession = async (
   email: string,
   name: string,
   rememberMe?: boolean,
-): Promise<void> => {
+): Promise<string> => {
   const { secretSaltToken } = generateToken();
   const emailHash = crypto
     .createHmac("sha256", secretSaltToken)
@@ -228,4 +228,5 @@ export const createPrelimSession = async (
     )
     .set(`emailReference:${email.toLowerCase()}`, emailHash, "EX", ttl)
     .exec();
+  return emailHash;
 };

@@ -2,12 +2,10 @@ import Footer from "./components/Footer";
 import Script from "next/script";
 import { Oswald, Caveat } from "next/font/google";
 import { EmailProvider } from "./context/EmailContext";
-//import Redirect from "./components/Redirect";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import Providers from "./providers";
 import { ToastContainer } from "react-toastify";
 import "./globals.css";
-import Redirect from "./components/Redirect";
 const oswald = Oswald({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -18,7 +16,7 @@ const caveat = Caveat({
   weight: ["400"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -35,9 +33,7 @@ export default function RootLayout({
         />
         <Providers>
           <EmailProvider>
-            <Redirect />
             {children}
-
             <CookieConsentBanner />
           </EmailProvider>
         </Providers>

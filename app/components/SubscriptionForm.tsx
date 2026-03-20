@@ -18,7 +18,6 @@ import { User, ErrorMessage } from "../types/types";
 
 const SubscriptionForm = () => {
   const router = useRouter();
-  //const { email, setEmail, rememberMe, setRememberMe, setShouldPoll } useEmailContext();
 
   const [user, setUser] = useState<User>({
     name: "",

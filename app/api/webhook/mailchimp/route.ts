@@ -8,7 +8,6 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getClientIp } from "@/app/utils/iphelpers";
 import { UserSession } from "@/app/types/types";
-
 function safeCompare(a: string, b: string): boolean {
   const aBuffer = Buffer.from(a);
   const bBuffer = Buffer.from(b);
@@ -55,6 +54,7 @@ function isAllowedWebhookIp(ip: string): boolean {
 function isExpectedUserAgent(userAgent: string): boolean {
   return /mailchimp/i.test(userAgent);
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let emailHash: string;
 export async function POST(req: NextRequest) {
   try {
@@ -117,6 +117,11 @@ export async function POST(req: NextRequest) {
         500,
       );
     }
+    const oldEmailHash = crypto
+      .createHmac("sha256", userSessionToBeIssued.secretToken)
+      .update(userSessionToBeIssued.email)
+      .digest("hex");
+    emailHash = oldEmailHash;
 
     // Update the session data with the new status
     const updatedUserSession: UserSession = {
@@ -125,11 +130,6 @@ export async function POST(req: NextRequest) {
       ttl,
     };
 
-    const oldEmailHash = crypto
-      .createHmac("sha256", userSessionToBeIssued.secretToken)
-      .update(userSessionToBeIssued.email)
-      .digest("hex");
-    emailHash = oldEmailHash;
     //Instead of polling, and being concerned about state resetting on the client. At the point the user confirms email, issue all cookies and session here and do a permanent redirect.
     await redis
       .multi()
@@ -143,12 +143,9 @@ export async function POST(req: NextRequest) {
       .del(`prelimSession:${oldEmailHash}`)
       .exec();
 
-    const redirectUrl = new URL(
-      `/api/email-confirmation?email=${emailHash}`,
-      req.url, // base = current origin
-    );
-
-    return NextResponse.redirect(redirectUrl, 303);
+    return new NextResponse(JSON.stringify({ message: "user subscribed!" }), {
+      status: 200,
+    });
   } catch (error) {
     console.error("Error processing webhook:", error);
     if (error instanceof HttpError) {

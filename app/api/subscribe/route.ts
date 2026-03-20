@@ -4,7 +4,6 @@ import {
   HttpError,
   createCookie,
   createPrelimSession,
-  generateToken,
   setTimeToLive,
 } from "../../utils/sessionHelpers";
 import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
@@ -99,9 +98,8 @@ export async function POST(req: NextRequest) {
     // Call the rate-limited function
     await addSubscriber(email, name);
 
-    await createPrelimSession(email, name, rememberMe);
-    const pendingToken = generateToken().secretSaltToken;
-    await createCookie("pendingSubscription", pendingToken, {
+    const emailHash = await createPrelimSession(email, name, rememberMe);
+    await createCookie("pendingSubscription", emailHash, {
       maxAge: ttl,
       sameSite: "lax",
     });
@@ -110,6 +108,7 @@ export async function POST(req: NextRequest) {
       JSON.stringify({
         message:
           "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!",
+        emailHash,
         status: "pending",
       }),
       { status: 200 },
