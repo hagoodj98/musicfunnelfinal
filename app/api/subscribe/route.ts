@@ -1,7 +1,6 @@
 import { mailchimpClient } from "@/app/utils/mailchimp";
 import Bottleneck from "bottleneck";
 import {
-  HttpError,
   createCookie,
   createPrelimSession,
   setTimeToLive,
@@ -14,6 +13,8 @@ import { cookies } from "next/headers";
 import redis from "@/lib/redis";
 import { getClientIp } from "../../utils/iphelpers";
 import ipRateLimiter from "../../../lib/iplimiter";
+import { checkEnvVariables } from "../../../environmentVarAccess";
+import { HttpError } from "@/app/utils/errorhandler";
 type MailchimpWrapped = ErrorResponse & {
   response?: { body?: { title?: string } };
 };
@@ -23,8 +24,6 @@ const limiter = new Bottleneck({
   maxConcurrent: 1, // Only one function runs at a time. Only one call to the wrapped function will execute at any given moment.
   minTime: 200, // Wait at least 200 milliseconds between each function call. After one call completes, Bottleneck will wait 200 milliseconds before starting the next call.
 });
-
-const listID = process.env.MAILCHIMP_LIST_ID;
 
 //adding the subscriber
 export async function POST(req: NextRequest) {
@@ -47,12 +46,7 @@ export async function POST(req: NextRequest) {
         401,
       );
     }
-    if (!listID) {
-      throw new HttpError(
-        "Server config error: MAILCHIMP_LIST_ID is missing.",
-        500,
-      );
-    }
+
     const clientIp = getClientIp(req);
     try {
       await ipRateLimiter.consume(clientIp);
@@ -77,6 +71,7 @@ export async function POST(req: NextRequest) {
 
     const addSubscriber = limiter.wrap(async (email: string, name: string) => {
       try {
+        const listID = checkEnvVariables().listID;
         const response = await mailchimpClient.lists.addListMember(listID, {
           email_address: email,
           status: "pending",
@@ -93,7 +88,8 @@ export async function POST(req: NextRequest) {
         }
       }
     });
-    const ttl = setTimeToLive(rememberMe); // 1 week vs 15 minutes
+
+    const ttl = setTimeToLive(rememberMe || false); // 1 week vs 15 minutes
 
     // Call the rate-limited function
     await addSubscriber(email, name);

@@ -1,11 +1,11 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import { HttpError } from "../../../utils/sessionHelpers";
 import { checkEnvVariables } from "../../../../environmentVarAccess";
 import {
   handleCheckoutSessionCompleted,
   handleCheckoutSessionExpired,
 } from "@/app/utils/checkoutHelpers";
+import { HttpError } from "@/app/utils/errorhandler";
 export const config = {
   api: {
     bodyParser: false,

@@ -1,8 +1,8 @@
+import { HttpError } from "./errorhandler";
 import { updateMailchimpTag, updateMailchimpAddress } from "./mailchimpHelpers";
 import {
   getSessionDataByToken,
   updateSessionData,
-  HttpError,
   setTimeToLive,
 } from "./sessionHelpers";
 import { NextResponse } from "next/server";
@@ -26,6 +26,12 @@ export const handleCheckoutSessionExpired = async (
     return new NextResponse(
       JSON.stringify({ message: "Session already completed." }),
       { status: 200 },
+    );
+  }
+  if (sessionData.rememberMe === undefined) {
+    throw new HttpError(
+      "Session data is incomplete. Missing rememberMe property.",
+      500,
     );
   }
   // Determine TTL based on rememberMe flag:
@@ -52,6 +58,12 @@ export const handleCheckoutSessionCompleted = async (
   const sessionData = await getSessionDataByToken(sessionToken);
 
   sessionData.checkoutStatus = "completed";
+  if (sessionData.rememberMe === undefined) {
+    throw new HttpError(
+      "Session data is incomplete. Missing rememberMe property.",
+      500,
+    );
+  }
   const ttl = setTimeToLive(sessionData.rememberMe);
 
   await updateSessionData(sessionToken, sessionData, ttl);

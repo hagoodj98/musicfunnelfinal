@@ -2,14 +2,7 @@ import crypto from "crypto";
 import redis from "../../lib/redis";
 import { UserSession } from "../types/types";
 import { cookies } from "next/headers";
-
-export class HttpError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message); // Calls the parent Error class constructor with the message.
-    this.status = status; // Sets a custom property 'status' that holds the HTTP status code.
-  }
-}
+import { HttpError } from "./errorhandler";
 
 export interface TokenBundle {
   /** Signed cookie & header pairing */
@@ -133,8 +126,8 @@ export async function updateSessionData(
     );
   }
 }
-export const setTimeToLive = (rememberMe: boolean | undefined) => {
-  return rememberMe ? 604800 : 900;
+export const setTimeToLive = (rememberMe: boolean) => {
+  return rememberMe ? 604800 : 600; // 1 week vs 10 minutes in seconds
 };
 
 /**
@@ -209,7 +202,7 @@ export const createPrelimSession = async (
     .createHmac("sha256", secretSaltToken)
     .update(email)
     .digest("hex");
-  const ttl = setTimeToLive(rememberMe || false); // 1 week vs 15 minutes
+  const ttl = setTimeToLive(rememberMe || false); // 1 week vs 10 minutes
   const preliminarysessionData: UserSession = {
     email,
     name,

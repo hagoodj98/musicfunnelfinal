@@ -1,10 +1,9 @@
 "use client";
-import Button from "@mui/material/Button";
-
+import BrandButton from "./ui/BrandButton";
 const HearNow = () => {
   return (
     <div>
-      <Button
+      <BrandButton
         color="inherit"
         onClick={() => {
           window.open("https://jaiquez.hearnow.com/good");
@@ -28,7 +27,7 @@ const HearNow = () => {
         <span className="font-header text-base uppercase tracking-[0.12em] sm:text-lg">
           Listen on HearNow
         </span>
-      </Button>
+      </BrandButton>
     </div>
   );
 };

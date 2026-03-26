@@ -1,10 +1,9 @@
 import Footer from "./components/Footer";
 import Script from "next/script";
 import { Oswald, Caveat } from "next/font/google";
-import { EmailProvider } from "./context/EmailContext";
+import { EmailProvider, SessionTimeProvider } from "./context/EmailContext";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import Providers from "./providers";
-import { ToastContainer } from "react-toastify";
 import "./globals.css";
 const oswald = Oswald({
   subsets: ["latin"],
@@ -24,17 +23,18 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${oswald.className} ${caveat.className} `}>
       <body
-        className={`antialiased bg-[url('../public/oc-gonzalez-A-11N8ItHZo-unsplash.jpg')] bg-cover bg-no-repeat bg-center`}
+        className={` antialiased bg-[url('../public/oc-gonzalez-A-11N8ItHZo-unsplash.jpg')] bg-cover bg-no-repeat bg-center`}
       >
-        <ToastContainer />
         <Script
           src="https://www.google.com/recaptcha/api.js"
           strategy="afterInteractive"
         />
         <Providers>
           <EmailProvider>
-            {children}
-            <CookieConsentBanner />
+            <SessionTimeProvider>
+              {children}
+              <CookieConsentBanner />
+            </SessionTimeProvider>
           </EmailProvider>
         </Providers>
         <Footer />

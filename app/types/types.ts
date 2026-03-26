@@ -1,7 +1,7 @@
 export type User = {
   name: string;
   email: string;
-  rememberMe: boolean | undefined;
+  rememberMe: boolean;
 };
 export type ErrorMessage = {
   field: string;
@@ -23,6 +23,8 @@ export type UserSession = {
     | "initiated"
     | "active";
 };
+export type Severity = "success" | "error" | "info" | "warning";
+
 export type EmailContextValue = {
   email: string;
   setEmail: React.Dispatch<React.SetStateAction<string>>;

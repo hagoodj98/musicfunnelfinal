@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Button from "@mui/material/Button";
 import Modal from "./ui/modal";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-
 type RefreshPopupProps = {
   timeLeft: number;
   onClose: () => void;
@@ -15,7 +14,7 @@ const RefreshPopup = ({ timeLeft, onClose }: RefreshPopupProps) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -32,22 +31,36 @@ const RefreshPopup = ({ timeLeft, onClose }: RefreshPopupProps) => {
       const data = await response.json();
       //Hiding popup on success
       onClose();
+
       setSuccess(data.message);
-      //This reloads the whole /landing to use the new session data
       window.location.reload();
-      // On successful refresh, hide the popupz
     } catch (err) {
       console.error("Error refreshing session:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [onClose]);
+
+  const handleEndSession = useCallback(async () => {
+    try {
+      const response = await fetch("/api/end-session", {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to end session.");
+      }
+      window.location.href = "/"; // Redirect to home page
+      onClose();
+    } catch (error) {
+      console.error("Error ending session:", error);
+    }
+  }, [onClose]);
 
   return (
     <Modal
       open={true}
-      onClose={onClose}
+      onClose={handleRefresh}
       title="Session Will Expire Soon"
       subtitle="Stay connected to keep your place"
       icon={<AccessTimeIcon fontSize="small" />}
@@ -59,10 +72,6 @@ const RefreshPopup = ({ timeLeft, onClose }: RefreshPopupProps) => {
         <p className="font-body text-xl">
           Would you like to refresh your session?
         </p>
-        <p className="font-body text-lg text-yellow">
-          (note) You&apos;ll be redirected back to the home page if you do not
-          refresh the session.
-        </p>
 
         {error && <p style={{ color: "#ff8a8a" }}>Error: {error}</p>}
         {success && <p style={{ color: "#a6ffbf" }}>{success}</p>}
@@ -70,7 +79,7 @@ const RefreshPopup = ({ timeLeft, onClose }: RefreshPopupProps) => {
 
       <div className="mt-5 flex justify-end gap-2">
         <Button
-          onClick={onClose}
+          onClick={handleEndSession}
           sx={{
             marginRight: "5px",
             backgroundColor: "rgb(1, 10, 38, 0.8)",
@@ -85,7 +94,7 @@ const RefreshPopup = ({ timeLeft, onClose }: RefreshPopupProps) => {
           disabled={loading}
           variant="contained"
         >
-          <span className="font-header">Nope!</span>
+          <span className="font-header">Back to Home</span>
         </Button>
         <Button
           onClick={handleRefresh}

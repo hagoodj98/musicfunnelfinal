@@ -1,7 +1,7 @@
 import redis from "../../../lib/redis";
-import { HttpError } from "../../utils/sessionHelpers";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { HttpError } from "@/app/utils/errorhandler";
 
 export async function GET() {
   try {

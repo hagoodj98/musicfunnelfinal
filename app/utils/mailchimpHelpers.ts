@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { mailchimpClient } from "./mailchimp";
-import { HttpError } from "./sessionHelpers";
 import transporter from "./mailer";
+import { HttpError } from "./errorhandler";
 //import jwt from 'jsonwebtoken';
 
 /**

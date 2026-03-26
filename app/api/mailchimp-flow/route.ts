@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const name = searchParams.get("name") || "Debug User";
   const rememberMe = searchParams.get("rememberMe") !== "false";
 
-  const ttl = rememberMe ? 80 : 90;
+  const ttl = rememberMe ? 80 : 86400;
 
   const { secretSaltToken } = generateToken();
   const emailHash = crypto
@@ -36,8 +36,5 @@ export async function GET(req: NextRequest) {
     ttl,
   );
 
-  return NextResponse.redirect(
-    new URL("/api/email-confirmation", req.url),
-    302,
-  );
+  return NextResponse.redirect(new URL("/confirming-email", req.url), 302);
 }

@@ -19,14 +19,16 @@ export async function middleware(req: NextRequest) {
   //If the cookie does exist, whatever the next url is ${req.nextUrl.origin}, go ahead and make a request to the redis-handler since this middleware only exists in the edge environment. Meaning, node is very limtied. So we have to make a request to an endpoint that can handle node normally.
   try {
     //Again the reason why I am making a request to redis-handler is because this helps restrict the /landing/thankyou route. We want to get the sessionToken that the middleware just validated. As i would normally use a redis.get(), i set the action to get and the key to session:${sessionToken}.
-    const apiURL = new URL("/api/redis-handler", req.nextUrl.origin);
-    const response = await fetch(apiURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/redis-handler`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "get", key: `session:${sessionToken}` }),
       },
-      body: JSON.stringify({ action: "get", key: `session:${sessionToken}` }),
-    });
+    );
     //I verify that the request was successful by checking !response.ok
     if (!response.ok) throw new Error("Failed to fetch session data");
     //I grab the result variable I set in the redis-handler and grabbed the code under the event case that the switch statement detected.I set reset to result = await redis.get(key);. Then I return that result in the response along with the status code
@@ -57,19 +59,13 @@ When you go to the club gate (which is like the middleware), the guard asks you 
       }
       // Also ensure checkoutStatus is completed//Ensure users are redirected correctly after checkout. If a user ever try to include /landing/thankyou in the url and the sessionData, coming from the sessionToken i just verified; AND the checkoutStatus is not set to completed, then redirect the user back to /landing. The checkoutStatus property is updated after user completes the stripe form. I have a stripe webhook that lets me know if user completed-checkout-session. If so, then update the checkoutStatus to completed using redis.
       if (sessionData.checkoutStatus !== "completed") {
-        console.log(
-          "Redirecting because checkout was not completed or canceled properly.",
-        );
         //When something goes wrong (like the checkout was cancelled), the middleware adds a little note (message) to the URL. It’s like attaching a sticky note to a package saying, “Oops, something went wrong!”
         const redirectUrl = new URL("/landing", req.url);
+        const message =
+          "Redirecting to landing page. No checkout was completed";
 
         //This will redirect the user to something like:/landing?msg=Your%20checkout%20session%20expired.%20Please%20try%20again.
-        redirectUrl.searchParams.append(
-          "msg",
-          encodeURIComponent(
-            "Redirecting back to fan page because checkout was not completed or canceled properly.",
-          ),
-        );
+        redirectUrl.searchParams.append("msg", encodeURIComponent(message));
         return NextResponse.redirect(redirectUrl);
       }
     }

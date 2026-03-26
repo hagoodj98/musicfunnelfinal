@@ -3,9 +3,9 @@ import SubscriptionForm from "./components/SubscriptionForm";
 import MusicCover from "../public/GOOD (1).jpg";
 import Me from "../public/IMG_1856(1).jpg";
 import HearNow from "./components/HearNow";
-import HomeToastNotifier from "./components/HomeToastNotifier";
-import { Suspense } from "react";
 import IntroSection from "./components/IntroSection";
+import ContentSection from "./components/ContentSection";
+import PageMessenger from "./components/PageMessenger";
 export const metadata = {
   title: "Home",
   description:
@@ -16,10 +16,6 @@ export default function Home() {
   return (
     <>
       <div className="bg-center">
-        <Suspense fallback={null}>
-          <HomeToastNotifier />
-        </Suspense>
-        {/* EmailPollingManager remains mounted continuously */}
         <div>
           <IntroSection videoAddress="/video/welcome-to-me.mp4">
             <div className="pb-8">
@@ -38,43 +34,41 @@ export default function Home() {
               </h3>
             </div>
           </IntroSection>
-          <div className="bg-[rgba(22,121,136,0.74)] ">
-            <div className="container mx-auto flex flex-col items-center p-5 lg:flex-row">
-              <div className="w-full pt-10 lg:w-1/2">
-                <Image src={Me} alt="picture of me" />
-              </div>
-              <div className="lg:w-1/2 p-8">
-                <div className="rounded-2xl bg-lighterblue/30 p-6 backdrop-blur-[1px]">
-                  <div className="my-4">
-                    <h1 className="text-center font-header text-4xl text-white sm:text-5xl">
-                      Jaiquez
-                    </h1>
-                    <h3 className="text-center font-body text-2xl text-yellow sm:text-3xl">
-                      Singer-Songwriter
-                    </h3>
-                  </div>
-                  <p className="text-center text-lg leading-relaxed text-yellow md:text-xl">
-                    His long-time interest in music fueled passion for
-                    songwriting and composing stories that make his audience
-                    feel more heard and less alone.
-                  </p>
-                  <p className="mt-4 text-center text-lg leading-relaxed text-yellow md:text-xl">
-                    His sit-down-conversational overtone approach to his songs
-                    enables him to give listeners a sense of humility and
-                    empowerment through his storytelling lyrics.
-                  </p>
-                  <h4 className="mt-6 text-center font-header text-2xl text-white sm:text-3xl">
-                    Join my FREE Private Community of authentic music fans and
-                    connect with me personally.
-                  </h4>
-                </div>
-                <div className="flex items-center">
-                  <span className=" text-4xl mx-auto my-7">👇</span>
-                </div>
-                <SubscriptionForm />
-              </div>
+          <ContentSection>
+            <div className="w-full lg:w-1/2">
+              <Image src={Me} alt="picture of me" />
             </div>
-          </div>
+            <div className="lg:w-1/2 p-8">
+              <div className="rounded-2xl bg-lighterblue/30 p-6 backdrop-blur-[1px]">
+                <div className="my-4">
+                  <h1 className="text-center font-header text-4xl text-white sm:text-5xl">
+                    Jaiquez
+                  </h1>
+                  <h3 className="text-center font-body text-2xl text-yellow sm:text-3xl">
+                    Singer-Songwriter
+                  </h3>
+                </div>
+                <p className="text-center text-lg leading-relaxed text-yellow md:text-xl">
+                  His long-time interest in music fueled passion for songwriting
+                  and composing stories that make his audience feel more heard
+                  and less alone.
+                </p>
+                <p className="mt-4 text-center text-lg leading-relaxed text-yellow md:text-xl">
+                  His sit-down-conversational overtone approach to his songs
+                  enables him to give listeners a sense of humility and
+                  empowerment through his storytelling lyrics.
+                </p>
+                <h4 className="mt-6 text-center font-header text-2xl text-white sm:text-3xl">
+                  Join my FREE Private Community of authentic music fans and
+                  connect with me personally.
+                </h4>
+              </div>
+              <div className="flex items-center">
+                <span className=" text-4xl mx-auto my-7">👇</span>
+              </div>
+              <SubscriptionForm />
+            </div>
+          </ContentSection>
           <div className="bg-[rgba(239,77,18,1)]">
             <div className="container mx-auto px-6 py-14 md:flex md:items-center">
               <div className="flex items-center justify-center py-6 md:w-1/2">
@@ -102,6 +96,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        <PageMessenger />
       </div>
     </>
   );

@@ -2,12 +2,12 @@ import { cookies } from "next/headers";
 import {
   generateToken,
   getSessionDataByToken,
-  HttpError,
   updateSessionData,
   setTimeToLive,
   createCookie,
 } from "../../utils/sessionHelpers";
 import { NextResponse } from "next/server";
+import { HttpError } from "@/app/utils/errorhandler";
 
 export async function POST() {
   try {
@@ -58,6 +58,7 @@ export async function POST() {
     return new NextResponse(
       JSON.stringify({
         message: "Session and cookies are refreshed with new ones ",
+        sessionTTL: ttl,
       }),
       {
         status: 200,

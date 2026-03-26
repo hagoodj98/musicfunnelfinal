@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import MessageNotify from "./MessageNotify";
 import Modal from "./ui/modal";
 import BrandButton from "./ui/BrandButton";
 import SearchIcon from "@mui/icons-material/Search";
@@ -10,15 +9,19 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { ErrorMessage } from "../types/types";
 import z from "zod/v4";
 import { validationSchema } from "../utils/zodValidation";
-
+import SnackbarComponent from "./ui/snackbar";
+import { Severity } from "../types/types";
 const FindMe = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState(""); // This will hold the actual message text
-  const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
   const [smShow, setSmShow] = useState(false);
   const [errors, setErrors] = useState<ErrorMessage[]>([]);
   const [status, setStatus] = useState("idle");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+  });
+  const [notifierSeverity, setNotifierSeverity] = useState<Severity>();
 
   const handleFindMe = useCallback(
     async (e: React.FormEvent<HTMLButtonElement>) => {
@@ -40,13 +43,22 @@ const FindMe = () => {
             errorResponse.error || "Something went wrong, please try again!",
           );
           setStatus("error");
+          setSnackbar({
+            open: true,
+            message:
+              errorResponse.error || "Something went wrong, please try again!",
+          });
+          setNotifierSeverity("error");
+
           return;
         }
         const data = await res.json();
         // Set the message state to the success message and show toast
-        setMessage(`${data.message}#${Date.now()}`);
-        setMessageType("success");
-        setLoading(false);
+        setSnackbar({
+          open: true,
+          message: data.message || "Subscription status checked successfully!",
+        });
+        setNotifierSeverity("success");
 
         window.location.href = "/landing";
       } catch (error) {
@@ -79,7 +91,7 @@ const FindMe = () => {
       >
         <span className="  font-header">Already Subscribed?</span>
       </BrandButton>
-      <MessageNotify notify={message} type={messageType} />
+
       <Modal
         open={smShow}
         onClose={() => setSmShow(false)}
@@ -131,6 +143,12 @@ const FindMe = () => {
           </BrandButton>
         </div>
       </Modal>
+      <SnackbarComponent
+        message={snackbar.message}
+        severity={notifierSeverity}
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 };

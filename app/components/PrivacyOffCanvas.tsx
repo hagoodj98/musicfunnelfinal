@@ -2,7 +2,13 @@
 import { useState } from "react";
 import Drawer from "@mui/material/Drawer";
 
-function PrivacyOffCanvas({ name, placement }) {
+function PrivacyOffCanvas({
+  name,
+  placement,
+}: {
+  name: string;
+  placement: "left" | "right";
+}) {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);

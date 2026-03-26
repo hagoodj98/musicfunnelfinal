@@ -2,7 +2,6 @@ import { mailchimpClient } from "../../utils/mailchimp";
 import crypto from "crypto";
 import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
 import {
-  HttpError,
   generateToken,
   updateSessionData,
   createCookie,
@@ -14,6 +13,7 @@ import ipRateLimiter from "../../../lib/iplimiter";
 import { NextRequest } from "next/server";
 import type { UserSession } from "../../types/types";
 import z from "zod/v4";
+import { HttpError } from "@/app/utils/errorhandler";
 
 const listID = process.env.MAILCHIMP_LIST_ID as string;
 

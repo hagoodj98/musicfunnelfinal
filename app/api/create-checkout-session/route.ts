@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import {
   getSessionDataByToken,
   updateSessionData,
-  HttpError,
   generateToken,
   createCookie,
   setTimeToLive,
@@ -13,6 +12,7 @@ import redis from "../../../lib/redis";
 import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
 import type { UserSession } from "../../types/types";
+import { HttpError } from "@/app/utils/errorhandler";
 const stripe = new Stripe(checkEnvVariables().stripeSecretKey);
 const priceId = checkEnvVariables().stripePriceId;
 
@@ -49,9 +49,9 @@ export async function POST() {
       await redis.expire(attemptsKey, 86400); // 24 hours in seconds
     }
     // If this is an extra checkout attempt (attempt 2 or 3), send a payment link via email.
-    if (attempts === 3 || attempts === 4) {
+    if (attempts === 3) {
       await redis.expire(attemptsKey, 86400); // lock out for 24 hours
-      // Instead of creating a new checkout session, send a payment link email
+      // Instead of creating a new checkout session, send a payment link via email
       const paymentLink = await stripe.paymentLinks.create({
         line_items: [
           {
@@ -59,9 +59,13 @@ export async function POST() {
             quantity: 1,
           },
         ],
+
+        //next step is to check and see what happens after payment from link.
         after_completion: {
           type: "redirect",
-          redirect: { url: process.env.THANK_YOU_PAGE_URL as string },
+          redirect: {
+            url: `${process.env.THANK_YOU_PAGE_URL}?sessionToken=${sessionToken}`,
+          },
         },
         billing_address_collection: "required", //Set to 'required' to collect billing address
         shipping_address_collection: {
@@ -75,14 +79,14 @@ export async function POST() {
       const userEmail = sessionData.email;
       await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
       throw new HttpError(
-        "Too many checkout attempts. Check your email! We sent a payment link to your email if you wanted to make a purchase.",
+        "Too many checkout attempts. Check your email! We sent a payment link to your email.",
         429,
       );
     }
     // If attempts are 4 or more, do not send any new payment link.
     if (attempts >= 4) {
       throw new HttpError(
-        "No more payment links can be generated in a 24 hour span. Please check your email again for the link. If you need assistance, you can find my email shown below  ⬇️. Sorry for the inconvience.",
+        "No more payment links can be generated in a 24 hour span. Check your email again for a link.  Need assistance? Send me an email shown below  ⬇️. Sorry for the inconvience.",
         429,
       );
     }

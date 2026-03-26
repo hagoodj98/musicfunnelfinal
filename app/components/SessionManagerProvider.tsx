@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useSessionTimeContext } from "../context/EmailContext";
 import SessionManager from "./SessionManager";
-
+import { useRouter } from "next/navigation";
 const SessionManagerProvider = () => {
-  const [initialTime, setInitialTime] = useState<number>(0); //default
-  //you need some kind of loading state when user is redirected to /landing.
+  const { sessionTime } = useSessionTimeContext();
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTTL = async () => {
+      if (sessionTime) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await fetch("/api/session-info");
         if (!res.ok) {
@@ -20,26 +25,33 @@ const SessionManagerProvider = () => {
         const data = await res.json();
 
         //Set the current cookie time remaining to initialTime
-        setInitialTime(data.ttl);
+        setTimeRemaining(data.ttl);
       } catch (error) {
         console.error(error);
         // Handle errors as needed (e.g., redirect to login)
-        window.location.href = "/";
+        router.push("/");
       } finally {
         setLoading(false);
       }
     };
-    fetchTTL();
-  }, []);
 
-  //this block of code is running in between pages
-  if (loading) {
-    return <p className="text-white">Loading Session time...</p>;
+    fetchTTL();
+  }, [router, sessionTime]);
+
+  //you need some kind of loading state when user is redirected to /landing.
+  if (!sessionTime) {
+    if (loading) {
+      return <p className="text-white">Loading session time…</p>;
+    }
   }
+  console.log(sessionTime);
 
   return (
     <div>
-      <SessionManager initialTime={initialTime} />
+      <SessionManager
+        //If sessionTime is not 0, use it. Otherwise, fall back to timeRemaining which was fetched from the server. This ensures that if the session was refreshed and sessionTime was updated, we use the new sessionTime. If sessionTime is still 0 (e.g., on initial load before fetching), we use the timeRemaining from the server.
+        initialTime={sessionTime !== 0 ? sessionTime : timeRemaining}
+      />
     </div>
   );
 };

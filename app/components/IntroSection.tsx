@@ -12,9 +12,7 @@ const IntroSection = ({ videoAddress, children }: Props) => {
       <div className="container mx-auto px-4">
         <div className="mx-auto lg:w-10/12">
           {children}
-          <div>
-            <CustomVideo vidAddress={videoAddress} />
-          </div>
+          <CustomVideo vidAddress={videoAddress} />
         </div>
       </div>
     </div>

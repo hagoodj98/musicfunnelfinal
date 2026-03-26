@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import Modal from "./ui/modal";
 import BrandButton from "./ui/BrandButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextInput from "./ui/TextInput";
 import GroupIcon from "@mui/icons-material/Group";
-//import { useEmailContext } from "../context/EmailContext";
 import FindMe from "./FindMe";
+import SnackbarComponent from "./ui/snackbar";
 import { useRouter } from "next/navigation";
 import CheckIcon from "@mui/icons-material/Check";
-import { toast } from "react-toastify";
 import { validationSchema } from "../utils/zodValidation";
 import z from "zod/v4";
 import { User, ErrorMessage } from "../types/types";
+import { Severity } from "../types/types";
 
 const SubscriptionForm = () => {
   const router = useRouter();
@@ -22,75 +22,89 @@ const SubscriptionForm = () => {
   const [user, setUser] = useState<User>({
     name: "",
     email: "",
-    rememberMe: undefined,
+    rememberMe: false,
   });
   const [errors, setErrors] = useState<ErrorMessage[] | ErrorMessage>([]);
   const [status, setStatus] = useState("idle");
   const [lgShow, setLgShow] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+  });
+  const [notifierSeverity, setNotifierSeverity] = useState<Severity>();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
 
-    try {
-      validationSchema.parse(user);
-      console.log(user);
+      try {
+        validationSchema.parse(user);
+        console.log(user);
 
-      setStatus("pending");
-      setErrors([]);
-      const subscribeResponse = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(user),
-      });
-      if (!subscribeResponse.ok) {
-        const errorResponse = await subscribeResponse.json();
+        setStatus("pending");
+        setErrors([]);
+        const subscribeResponse = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(user),
+        });
+        if (!subscribeResponse.ok) {
+          const errorResponse = await subscribeResponse.json();
 
-        if (errorResponse.error.includes("active session")) {
-          toast.info("You already have an active session. Redirecting...");
-          setStatus("idle");
-          setTimeout(() => {
-            router.push("/landing");
-          }, 3000);
-          return;
-        }
+          if (errorResponse.error.includes("active session")) {
+            setSnackbar({
+              open: true,
+              message:
+                "You already have an active session! Redirecting you to the landing page..",
+            });
+            setNotifierSeverity("info");
+            setStatus("idle");
+            setTimeout(() => {
+              router.push("/landing");
+            }, 3000);
+            return;
+          }
 
-        if (errorResponse.error.includes("already subscribed")) {
-          const errorMessage = "Email already subscribed!";
-          const fieldError: ErrorMessage = {
-            field: "email",
-            message: errorMessage,
-          };
-          setErrors(fieldError);
+          if (errorResponse.error.includes("already subscribed")) {
+            const errorMessage = "Email already subscribed!";
+            const fieldError: ErrorMessage = {
+              field: "email",
+              message: errorMessage,
+            };
+            setErrors(fieldError);
+            setStatus("error");
+            return;
+          }
+
+          setErrors(
+            errorResponse.error || "Something went wrong, please try again!",
+          );
+          setNotifierSeverity("error");
           setStatus("error");
           return;
         }
+      } catch (error) {
+        console.error("Subscription error:", error);
 
-        setErrors(
-          errorResponse.error || "Something went wrong, please try again!",
-        );
+        if (error instanceof z.ZodError) {
+          console.log("Zod issues:", error.issues);
+          const fieldError: ErrorMessage[] = error.issues.map((issue) => ({
+            field: issue.path[0] as string,
+            message: issue.message,
+          }));
+          setErrors(fieldError);
+          setStatus("error");
+
+          return;
+        }
+
         setStatus("error");
-        return;
       }
-    } catch (error) {
-      console.error("Subscription error:", error);
-
-      if (error instanceof z.ZodError) {
-        console.log("Zod issues:", error.issues);
-        const fieldError: ErrorMessage[] = error.issues.map((issue) => ({
-          field: issue.path[0] as string,
-          message: issue.message,
-        }));
-        setErrors(fieldError);
-        setStatus("error");
-
-        return;
-      }
-
-      setStatus("error");
-    }
-  };
+    },
+    [user, router],
+  );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -102,14 +116,6 @@ const SubscriptionForm = () => {
       setUser((prevUser) => ({ ...prevUser, email: value }));
     }
   };
-
-  useEffect(() => {
-    if (status === "confirmed") {
-      toast.success(
-        "Thank you for subscribing! Redirecting you the landing page..",
-      );
-    }
-  }, [status]);
 
   return (
     <div className="flex w-full justify-center">
@@ -235,13 +241,14 @@ const SubscriptionForm = () => {
               </div>
             </form>
           )}
-          {status === "confirmed" && (
-            <p className="text-center text-yellow">
-              Subscription confirmed! Redirecting to the landing page...
-            </p>
-          )}
         </div>
       </Modal>
+      <SnackbarComponent
+        message={snackbar.message}
+        severity={notifierSeverity}
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 };

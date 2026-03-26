@@ -1,12 +1,11 @@
-import { Suspense } from "react";
 import CheckoutInitiator from "../components/CheckoutInitiator.client";
 import SessionManagerProvider from "../components/SessionManagerProvider";
 import Image from "next/image";
 import FanPack from "../../public/fanpack.jpg";
 import CheckIcon from "@mui/icons-material/Check";
-import LandingToastNotifier from "../components/LandingToastNotifier";
 import IntroSection from "../components/IntroSection";
-
+import ContentSection from "../components/ContentSection";
+import PageMessenger from "../components/PageMessenger";
 export const metadata = {
   title: "Fan Pack",
   description:
@@ -17,10 +16,6 @@ const LandingPage = () => {
     <div>
       {/* This client component will fetch the TTL and then render the SessionManager. This strictly relates to the vality of the session using cookies. In terms of how long this cookie is valid for and what should happen as time decreases */}
       <SessionManagerProvider />
-      {/* Include the client component for toast notifications */}
-      <Suspense fallback={null}>
-        <LandingToastNotifier />
-      </Suspense>
 
       <IntroSection videoAddress="/video/thanks-for-subscribing.mp4">
         <div className="pb-8">
@@ -40,41 +35,40 @@ const LandingPage = () => {
           </h6>
         </div>
       </IntroSection>
-      <div className="bg-[rgba(22,121,136,0.74)] py-12 sm:py-16">
-        <div className="container mx-auto flex flex-col items-center gap-10 px-6 lg:flex-row lg:justify-around lg:px-12">
-          <div className="w-full lg:w-1/2">
-            <div className="mx-auto w-full max-w-md rounded-2xl border border-white/25 bg-white/10 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-              <Image
-                className="h-auto w-full rounded-xl object-cover"
-                src={FanPack}
-                alt="Ultimate Fan Starter Pack items"
-                priority
-              />
-            </div>
-          </div>
-          <div className="mt-2 w-full text-center text-white lg:mt-0 lg:w-1/2">
-            <h1 className=" font-header text-4xl text-white sm:text-5xl">
-              Ultimate Fan Starter Pack
-            </h1>
-            <h3 className=" font-body text-2xl text-yellow sm:text-3xl">
-              Here&#39;s What Your&#39;re Going To Get...
-            </h3>
-            <p className=" text-lg font-body">
-              <CheckIcon /> An Exclusive Phone Ring ($5 Value)
-            </p>
-            <p className="text-lg font-body">
-              <CheckIcon /> A Customized Band Sticker ($3 Value)
-            </p>
-            <p className="text-lg font-body">
-              <CheckIcon /> A Rare Artist Bracelet ($3 Value)
-            </p>
-            <p className=" text-lg font-body">
-              <CheckIcon /> A Personalized Key Chain ($5 Value)
-            </p>
-            <CheckoutInitiator />
+      <ContentSection>
+        <div className="w-full lg:w-1/2">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-white/25 bg-white/10 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+            <Image
+              className="h-auto w-full rounded-xl object-cover"
+              src={FanPack}
+              alt="Ultimate Fan Starter Pack items"
+              priority
+            />
           </div>
         </div>
-      </div>
+        <div className="mt-2 w-full text-center text-white lg:mt-0 lg:w-1/2">
+          <h1 className=" font-header text-4xl text-white sm:text-5xl">
+            Ultimate Fan Starter Pack
+          </h1>
+          <h3 className=" font-body text-2xl text-yellow sm:text-3xl">
+            Here&#39;s What Your&#39;re Going To Get...
+          </h3>
+          <p className=" text-lg font-body">
+            <CheckIcon /> An Exclusive Phone Ring ($5 Value)
+          </p>
+          <p className="text-lg font-body">
+            <CheckIcon /> A Customized Band Sticker ($3 Value)
+          </p>
+          <p className="text-lg font-body">
+            <CheckIcon /> A Rare Artist Bracelet ($3 Value)
+          </p>
+          <p className=" text-lg font-body">
+            <CheckIcon /> A Personalized Key Chain ($5 Value)
+          </p>
+          <CheckoutInitiator />
+        </div>
+      </ContentSection>
+      <PageMessenger />
     </div>
   );
 };

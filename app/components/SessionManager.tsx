@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Timer from "./Timer";
 import RefreshPopup from "./RefreshPopup";
-import useSubscriptionState from "../hooks/useSubscriptionState";
+import { useRouter } from "next/navigation";
 
 const SessionManager = ({ initialTime }: { initialTime: number }) => {
-  const { clearSubscription } = useSubscriptionState();
+  const router = useRouter();
 
   const [showPopup, setShowPopup] = useState(false);
   const [timeLeft, setTimeLeft] = useState(initialTime);
@@ -19,9 +19,10 @@ const SessionManager = ({ initialTime }: { initialTime: number }) => {
   };
   const handleExpire = () => {
     // For example, redirect the user or take other actions
-    alert("Redirecting back to squeeze page.");
-    clearSubscription();
-    window.location.href = "/";
+    window.confirm(
+      "Your session has expired. You will be redirected to the squeeze page.",
+    );
+    router.push("/");
   };
   const handleClosePopup = () => {
     setShowPopup(false);

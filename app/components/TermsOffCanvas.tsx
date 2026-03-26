@@ -2,7 +2,12 @@
 import { useState } from "react";
 import { Drawer } from "@mui/material";
 
-function TermsOffCanvas({ name, placement }) {
+type TermsOffCanvasProps = {
+  name: string;
+  placement: "left";
+};
+
+function TermsOffCanvas({ name, placement }: TermsOffCanvasProps) {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);

@@ -15,6 +15,8 @@ const Timer = ({
   onExpire,
 }: TimerProps) => {
   const [timeLeft, setTimeLeft] = useState(initialTime); //Here, timeLeft is a state variable initialized to the value of initialTime.
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
 
   useEffect(() => {
     onTimeUpdate(timeLeft);
@@ -33,10 +35,6 @@ const Timer = ({
 
     return () => clearInterval(timerId);
   }, [timeLeft, onTimeUpdate, onWarning, onExpire]);
-
-  const minutes = Math.floor(timeLeft / 60);
-
-  const seconds = timeLeft % 60;
 
   return (
     <div>

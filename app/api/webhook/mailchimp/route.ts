@@ -1,13 +1,10 @@
-import {
-  getPrelimSession,
-  HttpError,
-  setTimeToLive,
-} from "../../../utils/sessionHelpers";
+import { getPrelimSession, setTimeToLive } from "../../../utils/sessionHelpers";
 import redis from "../../../../lib/redis";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getClientIp } from "@/app/utils/iphelpers";
 import { UserSession } from "@/app/types/types";
+import { HttpError } from "@/app/utils/errorhandler";
 function safeCompare(a: string, b: string): boolean {
   const aBuffer = Buffer.from(a);
   const bBuffer = Buffer.from(b);
