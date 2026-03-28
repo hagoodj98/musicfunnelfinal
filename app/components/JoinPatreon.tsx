@@ -2,12 +2,28 @@
 
 import Button from "@mui/material/Button";
 import ForwardIcon from "@mui/icons-material/Forward";
+import { useCallback } from "react";
 
 const JoinPatreon = () => {
+  const handleRefresh = useCallback(async () => {
+    try {
+      await fetch("/api/refresh-session", {
+        method: "POST",
+      });
+      //I want to make sure the response was made without issues
+
+      window.location.reload();
+    } catch (err) {
+      console.error("Error refreshing session:", err);
+    } finally {
+    }
+  }, []);
+
   return (
     <div className="flex justify-center my-7">
       <Button
         onClick={() => {
+          handleRefresh();
           window.open("https://patreon.com/Jaiquez");
         }}
         sx={{

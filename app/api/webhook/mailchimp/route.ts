@@ -2,7 +2,7 @@ import { getPrelimSession, setTimeToLive } from "../../../utils/sessionHelpers";
 import redis from "../../../../lib/redis";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getClientIp } from "@/app/utils/iphelpers";
+import { getClientIp } from "@/app/utils/limiterhelpers";
 import { UserSession } from "@/app/types/types";
 import { HttpError } from "@/app/utils/errorhandler";
 function safeCompare(a: string, b: string): boolean {

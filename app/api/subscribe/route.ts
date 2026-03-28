@@ -10,9 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validationSchema } from "../../utils/zodValidation";
 import z from "zod/v4";
 import { cookies } from "next/headers";
-import redis from "@/lib/redis";
-import { getClientIp } from "../../utils/iphelpers";
-import ipRateLimiter from "../../../lib/iplimiter";
+import { handleSubscribeRateLimit } from "../../utils/limiterhelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
 import { HttpError } from "@/app/utils/errorhandler";
 type MailchimpWrapped = ErrorResponse & {
@@ -47,27 +45,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const clientIp = getClientIp(req);
-    try {
-      await ipRateLimiter.consume(clientIp);
-    } catch (rateLimitError: unknown) {
-      const retryAfterSeconds =
-        typeof rateLimitError === "object" &&
-        rateLimitError !== null &&
-        "msBeforeNext" in rateLimitError
-          ? Math.ceil(Number(rateLimitError.msBeforeNext) / 1000)
-          : 60;
-      throw new HttpError(
-        `Too many attempts from this IP. Try again in ${retryAfterSeconds} seconds.`,
-        429,
-      );
-    }
-
-    const foundKey = `subscribingEmail${email}`;
-    const foundKeyFlag = await redis.get(foundKey);
-    if (foundKeyFlag) {
-      throw new HttpError("Email already subscribed.", 400);
-    }
+    //limiter to prevent abuse of the subscribe endpoint. This checks if the email has exceeded the allowed number of subscription attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the subscription request.
+    await handleSubscribeRateLimit(email);
 
     const addSubscriber = limiter.wrap(async (email: string, name: string) => {
       try {
@@ -83,8 +62,7 @@ export async function POST(req: NextRequest) {
         if (
           (error as MailchimpWrapped).response?.body?.title === "Member Exists"
         ) {
-          await redis.set(foundKey, "true", "EX", 86400);
-          throw new HttpError("User already subscribed", 400);
+          throw new HttpError("Mailchimp: User already subscribed", 400);
         }
       }
     });

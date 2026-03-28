@@ -6,13 +6,11 @@ import {
   updateSessionData,
   generateToken,
   createCookie,
-  setTimeToLive,
 } from "../../utils/sessionHelpers";
-import redis from "../../../lib/redis";
-import { sendPaymentLinkEmailViaMailchimp } from "../../utils/mailchimpHelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
 import type { UserSession } from "../../types/types";
 import { HttpError } from "@/app/utils/errorhandler";
+import { handleCheckoutSessionRateLimit } from "@/app/utils/limiterhelpers";
 const stripe = new Stripe(checkEnvVariables().stripeSecretKey);
 const priceId = checkEnvVariables().stripePriceId;
 
@@ -38,60 +36,21 @@ export async function POST() {
         500,
       );
     }
-    const ttl = setTimeToLive(sessionData.rememberMe); // 1 week vs 15 minutes
-
+    // The CSRF token from the cookie must match the one stored in the session data to ensure the request is legitimate and not forged. If they don't match, we reject the request with a 403 Forbidden error, indicating that the CSRF validation failed and the request is unauthorized.
     if (csrfToken !== sessionData.csrfToken) {
       throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
     }
-    const attemptsKey = `checkoutAttempts:${sessionToken}`;
-    const attempts = await redis.incr(attemptsKey);
-    if (attempts === 2) {
-      await redis.expire(attemptsKey, 86400); // 24 hours in seconds
-    }
-    // If this is an extra checkout attempt (attempt 2 or 3), send a payment link via email.
-    if (attempts === 3) {
-      await redis.expire(attemptsKey, 86400); // lock out for 24 hours
-      // Instead of creating a new checkout session, send a payment link via email
-      const paymentLink = await stripe.paymentLinks.create({
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
-
-        //next step is to check and see what happens after payment from link.
-        after_completion: {
-          type: "redirect",
-          redirect: {
-            url: `${process.env.THANK_YOU_PAGE_URL}?sessionToken=${sessionToken}`,
-          },
-        },
-        billing_address_collection: "required", //Set to 'required' to collect billing address
-        shipping_address_collection: {
-          allowed_countries: ["US"], // Specify the countries to which I am willing to ship
-        },
-        metadata: {
-          sessionToken: sessionToken,
-        },
-      });
-      // Send the payment link via email.
-      const userEmail = sessionData.email;
-      await sendPaymentLinkEmailViaMailchimp(userEmail, paymentLink.url);
-      throw new HttpError(
-        "Too many checkout attempts. Check your email! We sent a payment link to your email.",
-        429,
+    // Check if the user has already completed checkout
+    if (sessionData.checkoutStatus === "completed") {
+      return new NextResponse(
+        JSON.stringify({ message: "Checkout already completed." }),
+        { status: 200 },
       );
     }
-    // If attempts are 4 or more, do not send any new payment link.
-    if (attempts >= 4) {
-      throw new HttpError(
-        "No more payment links can be generated in a 24 hour span. Check your email again for a link.  Need assistance? Send me an email shown below  ⬇️. Sorry for the inconvience.",
-        429,
-      );
-    }
+    // Implement rate limiting for checkout session creation to prevent abuse and brute-force attacks. This checks if the session token has exceeded the allowed number of attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the checkout session creation.
+    await handleCheckoutSessionRateLimit(sessionToken);
 
-    const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60;
+    const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60; // Set session to expire in 30 minutes (in seconds)
 
     // Define the checkout session
     const session = await stripe.checkout.sessions.create({
@@ -124,15 +83,19 @@ export async function POST() {
       csrfToken: newCsrfToken,
     };
 
-    await updateSessionData(sessionToken, updatedSessionData, ttl);
+    await updateSessionData(
+      sessionToken,
+      updatedSessionData,
+      expiresAt - Math.floor(Date.now() / 1000),
+    ); // Set TTL to match Stripe session expiration
 
     createCookie("sessionToken", sessionToken, {
-      maxAge: ttl,
+      maxAge: expiresAt - Math.floor(Date.now() / 1000),
       sameSite: "lax",
     });
 
     createCookie("csrfToken", newCsrfToken, {
-      maxAge: ttl,
+      maxAge: expiresAt - Math.floor(Date.now() / 1000),
       sameSite: "lax",
     });
 

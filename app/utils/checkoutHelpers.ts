@@ -65,13 +65,18 @@ export const handleCheckoutSessionCompleted = async (
     );
   }
   const ttl = setTimeToLive(sessionData.rememberMe);
-
   await updateSessionData(sessionToken, sessionData, ttl);
 
+  await addressUpdateHandler(paymentIntent, sessionData.email);
+};
+async function addressUpdateHandler(
+  paymentIntent: Stripe.Checkout.Session,
+  userEmail: string,
+) {
   if (
     paymentIntent.shipping_details &&
     paymentIntent.shipping_details.address &&
-    sessionData.email
+    userEmail
   ) {
     const formattedAddress = {
       addr1: paymentIntent.shipping_details.address.line1,
@@ -81,11 +86,10 @@ export const handleCheckoutSessionCompleted = async (
       zip: paymentIntent.shipping_details.address.postal_code,
       country: paymentIntent.shipping_details.address.country,
     };
-    //This helper function gets the email, and the JSON object that mailchimp expects
-    await updateMailchimpAddress(sessionData.email, formattedAddress);
+    //This helper function gets the email, and the JSON object that mailchimp expects, not the email the user inserts in the form, but the email that is stored in the session data, which is the email that was used to subscribe to the mailing list. This way, we ensure that we are updating the correct subscriber's information in Mailchimp, even if the user entered a different email during checkout. The session data email should always reflect the subscriber's email in Mailchimp, allowing us to maintain accurate records and update the correct subscriber's address information.
+    await updateMailchimpAddress(userEmail, formattedAddress);
+    // After updating the address, we can also update the subscriber's tag to "Fan Purchaser" in Mailchimp
+    await updateMailchimpTag(userEmail, "Fan Purchaser", "active");
   }
-  // /NEW: Update the subscriber's tag to "Fan Purchaser" *****
-  if (sessionData.email) {
-    await updateMailchimpTag(sessionData.email, "Fan Purchaser", "active");
-  }
-};
+  return null;
+}

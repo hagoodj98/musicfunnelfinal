@@ -5,7 +5,7 @@ import { useSessionTimeContext } from "../context/EmailContext";
 import SessionManager from "./SessionManager";
 import { useRouter } from "next/navigation";
 const SessionManagerProvider = () => {
-  const { sessionTime } = useSessionTimeContext();
+  const { sessionTime } = useSessionTimeContext(); //context is strictly for setting session time from confirmation page. SessionManagerProvider is responsible for fetching the initial session time from the server and passing it to SessionManager. Once the session time is set in the context, SessionManager will use it to manage the session timer. If the session time is updated (e.g., after refreshing the session), SessionManager will receive the new value through props and update accordingly.
   const [timeRemaining, setTimeRemaining] = useState(0);
   const router = useRouter();
   const [loading, setLoading] = useState(true);

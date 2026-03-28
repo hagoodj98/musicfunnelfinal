@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
         throw new HttpError("Missing Stripe signature", 400);
       }
       event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      //est_aFaeVegwL3PuepTfzN3Je2b
     } catch (error) {
       // Signature verification failed
       console.error(
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest) {
         status: 401,
       });
     }
+    console.log(event);
+
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutSessionCompleted(event.data.object);

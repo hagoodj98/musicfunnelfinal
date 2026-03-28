@@ -25,8 +25,8 @@ const Timer = ({
       onExpire();
       return; //This stops further execution in the effect if the timer has expired.
     }
-
-    if (timeLeft === 60) {
+    //When the timer reaches 60 seconds or less, the onWarning callback is triggered, allowing the parent component to display a warning popup or take other actions as needed.
+    if (timeLeft <= 60) {
       onWarning(timeLeft);
     }
     const timerId = setInterval(() => {

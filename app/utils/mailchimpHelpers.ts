@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { mailchimpClient } from "./mailchimp";
-import transporter from "./mailer";
 import { HttpError } from "./errorhandler";
 //import jwt from 'jsonwebtoken';
 
@@ -97,23 +96,4 @@ export async function updateMailchimpTag(
     console.error("Error updating Mailchimp tag:", (error as Error).message);
     throw new HttpError("Failed to update Mailchimp tag", 500);
   }
-}
-
-export async function sendPaymentLinkEmailViaMailchimp(
-  userEmail: string,
-  paymentLinkUrl: string,
-) {
-  const mailOptions = {
-    from: `"JAPP" ${process.env.GMAIL_USER}`,
-    to: userEmail,
-    subject: "Your Payment Link From JHStudios",
-    text: `Hi, \n\nPlease use the following link to complete your purchase:\n${paymentLinkUrl}\n\nThank you!`,
-    html: `<p>Hi</p>
-            <p>Please use the following link to complete your purchase:</p>
-            <p ><a  href="${paymentLinkUrl}">Buy Fan Pack</a></p>
-            <p>Thank you!</p>`,
-  };
-  const info = await transporter.sendMail(mailOptions);
-  console.log("Payment link email sent, Message ID:", info.messageId);
-  return info;
 }

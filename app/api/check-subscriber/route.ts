@@ -6,10 +6,8 @@ import {
   updateSessionData,
   createCookie,
 } from "../../utils/sessionHelpers";
-import { getClientIp } from "../../utils/iphelpers";
 import { validationSchema } from "../../utils/zodValidation";
-import redis from "../../../lib/redis";
-import ipRateLimiter from "../../../lib/iplimiter";
+import { handleFindEmailRateLimit } from "@/app/utils/limiterhelpers";
 import { NextRequest } from "next/server";
 import type { UserSession } from "../../types/types";
 import z from "zod/v4";
@@ -23,32 +21,8 @@ export async function POST(req: NextRequest) {
 
     validationSchema.pick({ email: true }).parse({ email });
 
-    const clientIp = getClientIp(req);
-    try {
-      await ipRateLimiter.consume(clientIp);
-    } catch (rateLimitError: unknown) {
-      const retryAfterSeconds =
-        typeof rateLimitError === "object" &&
-        rateLimitError !== null &&
-        "msBeforeNext" in rateLimitError
-          ? Math.ceil(Number(rateLimitError.msBeforeNext) / 1000)
-          : 60;
-
-      throw new HttpError(
-        `Too many attempts from this IP. Try again in ${retryAfterSeconds} seconds.`,
-        429,
-      );
-    }
-
-    // Check if this email was flagged as not found.
-    const notFoundKey = `notFound:${email}`;
-    const notFoundFlag = await redis.get(notFoundKey);
-    if (notFoundFlag) {
-      throw new HttpError(
-        "We couldn't find that email. Try again in 24 hours",
-        404,
-      );
-    }
+    // Implement rate limiting for email lookup to prevent abuse and brute-force attacks. This checks if the email has exceeded the allowed number of lookup attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the request.
+    await handleFindEmailRateLimit(email);
 
     // Generate the subscriber hash required by Mailchimp (MD5 hash of the lowercase email)
     const subscriberHash = crypto.createHash("md5").update(email).digest("hex");
@@ -75,7 +49,6 @@ export async function POST(req: NextRequest) {
     } catch (error: unknown) {
       // If Mailchimp returns a 404 error (member not found)
       if ((error as ErrorResponse).status === 404) {
-        await redis.set(notFoundKey, "true", "EX", 86400);
         throw new HttpError(
           "Mhm we couldn't find that email. You should subscribe!🙃",
           404,
