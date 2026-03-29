@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
 
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutSessionCompleted(event.data.object);
+        if (event.data.object.payment_status === "paid") {
+          await handleCheckoutSessionCompleted(event.data.object);
+        }
         break;
 
       case "checkout.session.expired":

@@ -6,7 +6,7 @@ import {
   updateSessionData,
   createCookie,
 } from "../../utils/sessionHelpers";
-import { validationSchema } from "../../utils/zodValidation";
+import { validationSchema } from "../../utils/inputValidation";
 import { handleFindEmailRateLimit } from "@/app/utils/limiterhelpers";
 import { NextRequest } from "next/server";
 import type { UserSession } from "../../types/types";

@@ -11,7 +11,7 @@ import FindMe from "./FindMe";
 import SnackbarComponent from "./ui/snackbar";
 import { useRouter } from "next/navigation";
 import CheckIcon from "@mui/icons-material/Check";
-import { validationSchema } from "../utils/zodValidation";
+import { validationSchema } from "../utils/inputValidation";
 import z from "zod/v4";
 import { User, ErrorMessage } from "../types/types";
 import { Severity } from "../types/types";

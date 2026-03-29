@@ -8,7 +8,7 @@ import TextInput from "./ui/TextInput";
 import CircularProgress from "@mui/material/CircularProgress";
 import { ErrorMessage } from "../types/types";
 import z from "zod/v4";
-import { validationSchema } from "../utils/zodValidation";
+import { validationSchema } from "../utils/inputValidation";
 import SnackbarComponent from "./ui/snackbar";
 import { Severity } from "../types/types";
 const FindMe = () => {

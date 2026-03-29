@@ -7,12 +7,18 @@ import {
 } from "../../utils/sessionHelpers";
 import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
 import { NextRequest, NextResponse } from "next/server";
-import { validationSchema } from "../../utils/zodValidation";
+import { validationSchema } from "../../utils/inputValidation";
 import z from "zod/v4";
 import { cookies } from "next/headers";
 import { handleSubscribeRateLimit } from "../../utils/limiterhelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
 import { HttpError } from "@/app/utils/errorhandler";
+import {
+  isDisposableEmailDomain,
+  isObviousJunkEmail,
+  isObviousJunkName,
+} from "../../utils/inputValidation";
+
 type MailchimpWrapped = ErrorResponse & {
   response?: { body?: { title?: string } };
 };
@@ -29,10 +35,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const payload = await req.json();
-
+    // Run cheap filters:
+    // Normalize email (trim + lowercase). This ensures that we treat "
     const { email, name, rememberMe } =
       await validationSchema.parseAsync(payload);
-
+    //    1. Check for active session via cookies. This checks if the incoming request has any existing session cookies (like sessionToken or csrfToken). If such cookies are present, it indicates that the user already has an active session, and we reject the new subscription attempt with a 401 Unauthorized error, prompting the user to check their inbox for confirmation instead of allowing them to create multiple sessions or subscriptions.
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get("sessionToken")?.value;
     const csrfToken = cookieStore.get("csrfToken")?.value;
@@ -45,8 +52,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    //limiter to prevent abuse of the subscribe endpoint. This checks if the email has exceeded the allowed number of subscription attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the subscription request.
-    await handleSubscribeRateLimit(email);
+    //    2. Block disposable domains. This checks if the email domain is in a known list of disposable email providers. If it is, we reject the subscription attempt with a 400 Bad Request error, indicating that disposable email addresses are not allowed.
+    if (isDisposableEmailDomain(email)) {
+      throw new HttpError(
+        "Disposable email addresses are not allowed. Please use a personal or business email.",
+        400,
+      );
+    }
+    //    3. Block malformed/obvious junk patterns.
+    if (isObviousJunkEmail(email)) {
+      throw new HttpError(
+        "Invalid email address. Please use a valid personal or business email.",
+        400,
+      );
+    }
+    //    3. Block malformed/obvious junk patterns for names as well.
+    if (isObviousJunkName(name)) {
+      throw new HttpError("Invalid name. Please provide a valid name.", 400);
+    }
+    //limiter to prevent abuse of the subscribe endpoint. This checks if the email has exceeded the allowed number of subscription attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the subscription request. So we dont need to limit session token creation here, because if someone is trying to abuse the subscribe endpoint, they are likely doing it with different emails, so we limit based on email instead of session token. If we limited based on session token, they could just create new sessions and bypass the limiter.
+    await handleSubscribeRateLimit(email, setTimeToLive(rememberMe || false));
 
     const addSubscriber = limiter.wrap(async (email: string, name: string) => {
       try {
