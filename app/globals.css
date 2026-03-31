@@ -11,6 +11,31 @@
   --font-body: "Caveat", cursive;
 }
 
+/* Scoped scrollbar style for checkout form panel */
+.checkout-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(1, 10, 38) rgba(255, 255, 255, 0.2);
+}
+
+.checkout-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.checkout-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.checkout-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #fdeab6 0%, #ef4c12 100%);
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.checkout-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #fff0cb 0%, #ff6b33 100%);
+}
+
 .custom-footer-button:hover {
   color: #fdeab6 !important;
 }

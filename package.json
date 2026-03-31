@@ -16,7 +16,8 @@
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@mui/icons-material": "^6.3.0",
     "@mui/material": "^6.3.0",
-    "@stripe/stripe-js": "^5.4.0",
+    "@stripe/react-stripe-js": "^6.0.0",
+    "@stripe/stripe-js": "^9.0.0",
     "bottleneck": "^2.19.5",
     "cookie": "^1.0.2",
     "disposable-domains": "^2.0.0",
@@ -32,7 +33,7 @@
     "react-dom": "^19.0.0",
     "react-toastify": "^11.0.3",
     "smartystreets-javascript-sdk": "^9.2.0",
-    "stripe": "^17.5.0",
+    "stripe": "^21.0.1",
     "ws": "^8.18.0",
     "zod": "^4.3.6"
   },

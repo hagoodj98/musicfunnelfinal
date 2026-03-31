@@ -1,17 +1,12 @@
 import Stripe from "stripe";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import {
-  getSessionDataByToken,
-  updateSessionData,
-  generateToken,
-  createCookie,
-} from "../../utils/sessionHelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
-import type { UserSession } from "../../types/types";
 import { HttpError } from "@/app/utils/errorhandler";
-import { handleCheckoutSessionRateLimit } from "@/app/utils/limiterhelpers";
-const stripe = new Stripe(checkEnvVariables().stripeSecretKey);
+import { getSessionDataByToken } from "@/app/utils/sessionHelpers";
+import { cookies } from "next/headers";
+const stripe = new Stripe(checkEnvVariables().stripeSecretKey, {
+  apiVersion: "2026-03-25.dahlia",
+});
 const priceId = checkEnvVariables().stripePriceId;
 
 export async function POST() {
@@ -40,21 +35,11 @@ export async function POST() {
     if (csrfToken !== sessionData.csrfToken) {
       throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
     }
-    // Check if the user has already completed checkout
-    if (sessionData.checkoutStatus === "completed") {
-      return new NextResponse(
-        JSON.stringify({ message: "Checkout already completed." }),
-        { status: 200 },
-      );
-    }
-    // Implement rate limiting for checkout session creation to prevent abuse and brute-force attacks. This checks if the session token has exceeded the allowed number of attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the checkout session creation.
-    await handleCheckoutSessionRateLimit(sessionToken);
-
-    const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60; // Set session to expire in 30 minutes (in seconds)
 
     // Define the checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      ui_mode: "elements", // Use Stripe-hosted UI for payment collection
+      customer_email: sessionData.email, // Pre-fill the customer's email in the checkout form
       line_items: [
         {
           price: priceId,
@@ -62,18 +47,14 @@ export async function POST() {
         },
       ],
       mode: "payment",
-      success_url: process.env.THANK_YOU_PAGE_URL as string,
-      cancel_url: process.env.LANDING_PAGE_URL as string,
-      billing_address_collection: "required", //Set to 'required' to collect billing address
+      billing_address_collection: "auto",
       shipping_address_collection: {
-        allowed_countries: ["US"], // Specify the countries to which I am willing to ship
+        allowed_countries: ["US"],
       },
-      expires_at: expiresAt, //When I want this session to expire automatically
-      metadata: {
-        sessionToken: sessionToken,
-      },
+      automatic_tax: { enabled: true },
+      return_url: `${process.env.THANK_YOU_PAGE_URL}/complete?session_id={CHECKOUT_SESSION_ID}`, // Redirect to this URL after successful payment. The {CHECKOUT_SESSION_ID} placeholder will be replaced with the actual session ID by Stripe.
     });
-
+    /*
     const newCsrfToken = generateToken().csrfToken;
 
     const updatedSessionData: UserSession = {
@@ -98,10 +79,16 @@ export async function POST() {
       maxAge: expiresAt - Math.floor(Date.now() / 1000),
       sameSite: "lax",
     });
-
-    return new NextResponse(JSON.stringify({ id: session.id }), {
-      status: 200,
-    });
+*/
+    return new NextResponse(
+      JSON.stringify({
+        clientSecret: session.client_secret,
+        customerEmail: sessionData.email,
+      }),
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
     console.error("Error creating Stripe checkout session:", error);
     if (error instanceof HttpError) {

@@ -16,6 +16,13 @@ export const validationSchema = z.object({
   ),
   rememberMe: z.boolean().optional(),
 });
+export const isValidAddressSchema = z.object({
+  line1: z.string().trim().min(1, { message: "Street address is required" }),
+  line2: z.string().trim().optional(),
+  city: z.string().trim().min(1, { message: "City is required" }),
+  state: z.string().trim().min(1, { message: "State is required" }),
+  postal_code: z.string().trim().min(1, { message: "ZIP code is required" }),
+});
 
 const disposableDomainSet = new Set(
   (disposableDomains as string[]).map((domain) => domain.toLowerCase()),

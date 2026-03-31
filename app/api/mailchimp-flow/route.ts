@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const name = searchParams.get("name") || "Debug User";
   const rememberMe = searchParams.get("rememberMe") !== "false";
 
-  const ttl = rememberMe ? 80 : 86400;
+  const ttl = rememberMe ? 86400 : 86400;
 
   const { secretSaltToken } = generateToken();
   const emailHash = crypto

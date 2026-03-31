@@ -35,36 +35,40 @@ const LandingPage = () => {
           </h6>
         </div>
       </IntroSection>
-      <ContentSection>
-        <div className="w-full lg:w-1/2">
-          <div className="mx-auto w-full max-w-md rounded-2xl border border-white/25 bg-white/10 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+      <ContentSection className="  ">
+        <div className="w-full flex-1">
+          <h1 className=" font-header mt-3 text-center text-4xl text-white ">
+            Ultimate Fan Starter Pack
+          </h1>
+          <h3 className=" font-body text-2xl text-center text-yellow ">
+            Here&#39;s What Your&#39;re Going To Get...
+          </h3>
+          <div className="mx-auto my-4   max-w-md rounded-2xl border border-white/25 bg-white/10 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
             <Image
-              className="h-auto w-full rounded-xl object-cover"
+              className="h-auto rounded-xl "
               src={FanPack}
               alt="Ultimate Fan Starter Pack items"
               priority
             />
           </div>
+          <div className=" lg:text-left">
+            <div className="text-center text-white">
+              <p className=" text-lg font-body">
+                <CheckIcon /> An Exclusive Phone Ring ($5 Value)
+              </p>
+              <p className="text-lg font-body">
+                <CheckIcon /> A Customized Band Sticker ($3 Value)
+              </p>
+              <p className="text-lg font-body">
+                <CheckIcon /> A Rare Artist Bracelet ($3 Value)
+              </p>
+              <p className=" text-lg font-body">
+                <CheckIcon /> A Personalized Key Chain ($5 Value)
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="mt-2 w-full text-center text-white lg:mt-0 lg:w-1/2">
-          <h1 className=" font-header text-4xl text-white sm:text-5xl">
-            Ultimate Fan Starter Pack
-          </h1>
-          <h3 className=" font-body text-2xl text-yellow sm:text-3xl">
-            Here&#39;s What Your&#39;re Going To Get...
-          </h3>
-          <p className=" text-lg font-body">
-            <CheckIcon /> An Exclusive Phone Ring ($5 Value)
-          </p>
-          <p className="text-lg font-body">
-            <CheckIcon /> A Customized Band Sticker ($3 Value)
-          </p>
-          <p className="text-lg font-body">
-            <CheckIcon /> A Rare Artist Bracelet ($3 Value)
-          </p>
-          <p className=" text-lg font-body">
-            <CheckIcon /> A Personalized Key Chain ($5 Value)
-          </p>
+        <div className="flex-1 mt-10 lg:mt-0 lg:pl-20">
           <CheckoutInitiator />
         </div>
       </ContentSection>

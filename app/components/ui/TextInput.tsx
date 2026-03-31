@@ -8,8 +8,9 @@ type TextInputProps = {
   label: string;
   value: string;
   name: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  iconType: "email" | "account" | "group";
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  iconType: "email" | "account" | "group" | "user";
+  readOnly?: boolean;
 };
 
 const TextInput = ({
@@ -18,6 +19,7 @@ const TextInput = ({
   value,
   onChange,
   iconType,
+  readOnly,
 }: TextInputProps) => {
   const getIcon = () => {
     switch (iconType) {
@@ -27,6 +29,8 @@ const TextInput = ({
         return <AccountCircle className="text-yellow" fontSize="large" />;
       case "group":
         return <GroupIcon className="text-yellow" fontSize="large" />;
+      case "user":
+        return <AccountCircle className="text-yellow" fontSize="large" />;
       default:
         return null;
     }
@@ -45,6 +49,7 @@ const TextInput = ({
           endAdornment: (
             <InputAdornment position="start">{getIcon()}</InputAdornment>
           ),
+          readOnly: readOnly,
         },
       }}
       label={label}
