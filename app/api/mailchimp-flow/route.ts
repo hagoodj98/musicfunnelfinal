@@ -41,9 +41,13 @@ export async function GET(req: NextRequest) {
       new URL("/confirming-email", process.env.NEXT_PUBLIC_BASE_URL),
       302,
     );
+    const isSecure =
+      new URL(
+        process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
+      ).protocol === "https:";
     redirectResponse.cookies.set("pendingSubscription", emailHash, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== "development",
+      secure: isSecure,
       path: "/",
       maxAge: ttl,
       sameSite: "lax",
