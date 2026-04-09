@@ -29,7 +29,6 @@ jobs:
           --health-retries 5
     env:
       REDIS_PASSWORD: password
-      REDIS_USERNAME: user
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       STRIPE_SECRET_KEY: sk_test_placeholder
