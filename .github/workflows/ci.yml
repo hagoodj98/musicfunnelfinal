@@ -39,6 +39,7 @@ jobs:
       MAILCHIMP_SERVER_PREFIX: us1
       MAILCHIMP_WEBHOOK_TOKEN: placeholder
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      INTERNAL_API_SECRET: ci-internal-secret
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
