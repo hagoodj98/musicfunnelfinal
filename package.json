@@ -30,6 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "next": "15.1.2",
     "nodemailer": "^6.10.0",
+    "pico": "^0.1.17",
     "rate-limiter-flexible": "^5.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -37,6 +38,7 @@
     "smartystreets-javascript-sdk": "^9.2.0",
     "stripe": "^21.0.1",
     "ws": "^8.18.0",
+    "yaml": "^2.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
