@@ -5,13 +5,13 @@ import { HttpError } from "@/app/utils/errorhandler";
 import { getSessionDataByToken } from "@/app/utils/sessionHelpers";
 import { cookies } from "next/headers";
 import redis from "@/lib/redis";
-const stripe = new Stripe(checkEnvVariables().stripeSecretKey, {
-  apiVersion: "2026-03-25.dahlia",
-});
-const priceId = checkEnvVariables().stripePriceId;
 
 export async function POST() {
   try {
+    const { stripeSecretKey, stripePriceId: priceId } = checkEnvVariables();
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2026-03-25.dahlia",
+    });
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get("sessionToken")?.value;
     const csrfToken = cookieStore.get("csrfToken")?.value;
