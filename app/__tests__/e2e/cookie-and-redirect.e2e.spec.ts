@@ -165,10 +165,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // and checkoutStatus === "completed"
     await page.goto("/landing/thankyou");
     await expect(page).toHaveURL(/\/landing\/thankyou/);
-    // Wait for SessionManagerProvider's /api/session-info fetch to settle.
-    // Without this, WebKit throws "navigation interrupted" when the in-flight
-    // fetchTTL callback calls router.push("/") concurrently with the next goto.
-    await page.waitForLoadState("networkidle");
+    // Wait for the page to finish its initial load before navigating away.
+    // "networkidle" is unusable here because SessionManagerProvider's 1-second
+    // timer makes continuous requests, so networkidle never fires in CI.
+    await page.waitForLoadState("load");
 
     // Step 6: Navigate back to landing
     await page.goto("/landing");
@@ -328,10 +328,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // checkoutStatus === "completed")
     await page.goto("/landing/thankyou");
     await expect(page).toHaveURL(/\/landing\/thankyou/);
-    // Wait for SessionManagerProvider's /api/session-info fetch to settle.
-    // Without this, WebKit throws "navigation interrupted" when the in-flight
-    // fetchTTL callback calls router.push("/") concurrently with the next goto.
-    await page.waitForLoadState("networkidle");
+    // Wait for the page to finish its initial load before navigating away.
+    // "networkidle" is unusable here because SessionManagerProvider's 1-second
+    // timer makes continuous requests, so networkidle never fires in CI.
+    await page.waitForLoadState("load");
 
     // Step 6: User revisits /landing
     await page.goto("/landing");
