@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint app lib",
     "test:unit": "vitest run --reporter verbose app/__tests__/backend app/__tests__/frontend",
     "test:unit:ui": "vitest --ui",
     "type-check": "tsc --noEmit",
