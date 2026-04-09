@@ -3,12 +3,10 @@ import Redis from "ioredis";
 // read the base64 string from ENV
 const base64Cert = process.env.REDIS_CA_BASE64;
 
-if (!base64Cert) {
-  throw new Error("REDIS_CA_BASE64 environment variable is not set");
-}
-
-// decode to a Buffer
-const redisCaBuffer = Buffer.from(base64Cert, "base64");
+// decode to a Buffer only if the cert is provided (production TLS)
+const redisCaBuffer = base64Cert
+  ? Buffer.from(base64Cert, "base64")
+  : undefined;
 
 // Create a Redis client instance
 const redis = new Redis({
@@ -16,9 +14,7 @@ const redis = new Redis({
   host: process.env.REDIS_HOST, // Redis host
   username: process.env.REDIS_USERNAME,
   password: process.env.REDIS_PASSWORD,
-  tls: {
-    ca: [redisCaBuffer],
-  },
+  ...(redisCaBuffer ? { tls: { ca: [redisCaBuffer] } } : {}),
 });
 
 redis.on("error", (err) => {
