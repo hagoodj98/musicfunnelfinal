@@ -3,11 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkEnvVariables } from "../../../../environmentVarAccess";
 import { handleCheckoutSessionCompleted } from "@/app/utils/checkoutHelpers";
 import { HttpError } from "@/app/utils/errorhandler";
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+
+// This route is used as the endpoint for Stripe webhooks. It listens for events from Stripe, verifies the signature to ensure the request is legitimate, and then processes the event accordingly. For example, when a checkout session is completed, it can trigger fulfillment actions like updating a database or sending a confirmation email. The GET method is also implemented to allow for simple health checks of the webhook endpoint.
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const stripeSecretKey = checkEnvVariables().stripeSecretKey;
   const stripe = new Stripe(stripeSecretKey);

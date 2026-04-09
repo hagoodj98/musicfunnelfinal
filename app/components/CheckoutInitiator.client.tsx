@@ -71,18 +71,8 @@ const CheckoutInitiator = () => {
       <>
         {checkoutCompleted ? (
           <div
+            className="bg-green-900/30 border-green-500/40 text-white text-center text-sm italic px-4 py-2 rounded"
             data-testid="purchase-completed-message"
-            style={{
-              color: "#fff",
-              background: "#15803d",
-              fontWeight: "bold",
-              textAlign: "center",
-              padding: 12,
-              border: "2px solid #22c55e",
-              borderRadius: 8,
-              margin: 12,
-              fontSize: 20,
-            }}
           >
             Purchase already completed. Check your email for confirmation and
             receipt.
@@ -90,17 +80,7 @@ const CheckoutInitiator = () => {
         ) : (
           <div
             data-testid="checkout-error-message"
-            style={{
-              color: "#fff",
-              background: "#b91c1c",
-              fontWeight: "bold",
-              textAlign: "center",
-              padding: 12,
-              border: "2px solid #f87171",
-              borderRadius: 8,
-              margin: 12,
-              fontSize: 18,
-            }}
+            className="bg-red-900/30 border-red-500/40 text-white text-center text-sm italic px-4 py-2 rounded"
           >
             Checkout failed to initiate: {error}
           </div>

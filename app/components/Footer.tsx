@@ -290,7 +290,7 @@ const Footer = () => {
                 href="mailto:jaiquezmanage98@gmail.com"
                 className="ml-1 text-white underline underline-offset-2 transition hover:text-yellow"
               >
-                jaiquezmanage98@gmail.com
+                jaiquez@jaiquezmusic.com
               </a>
             </p>
           </div>

@@ -37,7 +37,7 @@ export default function Home() {
           </IntroSection>
           <ContentSection>
             <div className="w-full lg:w-1/2">
-              <Image src={Me} alt="picture of me" />
+              <Image src={Me} alt="picture of me" priority />
             </div>
             <div className="lg:w-1/2 p-8">
               <div className="rounded-2xl bg-lighterblue/30 p-6 backdrop-blur-[1px]">

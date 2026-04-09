@@ -33,9 +33,11 @@ const Metafooter: React.FC<MetafooterProps> = ({
         anchor={placement}
         open={show}
         onClose={handleClose}
-        PaperProps={{
-          className:
-            "bg-lighterblue! w-full max-w-sm sm:max-w-md flex flex-col",
+        slotProps={{
+          paper: {
+            className: "w-full max-w-sm sm:max-w-md flex flex-col",
+            sx: { backgroundColor: "rgb(1, 10, 38)" },
+          },
         }}
       >
         {/* Header bar */}
