@@ -65,7 +65,6 @@ const FindMe = () => {
         console.error("Error checking subscription:", error);
 
         if (error instanceof z.ZodError) {
-          console.log("Zod issues:", error.issues);
           const fieldError: ErrorMessage[] = error.issues.map((issue) => ({
             field: issue.path[0] as string,
             message: issue.message,

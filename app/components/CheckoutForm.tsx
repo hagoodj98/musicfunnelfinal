@@ -67,7 +67,6 @@ const CheckoutForm = ({ email }: { email: string }) => {
 
         if (!response.ok) {
           const data = await response.json();
-          console.log(data);
 
           // If the error is related to too many attempts, we inform the user that their session has been closed and redirect them to the home page after a short delay, where they can start a new session if they want to try again.
           if (response.status === 429) {

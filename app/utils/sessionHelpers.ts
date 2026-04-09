@@ -36,15 +36,6 @@ export async function getPrelimSession(email: string): Promise<UserSession> {
     const originalSalt = prelimSession.secretToken as string;
     const mailchimpEmail = computeEmailHash(originalSalt, email);
 
-    // DEBUG: Print values for test troubleshooting
-
-    console.log(
-      "[DEBUG] emailHashStored:",
-      emailHashStored,
-      "| mailchimpEmail:",
-      mailchimpEmail,
-    );
-
     if (emailHashStored !== mailchimpEmail) {
       throw new HttpError("Unauthorized access", 401);
     }

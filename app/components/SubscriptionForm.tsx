@@ -39,7 +39,6 @@ const SubscriptionForm = () => {
 
       try {
         validationSchema.parse(user);
-        console.log(user);
 
         setStatus("pending");
         setErrors([]);
@@ -104,7 +103,6 @@ const SubscriptionForm = () => {
         console.error("Subscription error:", error);
 
         if (error instanceof z.ZodError) {
-          console.log("Zod issues:", error.issues);
           const fieldError: ErrorMessage[] = error.issues.map((issue) => ({
             field: issue.path[0] as string,
             message: issue.message,
@@ -123,7 +121,6 @@ const SubscriptionForm = () => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    console.log(name);
 
     if (name === "name") {
       setUser((prevUser) => ({ ...prevUser, name: value }));

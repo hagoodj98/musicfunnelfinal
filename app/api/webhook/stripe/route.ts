@@ -36,8 +36,6 @@ export async function POST(req: NextRequest) {
         status: 401,
       });
     }
-    console.log(event);
-
     switch (event.type) {
       case "checkout.session.completed":
         if (event.data.object.payment_status === "paid") {
@@ -45,7 +43,6 @@ export async function POST(req: NextRequest) {
         }
         break;
       default:
-        console.log(`Unhandled event type ${event.type}`);
         return new NextResponse(
           JSON.stringify({ message: "Event type not handled" }),
           { status: 200 },

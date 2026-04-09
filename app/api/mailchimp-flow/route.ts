@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
       "EX",
       ttl,
     );
-    console.log(req.url);
 
     const redirectResponse = NextResponse.redirect(
       new URL("/confirming-email", process.env.NEXT_PUBLIC_BASE_URL),

@@ -124,8 +124,6 @@ export async function POST(req: NextRequest) {
     // If the error is already an instance of HttpError, use its status and message.
 
     if (error instanceof z.ZodError) {
-      console.log(error);
-
       return NextResponse.json(
         {
           error: "Invalid input data. Please check your submission.",

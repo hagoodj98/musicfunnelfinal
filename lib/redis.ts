@@ -32,11 +32,8 @@ async function checkRedisConnection() {
   try {
     await redis.set("test", "value");
     const value = await redis.get("test");
-    console.log("Redis Test Value:", value);
-    if (value === "value") {
-      console.log("Connection to Redis is successful and working.");
-    } else {
-      console.log("Failed to retrieve the correct value from Redis.");
+    if (value !== "value") {
+      console.error("Redis connection check failed: unexpected value.");
     }
   } catch (error) {
     console.error("Error connecting to Redis:", error);
