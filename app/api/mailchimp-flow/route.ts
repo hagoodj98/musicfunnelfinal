@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCookie, generateToken } from "../../utils/sessionHelpers";
+import { generateToken } from "../../utils/sessionHelpers";
 import { UserSession } from "../../types/types";
 import crypto from "crypto";
 import redis from "@/lib/redis";
@@ -20,10 +20,6 @@ export async function GET(req: NextRequest) {
       .createHmac("sha256", secretSaltToken ?? "20")
       .update(email)
       .digest("hex");
-    await createCookie("pendingSubscription", emailHash, {
-      maxAge: ttl,
-      sameSite: "lax",
-    });
     const sessionData: UserSession = {
       email,
       name,
@@ -41,10 +37,18 @@ export async function GET(req: NextRequest) {
     );
     console.log(req.url);
 
-    return NextResponse.redirect(
+    const redirectResponse = NextResponse.redirect(
       new URL("/confirming-email", process.env.NEXT_PUBLIC_BASE_URL),
       302,
     );
+    redirectResponse.cookies.set("pendingSubscription", emailHash, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development",
+      path: "/",
+      maxAge: ttl,
+      sameSite: "lax",
+    });
+    return redirectResponse;
   } catch (error) {
     if (error instanceof HttpError) {
       return NextResponse.json(
