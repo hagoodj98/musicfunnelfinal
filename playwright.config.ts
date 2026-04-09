@@ -9,6 +9,12 @@ export default defineConfig({
     timeout: 5000,
   },
   reporter: "list",
+  webServer: {
+    command: "npm run build && npm run start",
+    url: "http://localhost:3000",
+    timeout: 120 * 1000,
+    reuseExistingServer: !process.env.CI,
+  },
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

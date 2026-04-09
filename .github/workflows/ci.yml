@@ -32,6 +32,14 @@ jobs:
       REDIS_USERNAME: user
       REDIS_HOST: localhost
       REDIS_PORT: 6379
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      STRIPE_PRICE_ID: price_placeholder
+      MAILCHIMP_LIST_ID: list_placeholder
+      MAILCHIMP_API_KEY: placeholder
+      MAILCHIMP_SERVER_PREFIX: us1
+      MAILCHIMP_WEBHOOK_TOKEN: placeholder
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
