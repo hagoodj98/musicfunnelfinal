@@ -34,9 +34,19 @@ const subscriberEmailRateLimiter = (ttl: number) => {
     inMemoryBlockDuration: ttl, // Block in memory for the duration of the TTL
   });
 };
-
+const validateAddressRateLimiter = () => {
+  return new RateLimiterRedis({
+    storeClient: redis,
+    keyPrefix: "validateAddressRateLimiter",
+    points: 2, // Allow 2 attempts per session token
+    duration: 3600, // Per hour
+    inMemoryBlockOnConsumed: 2, // If 2 points are consumed, block in memory to prevent further attempts without hitting Redis.
+    inMemoryBlockDuration: 3600, // Block in memory for 1 hour to prevent further attempts after the first failure, which adds an extra layer of protection against abuse while still allowing legitimate users to try again after the TTL expires.
+  });
+};
 export {
   checkoutSessionRateLimiter,
   findEmailRateLimiter,
   subscriberEmailRateLimiter,
+  validateAddressRateLimiter,
 };

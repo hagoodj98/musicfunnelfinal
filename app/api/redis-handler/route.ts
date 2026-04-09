@@ -5,6 +5,13 @@ import { HttpError } from "@/app/utils/errorhandler";
 export async function POST(req: NextRequest) {
   const { action, key } = await req.json();
   try {
+    // Only requests from within the app (e.g. middleware) are allowed.
+    // The secret is a non-public env var and never reaches the browser.
+    const internalSecret = req.headers.get("x-internal-secret");
+    if (!internalSecret || internalSecret !== process.env.INTERNAL_API_SECRET) {
+      throw new HttpError("Unauthorized.", 401);
+    }
+
     let result = null;
     switch (action) {
       case "get":

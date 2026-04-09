@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import CheckoutInitiator from "../components/CheckoutInitiator.client";
 import SessionManagerProvider from "../components/SessionManagerProvider";
 import Image from "next/image";

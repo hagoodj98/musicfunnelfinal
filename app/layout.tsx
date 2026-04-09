@@ -1,6 +1,6 @@
 import Footer from "./components/Footer";
 import Script from "next/script";
-import { Oswald, Caveat } from "next/font/google";
+import { Oswald, Inter } from "next/font/google";
 import { EmailProvider, SessionTimeProvider } from "./context/EmailContext";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import Providers from "./providers";
@@ -10,9 +10,9 @@ const oswald = Oswald({
   weight: ["400", "700"],
 });
 
-const caveat = Caveat({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["400", "500", "600"],
 });
 
 export default async function RootLayout({
@@ -21,7 +21,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${oswald.className} ${caveat.className} `}>
+    <html lang="en" className={`${oswald.className} ${inter.className}`}>
       <body
         className={` antialiased bg-[url('../public/oc-gonzalez-A-11N8ItHZo-unsplash.jpg')] bg-cover bg-no-repeat bg-center`}
       >

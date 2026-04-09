@@ -8,7 +8,6 @@ import SnackbarComponent from "../components/ui/snackbar";
 import { Severity } from "../types/types";
 import BrandButton from "../components/ui/BrandButton";
 import CircularProgress from "@mui/material/CircularProgress";
-import SubscriptionForm from "../components/SubscriptionForm";
 export default function Page() {
   const router = useRouter();
   const [isSubscriptionConfirmed, setIsSubscriptionConfirmed] = useState(false);
@@ -19,18 +18,26 @@ export default function Page() {
   });
   const [notifierSeverity, setNotifierSeverity] = useState<Severity>();
   const [errorMessage, setErrorMessage] = useState("");
-  const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch("/api/email-confirmation");
         if (!response.ok) {
           const errorResponse = await response.json();
-          if (errorResponse.error.includes("Session not found")) {
+          if (errorResponse.error.includes("Pending data not found")) {
             setErrorMessage("Could not verify email confirmation.");
-            setShowSubscriptionForm(true);
+            router.push("/");
+
             return;
           }
+          // If the user tries to access this endpoint while they already have an active session (indicated by the presence of session cookies), we want to reject the request with a 403 status code and an appropriate error message. This is because the email confirmation process should only be initiated for users who do not have an active session, and allowing users with active sessions to access this endpoint could lead to confusion or potential security issues. By checking for existing session cookies and rejecting the request if they are present, we can ensure that users go through the proper flow for confirming their email subscription without interfering with any active sessions they may have.
+          if (
+            errorResponse.error.includes("User already has an active session")
+          ) {
+            router.push("/landing");
+            return;
+          }
+
           setErrorMessage("Unauthorized access. Redirecting to homepage.");
           setTimeout(() => {
             router.push("/");
@@ -58,38 +65,28 @@ export default function Page() {
       <ContentSection>
         <div className="flex flex-col justify-center h-80">
           <div>
-            {showSubscriptionForm ? (
-              <>
-                <h1
-                  className="font-header text-2xl md:text-3xl mb-2 text-red-900"
-                  role="alert"
-                >
+            <h1 className="font-header text-2xl md:text-3xl mb-4">
+              {isSubscriptionConfirmed ? (
+                <span>Email Confirmed! Redirecting to landing page...</span>
+              ) : (
+                <span>
+                  Checking Email Confirmation...
+                  <CircularProgress
+                    size="20px"
+                    style={{
+                      display: "inline-flex",
+                      verticalAlign: "middle",
+                    }}
+                    color="inherit"
+                  />
+                </span>
+              )}
+              {errorMessage && (
+                <p className="font-body text-red-500 text-sm mt-2">
                   {errorMessage}
-                </h1>
-                <p className="text-base md:text-lg mb-6">
-                  Please re-enter your e-mail and try again.
                 </p>
-                <SubscriptionForm />
-              </>
-            ) : (
-              <h1 className="font-header text-2xl md:text-3xl mb-4">
-                {isSubscriptionConfirmed ? (
-                  <span>Email Confirmed! Redirecting to landing page...</span>
-                ) : (
-                  <span>
-                    Checking Email Confirmation...
-                    <CircularProgress
-                      size="20px"
-                      style={{
-                        display: "inline-flex",
-                        verticalAlign: "middle",
-                      }}
-                      color="inherit"
-                    />
-                  </span>
-                )}
-              </h1>
-            )}
+              )}
+            </h1>
             {isSubscriptionConfirmed && (
               <p className="font-body  md:text-3xl text-lg">
                 Not redirected automatically? Please click the button below.

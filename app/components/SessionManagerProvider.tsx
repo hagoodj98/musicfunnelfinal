@@ -44,8 +44,6 @@ const SessionManagerProvider = () => {
       return <p className="text-white">Loading session time…</p>;
     }
   }
-  console.log(sessionTime);
-
   return (
     <div>
       <SessionManager

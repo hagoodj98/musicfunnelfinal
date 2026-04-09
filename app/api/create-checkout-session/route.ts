@@ -4,6 +4,7 @@ import { checkEnvVariables } from "../../../environmentVarAccess";
 import { HttpError } from "@/app/utils/errorhandler";
 import { getSessionDataByToken } from "@/app/utils/sessionHelpers";
 import { cookies } from "next/headers";
+import redis from "@/lib/redis";
 const stripe = new Stripe(checkEnvVariables().stripeSecretKey, {
   apiVersion: "2026-03-25.dahlia",
 });
@@ -12,34 +13,41 @@ const priceId = checkEnvVariables().stripePriceId;
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("sessionToken")?.value; //my session sticker/cookie tells the server who the user is.
-    const csrfToken = cookieStore.get("csrfToken")?.value; //Another secret sticker/cookie that helps protect against attacks.
+    const sessionToken = cookieStore.get("sessionToken")?.value;
+    const csrfToken = cookieStore.get("csrfToken")?.value;
+    console.log("[API] sessionToken:", sessionToken, "csrfToken:", csrfToken);
 
-    if (!sessionToken) {
-      throw new HttpError("Session token is required", 401);
+    if (!sessionToken || !csrfToken) {
+      await redis.del(`session:${sessionToken}`);
+      cookieStore.delete("sessionToken");
+      cookieStore.delete("csrfToken");
+      console.log("[API] Missing session or CSRF token");
+      throw new HttpError("Session or CSRF token is missing", 401);
     }
-    if (!csrfToken) {
-      throw new HttpError("CSRF token is required", 401);
-    }
-
-    const sessionData = await getSessionDataByToken(sessionToken); //now sessionData is a parsed JSON Object
-    if (!sessionData)
+    const sessionData = await getSessionDataByToken(sessionToken);
+    console.log("[API] sessionData:", sessionData);
+    if (!sessionData) {
+      console.log("[API] Session not found");
       throw new HttpError("Session not found. Unauthorized access", 404);
+    }
     if (sessionData.rememberMe === undefined) {
+      console.log("[API] Session missing rememberMe");
       throw new HttpError(
         "Session data is incomplete. Missing rememberMe property.",
         500,
       );
     }
-    // The CSRF token from the cookie must match the one stored in the session data to ensure the request is legitimate and not forged. If they don't match, we reject the request with a 403 Forbidden error, indicating that the CSRF validation failed and the request is unauthorized.
-    if (csrfToken !== sessionData.csrfToken) {
-      throw new HttpError("Invalid CSRF token. Unauthorized!", 403);
+    if (sessionData.checkoutStatus === "completed") {
+      console.log("[API] Purchase already completed");
+      throw new HttpError("Purchase already completed.", 403);
     }
-
-    // Define the checkout session
+    if (csrfToken !== sessionData.csrfToken) {
+      console.log("[API] CSRF token mismatch");
+      throw new HttpError("Unauthorized.", 403);
+    }
     const session = await stripe.checkout.sessions.create({
-      ui_mode: "elements", // Use Stripe-hosted UI for payment collection
-      customer_email: sessionData.email, // Pre-fill the customer's email in the checkout form
+      ui_mode: "elements",
+      customer_email: sessionData.email,
       line_items: [
         {
           price: priceId,
@@ -52,34 +60,12 @@ export async function POST() {
         allowed_countries: ["US"],
       },
       automatic_tax: { enabled: true },
-      return_url: `${process.env.THANK_YOU_PAGE_URL}/complete?session_id={CHECKOUT_SESSION_ID}`, // Redirect to this URL after successful payment. The {CHECKOUT_SESSION_ID} placeholder will be replaced with the actual session ID by Stripe.
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/landing/thankyou`,
+      metadata: {
+        sessionToken: sessionToken,
+      },
     });
-    /*
-    const newCsrfToken = generateToken().csrfToken;
-
-    const updatedSessionData: UserSession = {
-      ...sessionData,
-      stripeSessionId: session.id,
-      checkoutStatus: "initiated",
-      csrfToken: newCsrfToken,
-    };
-
-    await updateSessionData(
-      sessionToken,
-      updatedSessionData,
-      expiresAt - Math.floor(Date.now() / 1000),
-    ); // Set TTL to match Stripe session expiration
-
-    createCookie("sessionToken", sessionToken, {
-      maxAge: expiresAt - Math.floor(Date.now() / 1000),
-      sameSite: "lax",
-    });
-
-    createCookie("csrfToken", newCsrfToken, {
-      maxAge: expiresAt - Math.floor(Date.now() / 1000),
-      sameSite: "lax",
-    });
-*/
+    console.log("[API] Stripe session created");
     return new NextResponse(
       JSON.stringify({
         clientSecret: session.client_secret,
@@ -90,14 +76,15 @@ export async function POST() {
       },
     );
   } catch (error) {
-    console.error("Error creating Stripe checkout session:", error);
+    console.error("[API] Error creating Stripe checkout session:", error);
     if (error instanceof HttpError) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new NextResponse(
-      JSON.stringify({ error: (error as Error).message }),
+    return NextResponse.json(
+      { error: "Error creating Stripe checkout session" },
       { status: 500 },
     );
   }

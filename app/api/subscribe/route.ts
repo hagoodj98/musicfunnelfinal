@@ -1,6 +1,7 @@
 import { mailchimpClient } from "@/app/utils/mailchimp";
 import Bottleneck from "bottleneck";
 import {
+  assertNoActiveSession,
   createCookie,
   createPrelimSession,
   setTimeToLive,
@@ -9,7 +10,6 @@ import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
 import { NextRequest, NextResponse } from "next/server";
 import { validationSchema } from "../../utils/inputValidation";
 import z from "zod/v4";
-import { cookies } from "next/headers";
 import { handleSubscribeRateLimit } from "../../utils/limiterhelpers";
 import { checkEnvVariables } from "../../../environmentVarAccess";
 import { HttpError } from "@/app/utils/errorhandler";
@@ -35,21 +35,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const payload = await req.json();
+    if (!payload) {
+      throw new HttpError("Request body is required", 400);
+    }
     // Run cheap filters:
     // Normalize email (trim + lowercase). This ensures that we treat "
     const { email, name, rememberMe } =
       await validationSchema.parseAsync(payload);
-    //    1. Check for active session via cookies. This checks if the incoming request has any existing session cookies (like sessionToken or csrfToken). If such cookies are present, it indicates that the user already has an active session, and we reject the new subscription attempt with a 401 Unauthorized error, prompting the user to check their inbox for confirmation instead of allowing them to create multiple sessions or subscriptions.
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("sessionToken")?.value;
-    const csrfToken = cookieStore.get("csrfToken")?.value;
-
-    // layer to prevent users from resubmitting email if there is an active session
-    if (sessionToken || csrfToken) {
-      throw new HttpError(
-        "You already have an active session. Redirecting...",
-        401,
-      );
+    // 1. Ensure no active session exists for this user. This check prevents users who are already logged in from initiating the subscription process again, which could lead to confusion or unintended consequences. By enforcing that there is no active session, we ensure that the subscription flow is only initiated for users who are not currently authenticated, maintaining a clear and secure user experience.
+    try {
+      await assertNoActiveSession();
+    } catch (error) {
+      if (
+        error instanceof HttpError &&
+        error.message.includes("inconsistent state")
+      ) {
+        // If the error is due to an inconsistent state of session cookies, we redirect the user to the homepage. This allows them to start fresh and ensures that any potential issues with their current session are resolved before they attempt to subscribe again.
+        throw new HttpError(
+          "Session data is in an inconsistent state. Redirecting to homepage.",
+          403,
+        );
+      }
     }
 
     //    2. Block disposable domains. This checks if the email domain is in a known list of disposable email providers. If it is, we reject the subscription attempt with a 400 Bad Request error, indicating that disposable email addresses are not allowed.
@@ -103,13 +109,13 @@ export async function POST(req: NextRequest) {
       sameSite: "lax",
     });
 
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         message:
           "Subscription initiated. Please check your email to confirm. Don't see it, check spam!!",
         emailHash,
         status: "pending",
-      }),
+      },
       { status: 200 },
     );
   } catch (error) {
@@ -120,25 +126,29 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       console.log(error);
 
-      return new NextResponse(
-        JSON.stringify({
+      return NextResponse.json(
+        {
           error: "Invalid input data. Please check your submission.",
           details: error.issues,
-        }),
+        },
         { status: 400 },
       );
     }
+    // For other types of errors, we check if it's an instance of HttpError (which we throw intentionally in our code for known error cases) and return its message and status. If it's not an HttpError, we return a generic 500 Internal Server Error with the error message if available.
     if (error instanceof HttpError) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
     // Otherwise, return a generic 500 Internal Server Error.
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         error:
-          "Subscription failed due to being a member already or an internal error has occured. **Please check your inbox (and spam folder) and make sure you confirmed your subscription first or send an email for support. ",
-      }),
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during the subscription process.",
+      },
       { status: 500 },
     );
   }

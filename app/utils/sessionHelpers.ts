@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { computeEmailHash } from "./cryptoHelpers";
 import redis from "../../lib/redis";
 import { UserSession } from "../types/types";
 import { cookies } from "next/headers";
@@ -33,10 +34,16 @@ export async function getPrelimSession(email: string): Promise<UserSession> {
     }
     const prelimSession = JSON.parse(pendingSession) as UserSession;
     const originalSalt = prelimSession.secretToken as string;
-    const mailchimpEmail = crypto
-      .createHmac("sha256", originalSalt)
-      .update(email.toLocaleLowerCase())
-      .digest("hex");
+    const mailchimpEmail = computeEmailHash(originalSalt, email);
+
+    // DEBUG: Print values for test troubleshooting
+
+    console.log(
+      "[DEBUG] emailHashStored:",
+      emailHashStored,
+      "| mailchimpEmail:",
+      mailchimpEmail,
+    );
 
     if (emailHashStored !== mailchimpEmail) {
       throw new HttpError("Unauthorized access", 401);
@@ -188,6 +195,43 @@ export async function createSession(
     throw new HttpError(
       `Error creating session: ${(error as Error).message}`,
       500,
+    );
+  }
+}
+
+/**
+ * Asserts that no active session cookies exist on the current request.
+ * - Both cookies present → user already has a session → throws 403.
+ * - Only one cookie present → inconsistent / tampered state → cleans up Redis
+ *   and cookies, then throws 403.
+ *
+ * Call this at the top of any endpoint that must only be reached before a
+ * session has been issued (e.g. /email-confirmation, /check-subscriber).
+ */
+export async function assertNoActiveSession(): Promise<void> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("sessionToken")?.value;
+  const csrfToken = cookieStore.get("csrfToken")?.value;
+
+  if (sessionToken && csrfToken) {
+    throw new HttpError(
+      "User already has an active session. Unauthorized access.",
+      403,
+    );
+  }
+  if (sessionToken || csrfToken) {
+    // If only one of the cookies is present, we treat this as an inconsistent state (potentially due to tampering or a previous error). To mitigate any potential security risks, we clean up any existing session in Redis associated with the sessionToken and delete both cookies to ensure a clean slate for the user. After performing this cleanup, we throw a 403 Forbidden error to indicate that the request is unauthorized due to the inconsistent state of the session cookies.
+    if (sessionToken) {
+      const isActiveSession = await redis.exists(`session:${sessionToken}`);
+      if (isActiveSession) {
+        await redis.del(`session:${sessionToken}`);
+      }
+    }
+    cookieStore.delete("sessionToken");
+    cookieStore.delete("csrfToken");
+    throw new HttpError(
+      "Session cookies are in an inconsistent state. Unauthorized access.",
+      403,
     );
   }
 }

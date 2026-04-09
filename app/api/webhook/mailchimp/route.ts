@@ -2,9 +2,9 @@ import { getPrelimSession, setTimeToLive } from "../../../utils/sessionHelpers";
 import redis from "../../../../lib/redis";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getClientIp } from "@/app/utils/limiterhelpers";
 import { UserSession } from "@/app/types/types";
 import { HttpError } from "@/app/utils/errorhandler";
+
 function safeCompare(a: string, b: string): boolean {
   const aBuffer = Buffer.from(a);
   const bBuffer = Buffer.from(b);
@@ -13,55 +13,19 @@ function safeCompare(a: string, b: string): boolean {
   return crypto.timingSafeEqual(aBuffer, bBuffer);
 }
 
-function isAllowedWebhookIp(ip: string): boolean {
-  const allowedIps = (process.env.MAILCHIMP_WEBHOOK_ALLOWED_IPS || "")
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  if (allowedIps.includes(ip)) {
-    return true;
-  }
-
-  const allowedIpHashes = (
-    process.env.MAILCHIMP_WEBHOOK_ALLOWED_IP_HASHES || ""
-  )
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  if (allowedIpHashes.length > 0) {
-    const salt = process.env.IP_HASH_SALT;
-    if (!salt) {
-      return false;
-    }
-
-    const requestIpHash = crypto
-      .createHash("sha256")
-      .update(ip + salt)
-      .digest("hex");
-
-    return allowedIpHashes.some((hash) => safeCompare(hash, requestIpHash));
-  }
-
-  // If no allowlist is configured, skip IP allowlist enforcement.
-  return allowedIps.length === 0;
-}
-
 function isExpectedUserAgent(userAgent: string): boolean {
+  // Mailchimp's user agent typically includes "Mailchimp" or "Mailchimp Webhooks". This check is a simple way to add an additional layer of verification to ensure that the request is coming from Mailchimp. However, it's important to note that user agent strings can be spoofed, so this should not be the sole method of verification. It should be used in conjunction with other security measures, such as validating a secret token, to ensure the authenticity of the webhook request.
   return /mailchimp/i.test(userAgent);
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let emailHash: string;
+const expectedWebhookToken = process.env.MAILCHIMP_WEBHOOK_TOKEN as string;
 export async function POST(req: NextRequest) {
   try {
-    const expectedWebhookToken =
-      process.env.MAILCHIMP_WEBHOOK_TOKEN ||
-      process.env.MAILCHIMP_WEBHOOK_SECRET;
     if (!expectedWebhookToken) {
       throw new HttpError("MAILCHIMP_WEBHOOK_TOKEN is not configured", 500);
     }
-
+    // Validate the incoming webhook request to ensure it is from Mailchimp and has the correct format. This includes checking for a specific token in the query parameters, verifying the content type of the request, and validating the user agent string to confirm that the request is coming from Mailchimp. If any of these checks fail, we reject the request with an appropriate error message and status code.
     const incomingWebhookToken = req.nextUrl.searchParams.get("token");
     if (
       !incomingWebhookToken ||
@@ -69,20 +33,15 @@ export async function POST(req: NextRequest) {
     ) {
       throw new HttpError("Unauthorized webhook request", 401);
     }
-
+    //  Validate the content type of the incoming webhook request to ensure it is in the expected format. Mailchimp typically sends webhook data as "application/x-www-form-urlencoded". If the content type does not match this expected format, we reject the request with a 415 Unsupported Media Type error, indicating that the payload format is not supported.
     const contentType = req.headers.get("content-type") || "";
     if (!contentType.includes("application/x-www-form-urlencoded")) {
       throw new HttpError("Unsupported webhook payload format", 415);
     }
-
+    // Validate the user agent string of the incoming webhook request to confirm that it is coming from Mailchimp. This is an additional security measure to help prevent unauthorized sources from sending requests to this endpoint. If the user agent does not match the expected pattern for Mailchimp, we reject the request with a 401 Unauthorized error, indicating that the source of the webhook is not authorized.
     const userAgent = req.headers.get("user-agent") || "";
     if (!isExpectedUserAgent(userAgent)) {
       throw new HttpError("Unauthorized webhook source", 401);
-    }
-
-    const requestIp = getClientIp(req);
-    if (!isAllowedWebhookIp(requestIp)) {
-      throw new HttpError("Webhook IP is not allowlisted", 401);
     }
 
     const body = await req.text(); //parse text body that is coming in from mailchimp

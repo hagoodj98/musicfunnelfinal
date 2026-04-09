@@ -2,6 +2,7 @@ import { mailchimpClient } from "../../utils/mailchimp";
 import crypto from "crypto";
 import type { ErrorResponse } from "@mailchimp/mailchimp_marketing";
 import {
+  assertNoActiveSession,
   generateToken,
   updateSessionData,
   createCookie,
@@ -12,13 +13,13 @@ import { NextRequest } from "next/server";
 import type { UserSession } from "../../types/types";
 import z from "zod/v4";
 import { HttpError } from "@/app/utils/errorhandler";
-
 const listID = process.env.MAILCHIMP_LIST_ID as string;
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
-
+    // Ensure no active session exists for this user. This check prevents users who are already logged in from initiating the subscription process again, which could lead to confusion or unintended consequences. By enforcing that there is no active session, we ensure that the subscription flow is only initiated for users who are not currently authenticated, maintaining a clear and secure user experience.
+    await assertNoActiveSession();
     validationSchema.pick({ email: true }).parse({ email });
 
     // Implement rate limiting for email lookup to prevent abuse and brute-force attacks. This checks if the email has exceeded the allowed number of lookup attempts within a certain time frame. If the limit is exceeded, it will throw an error and prevent further processing of the request.

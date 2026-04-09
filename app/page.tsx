@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Image from "next/image";
 import SubscriptionForm from "./components/SubscriptionForm";
 import MusicCover from "../public/GOOD (1).jpg";

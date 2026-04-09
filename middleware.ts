@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  console.log("Middleware is running");
-
   //This one-liner uses optional chaining to safely access the .value property of the cookie,
   //We don't have to fetch the cookie cause Nextjs middleware has campitablits to do that for us. So we can just grab it.
   const sessionToken = req.cookies.get("sessionToken")?.value;
   // Redirect if no session token is found. This means that the cookie called sessionToken which I set in /check-status has expired or invalid. Redirect the user back to squeeze page
   if (!sessionToken) {
-    console.log("No session token found, redirecting...");
     const redirectUrl = new URL("/", req.url);
     const message = "You cannot proceed without an active session!!";
 
@@ -19,13 +16,18 @@ export async function middleware(req: NextRequest) {
   //If the cookie does exist, whatever the next url is ${req.nextUrl.origin}, go ahead and make a request to the redis-handler since this middleware only exists in the edge environment. Meaning, node is very limtied. So we have to make a request to an endpoint that can handle node normally.
   try {
     //Again the reason why I am making a request to redis-handler is because this helps restrict the /landing/thankyou route. We want to get the sessionToken that the middleware just validated. As i would normally use a redis.get(), i set the action to get and the key to session:${sessionToken}.
-    const response = await fetch(`http://localhost:3000/api/redis-handler`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/redis-handler`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+          "ngrok-skip-browser-warning": "1",
+        },
+        body: JSON.stringify({ action: "get", key: `session:${sessionToken}` }),
       },
-      body: JSON.stringify({ action: "get", key: `session:${sessionToken}` }),
-    });
+    );
     //I verify that the request was successful by checking !response.ok
     if (!response.ok) throw new Error("Failed to fetch session data");
     //I grab the result variable I set in the redis-handler and grabbed the code under the event case that the switch statement detected.I set reset to result = await redis.get(key);. Then I return that result in the response along with the status code
@@ -37,7 +39,6 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     // // ONLY check CSRF if user is heading to /landing/thankyou
-
     if (req.nextUrl.pathname.includes("/landing/thankyou")) {
       //Since I rotated tokens and the new session data now contains a new CSRF token in /create-checkout-session, i want the middleware to verify that the CSRF token in the request (from the cookie) matches the new one stored in the session. This would help confirm that the session data being used is indeed the updated one. More importantly, it ensures the middleware is truly working with the updated session data—not just the session token name, but the new value (and new CSRF) that I expected. The reason why this is necessary is because i am using the same sessionToken name that the middleware is looking for. So to make sure the middleware is looking at the right sessionToken is by verifying the new csrf.
       const csrfFromCookie = req.cookies.get("csrfToken")?.value;

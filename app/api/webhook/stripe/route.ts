@@ -1,10 +1,7 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { checkEnvVariables } from "../../../../environmentVarAccess";
-import {
-  handleCheckoutSessionCompleted,
-  handleCheckoutSessionExpired,
-} from "@/app/utils/checkoutHelpers";
+import { handleCheckoutSessionCompleted } from "@/app/utils/checkoutHelpers";
 import { HttpError } from "@/app/utils/errorhandler";
 export const config = {
   api: {
@@ -47,10 +44,6 @@ export async function POST(req: NextRequest) {
         if (event.data.object.payment_status === "paid") {
           await handleCheckoutSessionCompleted(event.data.object);
         }
-        break;
-
-      case "checkout.session.expired":
-        await handleCheckoutSessionExpired(event.data.object);
         break;
       default:
         console.log(`Unhandled event type ${event.type}`);

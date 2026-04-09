@@ -66,7 +66,19 @@ const SubscriptionForm = () => {
             }, 3000);
             return;
           }
-
+          if (errorResponse.error.includes("inconsistent state")) {
+            setSnackbar({
+              open: true,
+              message:
+                "Your session data is in an inconsistent state. Redirecting you to the homepage to start fresh..",
+            });
+            setNotifierSeverity("warning");
+            setStatus("idle");
+            setTimeout(() => {
+              router.push("/");
+            }, 3000);
+            return;
+          }
           if (errorResponse.error.includes("already subscribed")) {
             const errorMessage = "Email already subscribed!";
             const fieldError: ErrorMessage = {
@@ -77,10 +89,13 @@ const SubscriptionForm = () => {
             setStatus("error");
             return;
           }
-
-          setErrors(
-            errorResponse.error || "Something went wrong, please try again!",
-          );
+          const errorMessage =
+            errorResponse.error || "Something went wrong, please try again!";
+          const fieldError: ErrorMessage = {
+            field: "Internal:Server",
+            message: errorMessage,
+          };
+          setErrors(fieldError);
           setNotifierSeverity("error");
           setStatus("error");
           return;

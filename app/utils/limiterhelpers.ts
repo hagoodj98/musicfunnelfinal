@@ -4,6 +4,7 @@ import {
   checkoutSessionRateLimiter,
   findEmailRateLimiter,
   subscriberEmailRateLimiter,
+  validateAddressRateLimiter,
 } from "@/lib/limiters";
 import crypto from "crypto";
 
@@ -14,6 +15,7 @@ export const handleCheckoutSessionRateLimit = async (sessionToken: string) => {
     handleRateLimitError(rateLimitError, `session token ${sessionToken}`);
   }
 };
+
 export const handleFindEmailRateLimit = async (email: string) => {
   try {
     await findEmailRateLimiter().consume(email);
@@ -28,7 +30,18 @@ export const handleSubscribeRateLimit = async (email: string, ttl: number) => {
     handleRateLimitError(rateLimitError, `subscription for email: ${email}`);
   }
 };
-
+export const handleValidateAddressRateLimit = async (sessionToken: string) => {
+  try {
+    await validateAddressRateLimiter().consume(sessionToken);
+  } catch (error: unknown) {
+    console.error(error);
+    //Not using handleRateLimitError here because we want to return a different message and status code for address validation attempts, and we also want to include a flag in the response indicating that the user's session should be closed if they exceed the limit, which adds an extra layer of protection against abuse while still allowing legitimate users to try again after the TTL expires.
+    throw new HttpError(
+      `Too many attempts for validating address. Try again later.`,
+      429,
+    );
+  }
+};
 function handleRateLimitError(rateLimitError: unknown, context: string): never {
   const retryAfterSeconds =
     typeof rateLimitError === "object" &&

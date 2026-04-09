@@ -1,9 +1,7 @@
-import type { Config } from "tailwindcss";
-
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
@@ -16,14 +14,11 @@ export default {
         lighterblue: "rgb(1, 10, 38)",
         yellow: "#FDEAB6",
       },
-      backgroundImage: {
-        me: "url('/public/IMG_1856(1).jpg)",
-      },
       fontFamily: {
         header: ["Oswald", "Helvetica", "Arial", "sans-serif"],
-        body: ["Caveat", "cursive"],
+        body: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
     },
   },
   plugins: [],
-} satisfies Config;
+};

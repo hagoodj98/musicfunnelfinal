@@ -34,7 +34,7 @@ const CookieConsentBanner = () => {
         ensure the functionality of the site and to enhance your user
         experience. For more information, please see our{" "}
         <span className="inline-block">
-          <Privacy name="Privacy Policy" placement="start" />
+          <Privacy name="Privacy Policy" placement="left" />
         </span>
       </span>
       <button
