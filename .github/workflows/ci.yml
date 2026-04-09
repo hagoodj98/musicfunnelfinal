@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: musicfunnel-ci-${{github.workflow}}-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+jobs:
+  verify:
+    name: Verify Code quality
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: bitnami/redis
+        env:
+          REDIS_PASSWORD: password
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli -a password ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      REDIS_PASSWORD: password
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      STRIPE_PRICE_ID: price_placeholder
+      MAILCHIMP_LIST_ID: list_placeholder
+      MAILCHIMP_API_KEY: placeholder
+      MAILCHIMP_SERVER_PREFIX: us1
+      MAILCHIMP_WEBHOOK_TOKEN: placeholder
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      INTERNAL_API_SECRET: ci-internal-secret
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - name: Install dependencies
+        run: rm -f package-lock.json && npm install
+      - name: Type check
+        run: npm run type-check
+      - name: Lint codebase
+        run: npm run lint
+      - name: Run unit tests
+        run: npm run test:unit
+      - name: Run integration tests
+        run: npm run test:integration
+      - name: Build application
+        run: npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Run end-to-end tests
+        run: npm run test:e2e
