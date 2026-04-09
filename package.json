@@ -31,6 +31,7 @@
     "next": "15.1.2",
     "nodemailer": "^6.10.0",
     "pico": "^0.1.17",
+    "picomatch": "^4.0.4",
     "rate-limiter-flexible": "^5.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
