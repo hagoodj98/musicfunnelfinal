@@ -165,9 +165,8 @@ export async function createCookie(
 ): Promise<void> {
   const cookieStore = await cookies();
   const isSecure =
-    new URL(
-      process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
-    ).protocol === "https:";
+    new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000")
+      .protocol === "https:";
   cookieStore.set(name, value, {
     httpOnly: true,
     secure: isSecure,

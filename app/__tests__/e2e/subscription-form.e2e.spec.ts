@@ -34,7 +34,7 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).pressSequentially("   ");
     await page.getByLabel(/email/i).pressSequentially("alice@example.com");
     await page.getByRole("button", { name: /get instant access/i }).click();
-    await expect(page.getByText(/name is required/i)).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/name is required/i)).toBeVisible();
   });
 
   test("email with no domain part is rejected with a validation error", async ({
@@ -44,7 +44,9 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).fill("Alice Smith");
     await page.getByLabel(/email/i).fill("alice@");
     await page.getByRole("button", { name: /get instant access/i }).click();
-    await expect(page.getByText(/invalid email/i)).toBeVisible();
+    await expect(
+      page.getByRole("dialog").getByText(/invalid email/i),
+    ).toBeVisible();
   });
 
   test("entering an invalid email shows an email validation error", async ({
@@ -53,7 +55,9 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).fill("Alice");
     await page.getByLabel(/email/i).fill("not-an-email");
     await page.getByRole("button", { name: /get instant access/i }).click();
-    await expect(page.getByText(/invalid email/i)).toBeVisible();
+    await expect(
+      page.getByRole("dialog").getByText(/invalid email/i),
+    ).toBeVisible();
   });
 
   test("name with invalid characters shows a validation error", async ({
@@ -62,7 +66,7 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).fill("Alice123!!");
     await page.getByLabel(/email/i).fill("alice@example.com");
     await page.getByRole("button", { name: /get instant access/i }).click();
-    await expect(page.getByText(/letters, spaces, apostrophes/i)).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/letters, spaces, apostrophes/i)).toBeVisible();
   });
 
   test("name shorter than 2 characters shows a validation error", async ({
@@ -71,7 +75,7 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).fill("A");
     await page.getByLabel(/email/i).fill("alice@example.com");
     await page.getByRole("button", { name: /get instant access/i }).click();
-    await expect(page.getByText(/name is required/i)).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/name is required/i)).toBeVisible();
   });
 
   test("modal closes when the close button is clicked", async ({ page }) => {
@@ -85,7 +89,9 @@ test.describe("Subscription form", () => {
     await page.getByLabel(/your name/i).fill("Alice Smith");
     await page.getByLabel(/email/i).fill("alice@example.com");
     // No error messages yet (before submit)
-    await expect(page.getByText(/name is required/i)).not.toBeVisible();
-    await expect(page.getByText(/invalid email/i)).not.toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/name is required/i)).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog").getByText(/invalid email/i),
+    ).not.toBeVisible();
   });
 });

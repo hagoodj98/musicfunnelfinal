@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   //This one-liner uses optional chaining to safely access the .value property of the cookie,
   //We don't have to fetch the cookie cause Nextjs middleware has campitablits to do that for us. So we can just grab it.
   const sessionToken = req.cookies.get("sessionToken")?.value;

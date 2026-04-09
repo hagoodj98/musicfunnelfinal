@@ -60,7 +60,7 @@ export async function POST() {
         allowed_countries: ["US"],
       },
       automatic_tax: { enabled: true },
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/landing/thankyou`,
+      return_url: `${process.env.DOMAIN_NAME}/landing/thankyou`,
       metadata: {
         sessionToken: sessionToken,
       },

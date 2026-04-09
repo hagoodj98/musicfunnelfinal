@@ -23,6 +23,8 @@ const CustomModal = ({
   return (
     <Modal open={open} onClose={onClose} aria-labelledby="modal-title">
       <div
+        role="dialog"
+        aria-labelledby="modal-title"
         className={`absolute left-1/2 top-1/2 w-[92%] -translate-x-1/2 -translate-y-1/2 ${maxWidthClass} outline-none`}
       >
         <div className="relative overflow-hidden rounded-2xl border border-secondary/70 bg-lighterblue text-white shadow-[0_20px_60px_rgba(1,10,38,0.65)]">

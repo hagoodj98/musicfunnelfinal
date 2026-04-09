@@ -42,9 +42,8 @@ export async function GET(req: NextRequest) {
       302,
     );
     const isSecure =
-      new URL(
-        process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
-      ).protocol === "https:";
+      new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000")
+        .protocol === "https:";
     redirectResponse.cookies.set("pendingSubscription", emailHash, {
       httpOnly: true,
       secure: isSecure,

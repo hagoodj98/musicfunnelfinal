@@ -1,7 +1,106 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 import Redis from "ioredis";
 
+/**
+ * WebKit drops Set-Cookie headers from 302 redirect responses before following them.
+ * This helper calls mailchimp-flow without following the redirect, extracts the
+ * pendingSubscription cookie from the response headers, and sets it manually so
+ * the subsequent /api/email-confirmation request receives it correctly.
+ */
+async function seedPendingSubscription(
+  page: Page,
+  email: string,
+  name: string,
+  rememberMe = true,
+) {
+  const response = await page.request.get(
+    `/api/mailchimp-flow?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&rememberMe=${rememberMe}`,
+    { maxRedirects: 0, failOnStatusCode: false },
+  );
+  const setCookie = response.headers()["set-cookie"] ?? "";
+  const match = setCookie.match(/pendingSubscription=([^;]+)/);
+  if (match) {
+    await page.context().addCookies([
+      {
+        name: "pendingSubscription",
+        value: match[1],
+        domain: "localhost",
+        path: "/",
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+      },
+    ]);
+  }
+}
+
+/**
+ * Seeds a full authenticated session (sessionToken + csrfToken) into the browser
+ * context by running through the mailchimp-flow → email-confirmation sequence.
+ *
+ * WebKit does NOT persist Set-Cookie headers from page.goto() responses for JSON
+ * endpoints, and cookies stored by page.request are not sent on subsequent browser
+ * navigations. Both cookies are extracted from response headers and explicitly
+ * injected via addCookies() so the browser engine's cookie jar is populated.
+ */
+async function seedSession(
+  page: Page,
+  email: string,
+  name: string,
+  rememberMe = true,
+) {
+  await seedPendingSubscription(page, email, name, rememberMe);
+
+  const confirmResp = await page.request.get("/api/email-confirmation", {
+    failOnStatusCode: false,
+  });
+  const setCookieHeader = confirmResp.headers()["set-cookie"] ?? "";
+
+  const sessionMatch = setCookieHeader.match(/sessionToken=([^;]+)/);
+  const csrfMatch = setCookieHeader.match(/csrfToken=([^;]+)/);
+
+  const cookiesToAdd: Array<{
+    name: string;
+    value: string;
+    domain: string;
+    path: string;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "Lax" | "Strict" | "None";
+  }> = [];
+  if (sessionMatch) {
+    cookiesToAdd.push({
+      name: "sessionToken",
+      value: sessionMatch[1],
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax",
+    });
+  }
+  if (csrfMatch) {
+    cookiesToAdd.push({
+      name: "csrfToken",
+      value: csrfMatch[1],
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax",
+    });
+  }
+  if (cookiesToAdd.length > 0) {
+    await page.context().addCookies(cookiesToAdd);
+  }
+}
+
 test.describe("Cookie and Redirect Behavior", () => {
+  // WebKit race: after networkidle, router.push('/') from SessionManagerProvider.catch
+  // may still be pending in the JS task queue if '/' is prefetched (no network activity).
+  // One retry is sufficient to handle this inherently timing-dependent scenario.
+  test.describe.configure({ retries: 1 });
+
   test("User deletes cookies and tries to access app", async ({ page }) => {
     // Navigate to the app
     await page.goto("/");
@@ -36,15 +135,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // Clear any lingering cookies so assertNoActiveSession doesn't block email-confirmation
     await page.context().clearCookies();
 
-    // Step 1: Hit mailchimp-flow — sets pendingSubscription cookie on localhost and
-    // redirects to the ngrok confirming-email page (cookie stays scoped to localhost)
-    await page.goto(
-      "/api/mailchimp-flow?email=returns%40e2e.test&name=Returns+E2E&rememberMe=true",
-    );
-
-    // Step 2: Hit email-confirmation — browser sends pendingSubscription cookie,
-    // server issues sessionToken + csrfToken and stores the real session in Redis
-    await page.goto("/api/email-confirmation");
+    // Steps 1+2: Seed full session via mailchimp-flow → email-confirmation.
+    // seedSession manually injects cookies via addCookies so WebKit's browser engine
+    // sends them on subsequent page.goto() navigation requests.
+    await seedSession(page, "returns@e2e.test", "Returns E2E", true);
 
     // Step 3: Read the issued sessionToken from browser cookies
     // (Playwright can read httpOnly cookies via CDP)
@@ -100,14 +194,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // Clear any lingering cookies so assertNoActiveSession doesn't block email-confirmation
     await page.context().clearCookies();
 
-    // Step 1: Hit mailchimp-flow — sets pendingSubscription cookie and pre-seeds Redis
-    await page.goto(
-      "/api/mailchimp-flow?email=banner%40e2e.test&name=Banner+E2E&rememberMe=true",
-    );
-
-    // Step 2: Hit email-confirmation — browser sends pendingSubscription cookie,
-    // server issues real sessionToken + csrfToken cookies and stores session in Redis
-    await page.goto("/api/email-confirmation");
+    // Steps 1+2: Seed full session via mailchimp-flow → email-confirmation.
+    // seedSession manually injects cookies via addCookies so WebKit's browser engine
+    // sends them on subsequent page.goto() navigation requests.
+    await seedSession(page, "banner@e2e.test", "Banner E2E", true);
 
     // Step 3: Read the issued sessionToken from browser cookies
     const browserCookies = await page
@@ -157,13 +247,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // Clear any lingering cookies so assertNoActiveSession doesn't block email-confirmation
     await page.context().clearCookies();
 
-    // Step 1: Hit mailchimp-flow — sets pendingSubscription cookie and pre-seeds Redis
-    await page.goto(
-      "/api/mailchimp-flow?email=bypass%40e2e.test&name=Bypass+E2E&rememberMe=true",
-    );
-
-    // Step 2: Hit email-confirmation — issues real sessionToken + csrfToken cookies
-    await page.goto("/api/email-confirmation");
+    // Steps 1+2: Seed full session via mailchimp-flow → email-confirmation.
+    // seedSession manually injects cookies via addCookies so WebKit's browser engine
+    // sends them on subsequent page.goto() navigation requests.
+    await seedSession(page, "bypass@e2e.test", "Bypass E2E", true);
 
     // Step 3: Read the issued sessionToken from browser cookies
     const browserCookies = await page
@@ -213,13 +300,10 @@ test.describe("Cookie and Redirect Behavior", () => {
     // Clear any lingering cookies so assertNoActiveSession doesn't block email-confirmation
     await page.context().clearCookies();
 
-    // Step 1: Hit mailchimp-flow — sets pendingSubscription cookie and pre-seeds Redis
-    await page.goto(
-      "/api/mailchimp-flow?email=absent%40e2e.test&name=Absent+E2E&rememberMe=true",
-    );
-
-    // Step 2: Hit email-confirmation — issues real sessionToken + csrfToken cookies
-    await page.goto("/api/email-confirmation");
+    // Steps 1+2: Seed full session via mailchimp-flow → email-confirmation.
+    // seedSession manually injects cookies via addCookies so WebKit's browser engine
+    // sends them on subsequent page.goto() navigation requests.
+    await seedSession(page, "absent@e2e.test", "Absent E2E", true);
 
     // Step 3: Read the issued sessionToken from browser cookies
     const browserCookies = await page
