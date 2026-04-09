@@ -5,7 +5,7 @@ import {
   generateToken,
   getSessionDataByHash,
 } from "@/app/utils/sessionHelpers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { HttpError } from "@/app/utils/errorhandler";
 
