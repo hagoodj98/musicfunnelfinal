@@ -15,34 +15,27 @@ export async function POST() {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get("sessionToken")?.value;
     const csrfToken = cookieStore.get("csrfToken")?.value;
-    console.log("[API] sessionToken:", sessionToken, "csrfToken:", csrfToken);
 
     if (!sessionToken || !csrfToken) {
       await redis.del(`session:${sessionToken}`);
       cookieStore.delete("sessionToken");
       cookieStore.delete("csrfToken");
-      console.log("[API] Missing session or CSRF token");
       throw new HttpError("Session or CSRF token is missing", 401);
     }
     const sessionData = await getSessionDataByToken(sessionToken);
-    console.log("[API] sessionData:", sessionData);
     if (!sessionData) {
-      console.log("[API] Session not found");
       throw new HttpError("Session not found. Unauthorized access", 404);
     }
     if (sessionData.rememberMe === undefined) {
-      console.log("[API] Session missing rememberMe");
       throw new HttpError(
         "Session data is incomplete. Missing rememberMe property.",
         500,
       );
     }
     if (sessionData.checkoutStatus === "completed") {
-      console.log("[API] Purchase already completed");
       throw new HttpError("Purchase already completed.", 403);
     }
     if (csrfToken !== sessionData.csrfToken) {
-      console.log("[API] CSRF token mismatch");
       throw new HttpError("Unauthorized.", 403);
     }
     const session = await stripe.checkout.sessions.create({
@@ -60,12 +53,11 @@ export async function POST() {
         allowed_countries: ["US"],
       },
       automatic_tax: { enabled: true },
-      return_url: `${process.env.NEXT_PUBLIC_DOMAIN_NAME}/landing/thankyou`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/landing/thankyou`,
       metadata: {
         sessionToken: sessionToken,
       },
     });
-    console.log("[API] Stripe session created");
     return new NextResponse(
       JSON.stringify({
         clientSecret: session.client_secret,

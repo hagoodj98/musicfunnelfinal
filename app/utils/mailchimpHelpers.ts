@@ -37,7 +37,6 @@ export async function updateMailchimpAddress(
         },
       },
     );
-    console.log("Mailchimp address updated successfully:", response);
     return response;
   } catch (error) {
     console.error(
@@ -86,10 +85,6 @@ export async function updateMailchimpTag(
           },
         ],
       },
-    );
-    console.log(
-      `Successfully updated tag "${tagName}" for ${email}:`,
-      response,
     );
     return response;
   } catch (error) {
