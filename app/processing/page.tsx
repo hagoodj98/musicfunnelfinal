@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { useSessionTimeContext } from "../context/EmailContext";
@@ -73,61 +73,63 @@ export default function Page() {
 
   return (
     <div>
-      <ContentSection>
-        <div className="flex flex-col justify-center h-80">
-          <div>
-            <h1 className="font-header text-2xl md:text-3xl mb-4">
-              {isCheckoutRedirect && (
-                <span>
-                  {isSubscriptionConfirmed
-                    ? "Purchase confirmed! Redirecting..."
-                    : "Processing your purchase confirmation..."}
-                  <CircularProgress
-                    size="20px"
-                    style={{
-                      display: "inline-flex",
-                      verticalAlign: "middle",
-                    }}
-                    color="inherit"
-                  />{" "}
-                </span>
-              )}
-              <br />
-              {isMailchimpRedirect && (
-                <span>
-                  {isSubscriptionConfirmed
-                    ? "Email subscription confirmed! Redirecting..."
-                    : "Processing your email confirmation..."}
-                  <CircularProgress
-                    size="20px"
-                    style={{
-                      display: "inline-flex",
-                      verticalAlign: "middle",
-                    }}
-                    color="inherit"
-                  />{" "}
-                </span>
-              )}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ContentSection>
+          <div className="flex flex-col justify-center h-80">
+            <div>
+              <h1 className="font-header text-2xl md:text-3xl mb-4">
+                {isCheckoutRedirect && (
+                  <span>
+                    {isSubscriptionConfirmed
+                      ? "Purchase confirmed! Redirecting..."
+                      : "Processing your purchase confirmation..."}
+                    <CircularProgress
+                      size="20px"
+                      style={{
+                        display: "inline-flex",
+                        verticalAlign: "middle",
+                      }}
+                      color="inherit"
+                    />{" "}
+                  </span>
+                )}
+                <br />
+                {isMailchimpRedirect && (
+                  <span>
+                    {isSubscriptionConfirmed
+                      ? "Email subscription confirmed! Redirecting..."
+                      : "Processing your email confirmation..."}
+                    <CircularProgress
+                      size="20px"
+                      style={{
+                        display: "inline-flex",
+                        verticalAlign: "middle",
+                      }}
+                      color="inherit"
+                    />{" "}
+                  </span>
+                )}
 
-              {errorMessage && (
-                <p className="font-body text-red-500 text-sm mt-2">
-                  {errorMessage}
+                {errorMessage && (
+                  <p className="font-body text-red-500 text-sm mt-2">
+                    {errorMessage}
+                  </p>
+                )}
+              </h1>
+              {isSubscriptionConfirmed && (
+                <p className="font-body  md:text-3xl text-lg">
+                  Not redirected automatically? Please click the button below.
                 </p>
               )}
-            </h1>
-            {isSubscriptionConfirmed && (
-              <p className="font-body  md:text-3xl text-lg">
-                Not redirected automatically? Please click the button below.
-              </p>
-            )}
-            {isSubscriptionConfirmed && (
-              <BrandButton onClick={() => router.push("/landing")}>
-                Landing Page
-              </BrandButton>
-            )}
+              {isSubscriptionConfirmed && (
+                <BrandButton onClick={() => router.push("/landing")}>
+                  Landing Page
+                </BrandButton>
+              )}
+            </div>
           </div>
-        </div>
-      </ContentSection>
+        </ContentSection>
+      </Suspense>
     </div>
   );
 }
