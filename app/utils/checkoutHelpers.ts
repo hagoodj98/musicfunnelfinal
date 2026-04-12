@@ -1,10 +1,5 @@
 import { HttpError } from "./errorhandler";
-import { updateMailchimpTag, updateMailchimpAddress } from "./mailchimpHelpers";
-import {
-  getSessionDataByToken,
-  updateSessionData,
-  setTimeToLive,
-} from "./sessionHelpers";
+import { updateCheckoutSessionData } from "./sessionHelpers";
 import type { Stripe } from "stripe";
 
 //////////////////////////
@@ -21,7 +16,7 @@ import type { Stripe } from "stripe";
  *
  * @param {Stripe.Checkout.Session} paymentIntent - The Stripe checkout session object that contains information about the completed checkout.
  */
-export const handleCheckoutSessionCompleted = async (
+export const processSuccessfulCheckout = async (
   paymentIntent: Stripe.Checkout.Session,
 ) => {
   if (!paymentIntent.metadata || !paymentIntent.metadata.sessionToken) {
@@ -31,46 +26,6 @@ export const handleCheckoutSessionCompleted = async (
     throw new HttpError('Missing sessionToken in payment metadata"', 400);
   }
   const sessionToken = paymentIntent.metadata.sessionToken;
-  // Retrieve current session data (using your helper)
-  const sessionData = await getSessionDataByToken(sessionToken);
-
-  sessionData.checkoutStatus = "completed";
-  if (sessionData.rememberMe === undefined) {
-    throw new HttpError(
-      "Session data is incomplete. Missing rememberMe property.",
-      500,
-    );
-  }
-  const ttl = setTimeToLive(sessionData.rememberMe);
-  await updateSessionData(sessionToken, sessionData, ttl);
-  await addressUpdateHandler(paymentIntent, sessionData.email);
+  // Update session data to mark checkout as completed and set appropriate TTL based on rememberMe status
+  await updateCheckoutSessionData(sessionToken, paymentIntent);
 };
-// The addressUpdateHandler function is responsible for updating the subscriber's address information in Mailchimp based on the shipping details collected during the Stripe checkout process. It takes the payment intent and the user's email as parameters, formats the address data according to Mailchimp's requirements, and then calls the helper functions to update both the address and the subscriber's tag in Mailchimp.
-async function addressUpdateHandler(
-  paymentIntent: Stripe.Checkout.Session,
-  userEmail: string,
-) {
-  if (
-    paymentIntent.collected_information?.shipping_details &&
-    paymentIntent.collected_information.shipping_details.address &&
-    userEmail
-  ) {
-    const formattedAddress = {
-      addr1: paymentIntent.collected_information.shipping_details.address.line1,
-      addr2:
-        paymentIntent.collected_information.shipping_details.address.line2 ||
-        "",
-      city: paymentIntent.collected_information.shipping_details.address.city,
-      state: paymentIntent.collected_information.shipping_details.address.state,
-      zip: paymentIntent.collected_information.shipping_details.address
-        .postal_code,
-      country:
-        paymentIntent.collected_information.shipping_details.address.country,
-    };
-    //This helper function gets the email, and the JSON object that mailchimp expects, not the email the user inserts in the form, but the email that is stored in the session data, which is the email that was used to subscribe to the mailing list. This way, we ensure that we are updating the correct subscriber's information in Mailchimp, even if the user entered a different email during checkout. The session data email should always reflect the subscriber's email in Mailchimp, allowing us to maintain accurate records and update the correct subscriber's address information.
-    await updateMailchimpAddress(userEmail, formattedAddress);
-    // After updating the address, we can also update the subscriber's tag to "Fan Purchaser" in Mailchimp
-    await updateMailchimpTag(userEmail, "Fan Purchaser", "active");
-  }
-  return null;
-}

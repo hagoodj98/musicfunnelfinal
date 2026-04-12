@@ -24,16 +24,17 @@ export async function POST(req: NextRequest) {
       default:
         throw new HttpError("Unsupported action", 400);
     }
-    return new NextResponse(JSON.stringify({ result }), { status: 200 });
+    return NextResponse.json({ result }, { status: 200 });
   } catch (error: unknown) {
     console.error("Redis Handler Error:", error);
     if (error instanceof HttpError) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new NextResponse(
-      JSON.stringify({ error: (error as Error).message }),
+    return NextResponse.json(
+      { error: (error as Error).message },
       {
         status: 500,
       },

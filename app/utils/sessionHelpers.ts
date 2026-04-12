@@ -4,6 +4,8 @@ import redis from "../../lib/redis";
 import { UserSession } from "../types/types";
 import { cookies } from "next/headers";
 import { HttpError } from "./errorhandler";
+import { updateMailchimpAddress, updateMailchimpTag } from "./mailchimpHelpers";
+import { Stripe } from "stripe";
 
 export interface TokenBundle {
   /** Signed cookie & header pairing */
@@ -207,6 +209,7 @@ export async function assertNoActiveSession(): Promise<void> {
   const sessionToken = cookieStore.get("sessionToken")?.value;
   const csrfToken = cookieStore.get("csrfToken")?.value;
 
+  // If both cookies are present, we assume the user already has an active session and reject the request with a 403 Forbidden error to prevent multiple sessions for the same user. Only concerned what attackers might do if they have both cookies, which is to try to use the sessionToken to access protected endpoints. If they have both cookies, they likely also have the sessionToken value and can just use that to access protected endpoints, so we want to block that outright with a 403 rather than trying to clean up Redis and cookies because if they have both cookies, cleaning up Redis and cookies would not be effective since they can just use the sessionToken they have to access protected endpoints anyway. If only one cookie is present, we treat this as an inconsistent state (potentially due to tampering or a previous error). To mitigate any potential security risks, we clean up any existing session in Redis associated with the sessionToken and delete both cookies to ensure a clean slate for the user. After performing this cleanup, we throw a 403 Forbidden error to indicate that the request is unauthorized due to the inconsistent state of the session cookies.
   if (sessionToken && csrfToken) {
     throw new HttpError(
       "User already has an active session. Unauthorized access.",
@@ -261,3 +264,62 @@ export const createPrelimSession = async (
     .exec();
   return emailHash;
 };
+
+export const updateCheckoutSessionData = async (
+  sessionToken: string,
+  stripeSession: Stripe.Checkout.Session,
+): Promise<void> => {
+  try {
+    const existingSessionData = await getSessionDataByToken(sessionToken);
+
+    if (existingSessionData.rememberMe === undefined) {
+      throw new HttpError(
+        "Session data is incomplete. Missing rememberMe property.",
+        500,
+      );
+    }
+    const ttl = setTimeToLive(existingSessionData.rememberMe);
+
+    await updateSessionData(
+      sessionToken,
+      { ...existingSessionData, checkoutStatus: "completed" },
+      ttl,
+    );
+    await addressUpdateHandler(stripeSession, existingSessionData.email);
+  } catch (error: unknown) {
+    throw new HttpError(
+      `Error updating session data: ${(error as Error).message}`,
+      500,
+    );
+  }
+};
+// The addressUpdateHandler function is responsible for updating the subscriber's address information in Mailchimp based on the shipping details collected during the Stripe checkout process. It takes the payment intent and the user's email as parameters, formats the address data according to Mailchimp's requirements, and then calls the helper functions to update both the address and the subscriber's tag in Mailchimp.
+
+async function addressUpdateHandler(
+  paymentIntent: Stripe.Checkout.Session,
+  userEmail: string,
+) {
+  if (
+    paymentIntent.collected_information?.shipping_details &&
+    paymentIntent.collected_information.shipping_details.address &&
+    userEmail
+  ) {
+    const formattedAddress = {
+      addr1: paymentIntent.collected_information.shipping_details.address.line1,
+      addr2:
+        paymentIntent.collected_information.shipping_details.address.line2 ||
+        "",
+      city: paymentIntent.collected_information.shipping_details.address.city,
+      state: paymentIntent.collected_information.shipping_details.address.state,
+      zip: paymentIntent.collected_information.shipping_details.address
+        .postal_code,
+      country:
+        paymentIntent.collected_information.shipping_details.address.country,
+    };
+    //This helper function gets the email, and the JSON object that mailchimp expects, not the email the user inserts in the form, but the email that is stored in the session data, which is the email that was used to subscribe to the mailing list. This way, we ensure that we are updating the correct subscriber's information in Mailchimp, even if the user entered a different email during checkout. The session data email should always reflect the subscriber's email in Mailchimp, allowing us to maintain accurate records and update the correct subscriber's address information.
+    await updateMailchimpAddress(userEmail, formattedAddress);
+    // After updating the address, we can also update the subscriber's tag to "Fan Purchaser" in Mailchimp
+    await updateMailchimpTag(userEmail, "Fan Purchaser", "active");
+  }
+  return null;
+}

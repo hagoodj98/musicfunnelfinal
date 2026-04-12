@@ -1,13 +1,20 @@
 "use client";
 
-export function CustomVideo({ vidAddress }: { vidAddress: string }) {
+export function CustomVideo({
+  vidAddress,
+  poster,
+}: {
+  vidAddress: string;
+  poster?: string;
+}) {
   return (
     <div className="rounded aspect-video w-full">
       <video
         src={vidAddress}
+        poster={poster}
         playsInline
         className="w-full h-full rounded"
-        preload="metadata"
+        preload={poster ? "none" : "metadata"}
         controls
       />
     </div>

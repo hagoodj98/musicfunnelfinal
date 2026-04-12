@@ -9,7 +9,7 @@ import {
 } from "../../utils/sessionHelpers";
 import { validationSchema } from "../../utils/inputValidation";
 import { handleFindEmailRateLimit } from "@/app/utils/limiterhelpers";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { UserSession } from "../../types/types";
 import z from "zod/v4";
 import { HttpError } from "@/app/utils/errorhandler";
@@ -86,30 +86,33 @@ export async function POST(req: NextRequest) {
     await createCookie("csrfToken", csrfToken, { maxAge: 900 });
 
     // Return a 200 response with the cookies set, and instruct the client to redirect to /landing.
-    return new Response(
-      JSON.stringify({ message: "Subscriber found. Redirecting to landing." }),
+    return NextResponse.json(
       {
-        status: 200,
+        message: "Subscriber found. Redirecting to landing.",
+        redirectUrl: "/landing",
       },
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error in check-subscriber endpoint:", error);
     if (error instanceof z.ZodError) {
-      return new Response(
-        JSON.stringify({
+      return NextResponse.json(
+        {
           error: "Invalid email data. Please check your submission.",
           details: error.issues,
-        }),
+        },
         { status: 400 },
       );
     }
     if (error instanceof HttpError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

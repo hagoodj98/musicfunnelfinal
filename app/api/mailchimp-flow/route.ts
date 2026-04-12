@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     );
 
     const redirectResponse = NextResponse.redirect(
-      new URL("/confirming-email", process.env.NEXT_PUBLIC_BASE_URL),
+      new URL("/processing", process.env.NEXT_PUBLIC_BASE_URL),
       302,
     );
     const isSecure =
