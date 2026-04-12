@@ -11,7 +11,10 @@ import z from "zod/v4";
 import { validationSchema } from "../utils/inputValidation";
 import SnackbarComponent from "./ui/snackbar";
 import { Severity } from "../types/types";
+import { useRouter } from "next/navigation";
+
 const FindMe = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [smShow, setSmShow] = useState(false);
@@ -60,7 +63,11 @@ const FindMe = () => {
         });
         setNotifierSeverity("success");
 
-        window.location.href = "/landing";
+        if (data.redirectUrl) {
+          setTimeout(() => {
+            router.push(data.redirectUrl);
+          }, 3000);
+        }
       } catch (error) {
         console.error("Error checking subscription:", error);
 
@@ -78,7 +85,7 @@ const FindMe = () => {
         setLoading(false);
       }
     },
-    [email],
+    [email, router],
   );
 
   return (

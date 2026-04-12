@@ -55,11 +55,11 @@ export async function POST() {
       maxAge: ttl,
       sameSite: "lax",
     });
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         message: "Session and cookies are refreshed with new ones ",
         sessionTTL: ttl,
-      }),
+      },
       {
         status: 200,
       },
@@ -67,12 +67,13 @@ export async function POST() {
   } catch (error) {
     console.error("Error refreshing session:", error);
     if (error instanceof HttpError) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new NextResponse(
-      JSON.stringify({ error: (error as Error).message }),
+    return NextResponse.json(
+      { error: (error as Error).message },
       {
         status: 500,
       },

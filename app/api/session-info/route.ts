@@ -20,15 +20,16 @@ export async function GET() {
       throw new HttpError("Session not found or expired", 404);
     }
     //Return the TTL value. We use this value to set our timer on the client side to know when session is going to expire
-    return new Response(JSON.stringify({ ttl }), { status: 200 });
+    return NextResponse.json({ ttl }, { status: 200 });
   } catch (error) {
     if (error instanceof HttpError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new NextResponse(
-      JSON.stringify({ error: (error as Error).message }),
+    return NextResponse.json(
+      { error: (error as Error).message },
       { status: 500 },
     );
   }

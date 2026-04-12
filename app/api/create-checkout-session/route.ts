@@ -53,16 +53,17 @@ export async function POST() {
         allowed_countries: ["US"],
       },
       automatic_tax: { enabled: true },
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/landing/thankyou`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/processing?session_id={CHECKOUT_SESSION_ID}`,
+
       metadata: {
         sessionToken: sessionToken,
       },
     });
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         clientSecret: session.client_secret,
         customerEmail: sessionData.email,
-      }),
+      },
       {
         status: 200,
       },

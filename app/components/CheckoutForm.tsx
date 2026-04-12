@@ -137,16 +137,16 @@ const CheckoutForm = ({ email }: { email: string }) => {
           setIsSubmitting(false); // Stop the submission process before redirecting
           setMessage(shippingValidationError); // Inform the user about the session closure
           setTimeout(() => {
-            router.push("/"); // Redirect to home page after 3 seconds
-          }, 3000);
+            router.push("/"); // Redirect to home page after 10 seconds
+          }, 10000);
         }
         // If the error message includes "Can't validate address because session data is missing", it means the user's session is missing necessary data for address validation, which could happen if their session has expired or if they are trying to access the validation endpoint without going through the proper flow. In this case, we inform the user about the missing session data and redirect them to the home page after a short delay, where they can start a new session if they want to try again.
         if (shippingValidationError.includes("missing")) {
           setIsSubmitting(false); // Stop the submission process before redirecting
           setMessage(shippingValidationError); // Inform the user about the missing session token
           setTimeout(() => {
-            router.push("/"); // Redirect to home page after 3 seconds
-          }, 3000);
+            router.push("/"); // Redirect to home page after 10 seconds
+          }, 10000);
         }
         setMessage(shippingValidationError); // Display the error message to the user (e.g., undeliverable address or validation error)
         setIsSubmitting(false);
@@ -168,7 +168,6 @@ const CheckoutForm = ({ email }: { email: string }) => {
       // This point will only be reached if there is an immediate error when
       // confirming the payment. Otherwise, your customer will be redirected to
       // your `return_url`. For some payment methods like iDEAL, your customer will
-      // be redirected to an intermediate site first to authorize the payment, then
       // redirected to the `return_url`. We dont need to listen for payment fails in webhooks because if the payment fails, the user will be redirected to the return_url with a failed status in the query params. Then in the ThankYou page, I can check for that failed status and display a message to the user accordingly.
       if (confirmResult.type === "error") {
         setMessage(confirmResult.error.message);
@@ -213,7 +212,7 @@ const CheckoutForm = ({ email }: { email: string }) => {
     return <div>Error: {checkoutState.error.message}</div>;
   }
   return (
-    <div className="flex h-150 w-full flex-col rounded-lg bg-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+    <div className="flex h-[600px] w-full flex-col rounded-lg bg-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
       <h2 className="font-header shrink-0 px-6 pt-6 pb-3 text-2xl font-bold text-white">
         Complete Your Purchase
       </h2>
@@ -249,7 +248,20 @@ const CheckoutForm = ({ email }: { email: string }) => {
           className="mt-6 w-full"
         >
           {isSubmitting ? (
-            <div className="spinner"></div>
+            <div className="spinner">
+              Processing...{" "}
+              <span>
+                {" "}
+                <CircularProgress
+                  size="20px"
+                  style={{
+                    display: "inline-flex",
+                    verticalAlign: "middle",
+                  }}
+                  color="inherit"
+                />
+              </span>
+            </div>
           ) : (
             `Pay ${checkoutState.checkout.total.total.amount} now`
           )}

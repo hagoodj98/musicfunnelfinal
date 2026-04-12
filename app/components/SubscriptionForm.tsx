@@ -90,8 +90,15 @@ const SubscriptionForm = () => {
           }
           const errorMessage =
             errorResponse.error || "Something went wrong, please try again!";
+          const isNameError = errorMessage.includes("Invalid name");
+          const isEmailError = errorMessage.includes("Invalid email");
+          const fieldErrorType = isNameError
+            ? "Name"
+            : isEmailError
+              ? "Email"
+              : "Unknown";
           const fieldError: ErrorMessage = {
-            field: "Internal:Server",
+            field: `InternalErrorServer${fieldErrorType}`,
             message: errorMessage,
           };
           setErrors(fieldError);
@@ -156,6 +163,11 @@ const SubscriptionForm = () => {
               <p className="text-center text-sm leading-relaxed text-yellow/90 sm:text-base">
                 Use your best email so we can send your access right away.
               </p>
+              {errors &&
+                !Array.isArray(errors) &&
+                errors.field === "InternalErrorServerUnknown" && (
+                  <p className="text-sm text-red-500">{errors.message}</p>
+                )}
               {Array.isArray(errors) &&
                 errors
                   .filter((error) => error.field === "name")
@@ -164,6 +176,14 @@ const SubscriptionForm = () => {
                       {error.message}
                     </p>
                   ))}
+              {errors && !Array.isArray(errors) && errors.field === "name" && (
+                <p className="text-sm text-red-500">{errors.message}</p>
+              )}
+              {errors &&
+                !Array.isArray(errors) &&
+                errors.field === "InternalErrorServerName" && (
+                  <p className="text-sm text-red-500">{errors.message}</p>
+                )}
 
               <TextInput
                 label="Your Name"
@@ -183,6 +203,11 @@ const SubscriptionForm = () => {
               {errors && !Array.isArray(errors) && errors.field === "email" && (
                 <p className="text-sm text-red-500">{errors.message}</p>
               )}
+              {errors &&
+                !Array.isArray(errors) &&
+                errors.field === "InternalErrorServerEmail" && (
+                  <p className="text-sm text-red-500">{errors.message}</p>
+                )}
               <TextInput
                 label="Email"
                 value={user.email}

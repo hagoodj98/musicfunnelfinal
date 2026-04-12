@@ -99,18 +99,17 @@ export async function POST(req: NextRequest) {
       .del(`prelimSession:${oldEmailHash}`)
       .exec();
 
-    return new NextResponse(JSON.stringify({ message: "user subscribed!" }), {
-      status: 200,
-    });
+    return NextResponse.json({ message: "user subscribed!" }, { status: 200 });
   } catch (error) {
     console.error("Error processing webhook:", error);
     if (error instanceof HttpError) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: error.status,
-      });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
-    return new NextResponse(
-      JSON.stringify({ error: (error as Error).message }),
+    return NextResponse.json(
+      { error: (error as Error).message },
       {
         status: 500,
       },

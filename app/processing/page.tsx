@@ -2,26 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useSessionTimeContext } from "../context/EmailContext";
 import ContentSection from "../components/ContentSection";
-import SnackbarComponent from "../components/ui/snackbar";
-import { Severity } from "../types/types";
 import BrandButton from "../components/ui/BrandButton";
 import CircularProgress from "@mui/material/CircularProgress";
+
 export default function Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubscriptionConfirmed, setIsSubscriptionConfirmed] = useState(false);
   const { setSessionTime } = useSessionTimeContext();
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-  });
-  const [notifierSeverity, setNotifierSeverity] = useState<Severity>();
   const [errorMessage, setErrorMessage] = useState("");
+  const [isCheckoutRedirect, setIsCheckoutRedirect] = useState(false);
+  const [isMailchimpRedirect, setIsMailchimpRedirect] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/email-confirmation");
+        const sessionID = searchParams.get("session_id");
+        const params = sessionID ? `?session_id=${sessionID}` : "";
+        if (sessionID) {
+          setIsCheckoutRedirect(true);
+        } else {
+          setIsMailchimpRedirect(true);
+        }
+        //If sessionid does not exist, it means the user confirmed email through mailchimp or manually entered url. Either way, we check for existing info in redis and if not found, we reject the request. This is to prevent unauthorized access to the email confirmation endpoint and ensure that only users who have gone through the proper flow can confirm their email and get redirected to the landing page. If sessionid does exist we check with stripe to verify that the session is paid and then update the session data and mailchimp data accordingly before redirecting to the thank you page. We want to do this verification step to ensure that only users who have completed the checkout process can access the thank you page and have their session and mailchimp data updated, which is important for maintaining the integrity of our subscription flow and providing a seamless user experience. If we did not perform this verification step, it could lead to situations where users who have not completed the checkout process are able to access the thank you page and have their session and mailchimp data updated, which could cause confusion and potential issues with our subscription management.
+
+        const response = await fetch(`/api/processing-webhook${params}`);
         if (!response.ok) {
           const errorResponse = await response.json();
           if (errorResponse.error.includes("Pending data not found")) {
@@ -44,13 +52,16 @@ export default function Page() {
           }, 2000);
           return;
         }
-
-        setSnackbar({ open: true, message: "Email confirmed!" });
-        setNotifierSeverity("success");
-        setIsSubscriptionConfirmed(true);
         const data = await response.json();
+        setIsSubscriptionConfirmed(true);
+
         setSessionTime(data.sessionTTL);
-        router.push("/landing");
+        // If there is a redirectUrl in the response, it means the email confirmation and/or checkout session verification was successful and we can safely redirect the user to the appropriate page (either /landing or /landing/thankyou) based on the flow they came from. We use a timeout to allow the user to see the success message in the snackbar before being redirected, which provides a better user experience by giving them feedback that their action was successful before navigating them to the next page.
+        if (data.redirectUrl) {
+          setTimeout(() => {
+            router.push(data.redirectUrl);
+          }, 5000);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
         setErrorMessage("An unexpected error occurred. Please try again.");
@@ -58,7 +69,7 @@ export default function Page() {
     };
 
     fetchData();
-  }, [router, setSessionTime]);
+  }, [router, searchParams, setSessionTime]);
 
   return (
     <div>
@@ -66,11 +77,11 @@ export default function Page() {
         <div className="flex flex-col justify-center h-80">
           <div>
             <h1 className="font-header text-2xl md:text-3xl mb-4">
-              {isSubscriptionConfirmed ? (
-                <span>Email Confirmed! Redirecting to landing page...</span>
-              ) : (
+              {isCheckoutRedirect && (
                 <span>
-                  Checking Email Confirmation...
+                  {isSubscriptionConfirmed
+                    ? "Purchase confirmed! Redirecting..."
+                    : "Processing your purchase confirmation..."}
                   <CircularProgress
                     size="20px"
                     style={{
@@ -78,9 +89,26 @@ export default function Page() {
                       verticalAlign: "middle",
                     }}
                     color="inherit"
-                  />
+                  />{" "}
                 </span>
               )}
+              <br />
+              {isMailchimpRedirect && (
+                <span>
+                  {isSubscriptionConfirmed
+                    ? "Email subscription confirmed! Redirecting..."
+                    : "Processing your email confirmation..."}
+                  <CircularProgress
+                    size="20px"
+                    style={{
+                      display: "inline-flex",
+                      verticalAlign: "middle",
+                    }}
+                    color="inherit"
+                  />{" "}
+                </span>
+              )}
+
               {errorMessage && (
                 <p className="font-body text-red-500 text-sm mt-2">
                   {errorMessage}
@@ -100,12 +128,6 @@ export default function Page() {
           </div>
         </div>
       </ContentSection>
-      <SnackbarComponent
-        message={snackbar.message}
-        severity={notifierSeverity}
-        open={snackbar.open}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      />
     </div>
   );
 }

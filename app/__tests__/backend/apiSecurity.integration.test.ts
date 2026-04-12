@@ -53,6 +53,11 @@ const sessionMocks = vi.hoisted(() => ({
 const stripeMocks = vi.hoisted(() => ({
   constructEvent: vi.fn(),
   sessionsCreate: vi.fn(),
+  sessionsRetrieve: vi.fn(),
+}));
+
+const checkoutMocks = vi.hoisted(() => ({
+  processSuccessfulCheckout: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -82,6 +87,10 @@ vi.mock("../../utils/sessionHelpers", () => ({
   setTimeToLive: sessionMocks.setTimeToLive,
   createPrelimSession: sessionMocks.createPrelimSession,
   getPrelimSession: sessionMocks.getPrelimSession,
+}));
+
+vi.mock("../../utils/checkoutHelpers", () => ({
+  processSuccessfulCheckout: checkoutMocks.processSuccessfulCheckout,
 }));
 
 vi.mock("../../utils/mailchimp", () => ({
@@ -138,7 +147,12 @@ vi.mock("stripe", () => ({
   default: function MockStripe() {
     return {
       webhooks: { constructEvent: stripeMocks.constructEvent },
-      checkout: { sessions: { create: stripeMocks.sessionsCreate } },
+      checkout: {
+        sessions: {
+          create: stripeMocks.sessionsCreate,
+          retrieve: stripeMocks.sessionsRetrieve,
+        },
+      },
     };
   },
 }));
@@ -206,6 +220,9 @@ describe("API endpoint security — remaining routes", () => {
 
     stripeMocks.constructEvent.mockReset();
     stripeMocks.sessionsCreate.mockReset();
+    stripeMocks.sessionsRetrieve.mockReset();
+    checkoutMocks.processSuccessfulCheckout.mockReset();
+    checkoutMocks.processSuccessfulCheckout.mockResolvedValue(undefined);
   });
 
   // ─── POST /api/redis-handler ────────────────────────────────────────────────
@@ -282,13 +299,13 @@ describe("API endpoint security — remaining routes", () => {
     });
   });
 
-  // ─── GET /api/email-confirmation ────────────────────────────────────────────
+  // ─── GET /api/processing-webhook ───────────────────────────────────────────
 
   describe("GET /api/email-confirmation", () => {
     let GET: (req: NextRequest) => Promise<Response>;
 
     beforeEach(async () => {
-      ({ GET } = await import("../../api/email-confirmation/route"));
+      ({ GET } = await import("../../api/processing-webhook/route"));
     });
 
     it("returns 400 if pendingSubscription cookie is missing", async () => {
@@ -330,6 +347,43 @@ describe("API endpoint security — remaining routes", () => {
         "sessionToken",
         "mockSessionToken",
         expect.any(Object),
+      );
+    });
+
+    it("returns 402 for checkout redirects when Stripe session is not paid", async () => {
+      stripeMocks.sessionsRetrieve.mockResolvedValue({
+        payment_status: "unpaid",
+        metadata: { sessionToken: "tok_123" },
+      });
+
+      const req = new NextRequest(
+        "http://localhost/api/processing-webhook?session_id=cs_test_123",
+      );
+      const res = await GET(req);
+
+      expect(res.status).toBe(402);
+      expect(checkoutMocks.processSuccessfulCheckout).not.toHaveBeenCalled();
+    });
+
+    it("returns thankyou redirect payload when checkout session is paid", async () => {
+      stripeMocks.sessionsRetrieve.mockResolvedValue({
+        payment_status: "paid",
+        metadata: { sessionToken: "tok_123" },
+      });
+
+      const req = new NextRequest(
+        "http://localhost/api/processing-webhook?session_id=cs_test_123",
+      );
+      const res = await GET(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(checkoutMocks.processSuccessfulCheckout).toHaveBeenCalledTimes(1);
+      expect(json).toEqual(
+        expect.objectContaining({
+          success: true,
+          redirectUrl: "/landing/thankyou",
+        }),
       );
     });
   });

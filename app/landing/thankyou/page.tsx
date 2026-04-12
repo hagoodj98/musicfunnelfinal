@@ -12,7 +12,10 @@ const ThankYouPage = () => {
   return (
     <div>
       <SessionManagerProvider />
-      <IntroSection videoAddress="/video/take-this-journey-with-me.mp4">
+      <IntroSection
+        videoAddress="/video/take-this-journey-with-me.mp4"
+        poster="/fanpack.jpg"
+      >
         <div className="pb-8">
           <h1 className="font-header mx-auto mt-7 max-w-4xl text-center text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
             JOIN MY PATREON FOR ONLY{" "}
